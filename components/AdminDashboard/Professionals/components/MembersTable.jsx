@@ -1,0 +1,217 @@
+"use client";
+
+import { useState, useCallback } from "react";
+import Icon from "@/components/common/Icon";
+import ResumeChip from "./ResumeChip";
+import {
+  formatContact,
+  formatCities,
+  formatRelativeTime,
+  getResumeName,
+  getResumeUrl,
+} from "@/utilities/professionals.helpers";
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function ColumnHeader({ children, withMenu }) {
+  return (
+    <th className="px-4 py-3 text-left text-14 font-semibold text-(--color-black-shade-700) border border-(--color-black-shade-100) bg-(--pure-white) whitespace-nowrap">
+      {withMenu ? (
+        <div className="flex items-center gap-2">
+          <span>{children}</span>
+          <button
+            className="cursor-pointer opacity-50 hover:opacity-90 transition-opacity shrink-0"
+            aria-label={`${children} options`}
+          >
+            <Icon
+              name="statics/Employee-Dashboard/three-vertical-dots.svg"
+              width={3}
+              height={15}
+              alt="options"
+            />
+          </button>
+        </div>
+      ) : (
+        children
+      )}
+    </th>
+  );
+}
+
+function SkeletonRow() {
+  return (
+    <tr className="animate-pulse">
+      <td className="px-3 py-3.5 border border-(--color-black-shade-100)">
+        <div className="h-4 w-4 rounded bg-(--color-black-shade-100)" />
+      </td>
+      {Array.from({ length: 7 }).map((_, i) => (
+        <td key={i} className="px-4 py-3.5 border border-(--color-black-shade-100)">
+          <div className="h-4 rounded bg-(--color-black-shade-100)" />
+        </td>
+      ))}
+      <td className="px-4 py-3.5 border border-(--color-black-shade-100) text-center">
+        <div className="h-6 w-6 rounded-full bg-(--color-black-shade-100) mx-auto" />
+      </td>
+    </tr>
+  );
+}
+
+const THEAD = ({ isAllSelected, onToggleAll }) => (
+  <thead>
+    <tr>
+      <th className="w-12 px-3 py-3 border border-(--color-black-shade-100) bg-(--pure-white)">
+        <input
+          type="checkbox"
+          checked={isAllSelected}
+          onChange={onToggleAll}
+          className="h-4 w-4 rounded border-(--color-black-shade-300) cursor-pointer accent-(--color-primary)"
+          aria-label="Select all"
+        />
+      </th>
+      <ColumnHeader>Professional ID</ColumnHeader>
+      <ColumnHeader>Full Name</ColumnHeader>
+      <ColumnHeader>Contact Number</ColumnHeader>
+      <ColumnHeader>City Preference</ColumnHeader>
+      <ColumnHeader withMenu>Last Active</ColumnHeader>
+      <ColumnHeader withMenu>Score</ColumnHeader>
+      <ColumnHeader>Resume</ColumnHeader>
+      <th className="px-4 py-3 text-center text-14 font-semibold text-(--color-black-shade-700) border border-(--color-black-shade-100) bg-(--pure-white) whitespace-nowrap">
+        View
+      </th>
+    </tr>
+  </thead>
+);
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
+export default function MembersTable({ data = [], loading, error, onRetry, onView }) {
+  const [selectedRows, setSelectedRows] = useState(new Set());
+
+  const isAllSelected = data.length > 0 && selectedRows.size === data.length;
+
+  const toggleAll = useCallback(() => {
+    setSelectedRows(
+      isAllSelected ? new Set() : new Set(data.map((_, i) => i))
+    );
+  }, [isAllSelected, data]);
+
+  const toggleRow = useCallback((index) => {
+    setSelectedRows((prev) => {
+      const next = new Set(prev);
+      next.has(index) ? next.delete(index) : next.add(index);
+      return next;
+    });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="w-full overflow-x-auto">
+        <table className="w-full border-collapse">
+          <THEAD isAllSelected={false} onToggleAll={() => {}} />
+          <tbody>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <SkeletonRow key={i} />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-3">
+        <p className="text-14 text-(--color-black-shade-500)">{error}</p>
+        <button
+          onClick={onRetry}
+          className="px-4 py-2 rounded-lg text-14 font-medium text-(--color-primary) border border-(--color-primary) hover:bg-(--color-primary-shade-100) transition-colors cursor-pointer"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (data.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-2">
+        <p className="text-14 font-medium text-(--color-black-shade-600)">
+          No professionals found
+        </p>
+        <p className="text-13 text-(--color-black-shade-400)">
+          Try adjusting your search or filters
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full overflow-x-auto">
+      <table className="w-full border-collapse">
+        <THEAD isAllSelected={isAllSelected} onToggleAll={toggleAll} />
+        <tbody>
+          {data.map((row, idx) => {
+            const resumeName = getResumeName(row.resumeCV);
+            const resumeUrl = getResumeUrl(row.resumeCV);
+            return (
+              <tr
+                key={row.id ?? idx}
+                className="hover:bg-(--color-black-shade-50) transition-colors"
+              >
+                <td className="px-3 py-3.5 border border-(--color-black-shade-100)">
+                  <input
+                    type="checkbox"
+                    checked={selectedRows.has(idx)}
+                    onChange={() => toggleRow(idx)}
+                    className="h-4 w-4 rounded border-(--color-black-shade-300) cursor-pointer accent-(--color-primary)"
+                    aria-label={`Select ${row.fullName}`}
+                  />
+                </td>
+                <td className="px-4 py-3.5 text-14 text-(--color-black-shade-700) border border-(--color-black-shade-100) whitespace-nowrap">
+                  {row.professionalId ?? row.id}
+                </td>
+                <td className="px-4 py-3.5 text-14 text-(--color-black-shade-700) border border-(--color-black-shade-100) whitespace-nowrap">
+                  {row.fullName || row.name || "—"}
+                </td>
+                <td className="px-4 py-3.5 text-14 text-(--color-black-shade-700) border border-(--color-black-shade-100) whitespace-nowrap">
+                  {formatContact(row.countryCode, row.contactNo)}
+                </td>
+                <td className="px-4 py-3.5 text-14 text-(--color-black-shade-600) border border-(--color-black-shade-100) max-w-45">
+                  <span
+                    className="block truncate"
+                    title={formatCities(row.cityPreference)}
+                  >
+                    {formatCities(row.cityPreference)}
+                  </span>
+                </td>
+                <td className="px-4 py-3.5 text-14 text-(--color-black-shade-600) border border-(--color-black-shade-100) whitespace-nowrap">
+                  {formatRelativeTime(row.lastActive)}
+                </td>
+                <td className="px-4 py-3.5 text-14 font-medium text-(--color-black-shade-700) border border-(--color-black-shade-100) whitespace-nowrap">
+                  {row.score ?? "—"}
+                </td>
+                <td className="px-4 py-3.5 border border-(--color-black-shade-100)">
+                  <ResumeChip filename={resumeName} href={resumeUrl} />
+                </td>
+                <td className="px-4 py-3.5 border border-(--color-black-shade-100) text-center">
+                  <button
+                    onClick={() => onView?.(row)}
+                    className="inline-flex items-center justify-center cursor-pointer hover:opacity-70 transition-opacity"
+                    aria-label={`View ${row.fullName}`}
+                  >
+                    <Icon
+                      name="statics/Employee-Dashboard/eye-icon.svg"
+                      width={26}
+                      height={26}
+                      alt="view"
+                    />
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}

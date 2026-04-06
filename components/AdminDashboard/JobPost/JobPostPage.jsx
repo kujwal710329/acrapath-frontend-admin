@@ -1,0 +1,95 @@
+"use client";
+
+import { useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import JobPostTabNav from "./components/JobPostTabNav";
+import TableControls from "@/components/AdminDashboard/Professionals/components/TableControls";
+import CurrentPostTable from "./components/CurrentPostTable";
+import JobPostRequestsTable from "./components/JobPostRequestsTable";
+import AddNewJobPost from "./components/AddNewJobPost";
+import { useJobPosts } from "@/hooks/useJobPosts";
+
+const REQUESTS_TYPE_TABS = new Set(["request", "rejected"]);
+
+export default function JobPostPage() {
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState("currentPost");
+  const [perPage, setPerPage] = useState(20);
+
+  const {
+    rows,
+    pagination,
+    loading,
+    error,
+    search,
+    goToPage,
+    handleSearch,
+    refresh,
+    updateStatus,
+  } = useJobPosts({ tab: activeTab, perPage });
+
+  // Header refresh button
+  useEffect(() => {
+    window.addEventListener("admin-refresh", refresh);
+    return () => window.removeEventListener("admin-refresh", refresh);
+  }, [refresh]);
+
+  const handleTabChange = useCallback((tab) => {
+    setActiveTab(tab);
+  }, []);
+
+  const handleView = useCallback(
+    (row) => router.push(`/admin/job-post/${row.jobId}`),
+    [router]
+  );
+
+  const isRequestsType = REQUESTS_TYPE_TABS.has(activeTab);
+  const isAddNew = activeTab === "addNew";
+
+  return (
+    <div className="flex flex-col">
+      {/* Sticky toolbar */}
+      <div className="sticky top-18 z-20 flex items-center justify-between flex-wrap gap-3 px-6 py-3 bg-(--pure-white) border-b border-(--color-black-shade-100)">
+        <JobPostTabNav activeTab={activeTab} onTabChange={handleTabChange} />
+        {!isAddNew && (
+          <TableControls
+            search={search}
+            onSearch={handleSearch}
+            perPage={perPage}
+            onPerPageChange={setPerPage}
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            hasPrevPage={pagination.hasPrevPage}
+            hasNextPage={pagination.hasNextPage}
+            onPageChange={goToPage}
+            onFilterClick={() => {}}
+          />
+        )}
+      </div>
+
+      {/* Table */}
+      <div>
+        {isAddNew ? (
+          <AddNewJobPost onBack={() => handleTabChange("currentPost")} />
+        ) : isRequestsType ? (
+          <JobPostRequestsTable
+            data={rows}
+            loading={loading}
+            error={error}
+            onRetry={refresh}
+            onStatusChange={updateStatus}
+            onView={handleView}
+          />
+        ) : (
+          <CurrentPostTable
+            data={rows}
+            loading={loading}
+            error={error}
+            onRetry={refresh}
+            onView={handleView}
+          />
+        )}
+      </div>
+    </div>
+  );
+}

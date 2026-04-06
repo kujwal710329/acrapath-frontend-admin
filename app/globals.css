@@ -1,0 +1,546 @@
+@import "tailwindcss";
+
+
+html {
+  font-size: 100%; /* 1rem = browser default, usually 16px */
+}
+:root {
+  /* Primary Colors */
+  --color-bg-primary: #F5F5F5;
+  --color-primary: #147ff6;
+  /* --Primary-Color: #147FF6;  */
+  --color-primary-shade-1000: #043062;
+  --color-primary-shade-900: #05448A;
+  --color-primary-shade-800: #0757B1;
+  --color-primary-shade-700: #086BD8;
+  --color-primary-shade-500: #3B94F7;
+  --color-primary-shade-400: #62A9F9;
+  --color-primary-shade-300: #89BFFA;
+  --color-primary-shade-200: #B0D4FC;
+  --color-primary-shade-100: #D8EAFD;
+  /* --color-dot: #264486; */
+  
+  /* Secondary Colors */
+  --color-secondary: #00CC83;
+  --color-secondary-shade-1000: #007A4F;  
+  --color-secondary-shade-900: #008F5C;  
+  --color-secondary-shade-800: #00A369;   
+  --color-secondary-shade-700: #00B876;
+  --color-secondary-shade-500: #00EB97;   /* hover color */  
+  --color-secondary-shade-400: #1FFAAF;   
+  --color-secondary-shade-300: #66FFC8;
+  --color-secondary-shade-200: #ADFFE2;
+  --color-secondary-shade-100: #E0FFF4;
+
+  /* Black Shades */
+  --color-black: #000000;
+  --color-black-shade-900: #1A1A1A;
+  --color-black-shade-800: #333333;
+  --color-black-shade-700: #4D4D4D;
+  --color-black-shade-600: #666666;
+  --color-black-shade-500: #808080;
+  --color-black-shade-400: #999999;
+  --color-black-shade-300: #B3B3B3;
+  --color-black-shade-200: #CCCCCC;
+  --color-black-shade-100: #E6E6E6;
+  --color-black-shade-50: #F2F2F2;
+
+  /* White Shades */
+  --pure-white: #FFFFFF;
+  --white-secondary: #F7F7F7;
+
+  --color-red: #EB001B;
+  --color-star: #E9AD03;
+
+  /* Navbar Colors */
+  --navbar-bg: var(--pure-white);
+  --navbar-text: var(--color-black);
+  --navbar-logo-bg: var(--color-black-shade-200);
+  --navbar-button-bg: var(--pure-white); /* White background */
+  --navbar-button-text: #147FF6; /* Blue text */
+  --navbar-button-border: var(--color-primary-shade-200); /* Light blue border */
+  --navbar-hover: var(--color-black-shade-700);
+  --navbar-border: var(--color-black-shade-200);
+  --navbar-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1);
+
+  /* Navbar Spacing */
+  --navbar-nav-gap: 2.125rem; /* Gap between logo and first nav item */
+  --navbar-nav-items-gap: 1rem; /* Gap between navigation items */
+
+  /* Navbar Border Radius */
+  --navbar-radius-sm: 0.25rem;
+  --navbar-radius-md: 0.5rem;
+
+  /* Navbar Z-Index */
+  --navbar-z-index: 50;
+  --navbar-dropdown-z-index: 50;
+
+  /* Shadow Variables */
+  --shadow-black: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+
+  /* Footer Colors */
+  --footer-bg: #0757B1; /* Primary Shade 800 */
+  --footer-text: var(--pure-white);
+  --footer-border: rgba(255, 255, 255, 0.2);
+
+  /* Fonts */
+  --font-body: var(--font-poppins);
+  --font-heading: var(--font-poppins);
+  --font-size-16: 1rem;
+  --font-size-body: 1rem; /* 16px */
+  
+  /* Responsive Font Sizes - Mobile: 12px, Desktop: 16px */
+  --font-size-mobile: 0.75rem; /* 12px - Mobile */
+  --font-size-desktop: 1rem; /* 16px - Desktop */
+  --font-size-base: var(--font-size-mobile); /* Default mobile */
+  
+  --navbar-font-size: var(--font-size-base);
+  --navbar-logo-font-size: 1.5rem; /* Logo text size */
+  --font-size-section-heading: 2rem; /* 32px */
+  --font-size-subheading: 1.25rem; /* 20px */
+  --font-size-display-heading: 3rem; /* 48px */
+  --font-size-display-body: 1.5rem; /* 24px */
+}
+
+/* Responsive font size - Desktop: 16px */
+@media (min-width: 768px) {
+  :root {
+    --font-size-base: var(--font-size-desktop);
+  }
+}
+
+
+/*
+  Section spacing scale:
+  - Between sections: ~64px  → use .section-padding or py-14 md:py-16
+  - Between elements: 36px   → gap-9
+*/
+
+/* Consistent vertical padding for every page section */
+.section-padding {
+  padding-top: 3.5rem;    /* 56px */
+  padding-bottom: 3.5rem;
+}
+
+@media (min-width: 768px) {
+  .section-padding {
+    padding-top: 4rem;    /* 64px */
+    padding-bottom: 4rem;
+  }
+}
+
+
+
+.between-elements-padding > :not(:last-child) {
+  padding-bottom: 1.5rem; /* 24px */
+}
+.between-elements-right-padding > :not(:last-child) {
+  padding-right: 1.5rem; /* 24px */
+}
+
+.page-margin {
+  margin-top: 0rem;    /* 0px */
+  margin-bottom: 0rem; /* 0px */
+}
+
+.font-body {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);  /* 16px */
+  color: var(--color-black);
+}
+.font-display-heading {
+  font-weight: 700; /* Bold */
+  text-align: center;
+  font-family: var(--font-heading);
+  font-size: var(--font-size-display-heading);
+  color: var(--color-black);
+}
+.font-section-heading {
+  font-weight: 600; /* Semi-bold */
+  text-align: center;
+  font-family: var(--font-heading);
+  font-size: var(--font-size-section-heading);
+  color: var(--color-black);
+}
+.font-sub-heading {
+  font-weight: 500; /* Medium */
+  font-family: var(--font-body);
+  font-size: var(--font-size-subheading);
+  color: var(--color-black);
+}
+
+.h2-primary {
+  color: var(--color-black-shade-800);
+  font-size: 1.5rem; /* 24px - mobile */
+  text-align: center;
+  font-weight: 600; /* semi-bold */
+}
+
+@media (min-width: 768px) {
+  .h2-primary {
+    font-size: 2rem; /* 32px - desktop */
+  }
+}
+
+.icon-large {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 0.5rem; /* 8px */
+  background: var(--color-black-shade-200);
+}
+.icon-medium {
+  width: 2.25rem; /* 36px */
+  height: 2.25rem; /* 36px */
+  border-radius: 0.5rem; /* 8px */
+}
+
+@layer base {
+  html {
+    font-family: var(--font-poppins), system-ui, sans-serif !important;
+  }
+  
+  body {
+    font-family: var(--font-poppins), system-ui, sans-serif !important;
+  }
+  
+  * {
+    font-family: var(--font-poppins), system-ui, sans-serif !important;
+  }
+  
+  button, input, textarea, select {
+    font-family: var(--font-poppins), system-ui, sans-serif !important;
+  }
+}
+
+
+/* Mobile: Default (no prefix) - applies to all screen sizes
+   Tablet: md: (min-width: 768px)
+   Desktop: lg: (min-width: 1024px)
+   Large Desktop: xl: (min-width: 1280px)
+*/
+
+
+/* Responsive Grid - 3 columns on desktop, 1 on mobile */
+.responsive-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .responsive-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+}
+
+/* Responsive Flex - Row on desktop, column on mobile */
+.responsive-flex {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .responsive-flex {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+/* Responsive Text Alignment - Center on mobile, left on desktop */
+.responsive-text {
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .responsive-text {
+    text-align: left;
+  }
+}
+
+/* Responsive Spacing - Smaller on mobile, larger on desktop */
+.responsive-spacing {
+  padding: 1rem 0;
+}
+
+@media (min-width: 768px) {
+  .responsive-spacing {
+    padding: 2rem 0;
+  }
+}
+
+@layer utilities {
+  .margin-medium {
+    margin: 1rem; /* 16px */
+  }
+  .margin-large-top {
+    margin-top: 5rem; /* 80px */
+  }
+  .margin-large {
+    margin-top: 3rem; /* 48px */
+  }
+  
+  /* Text Size Utility Classes */
+  .text-10 {
+    font-size: 10px;
+  }
+  .text-12 {
+    font-size: 12px;
+  }
+  .text-14 {
+    font-size: 14px;
+  }
+  .text-16 {
+    font-size: 16px;
+  }
+  .text-18 {
+    font-size: 18px;
+  }
+  .text-20 {
+    font-size: 20px;
+  }
+  .text-24 {
+    font-size: 24px;
+  }
+  .text-28 {
+    font-size: 28px;
+  }
+  .text-32 {
+    font-size: 32px;
+  }
+}
+
+.corner-radius {
+  border-radius: 0.5rem; /* 8px */
+}
+
+
+
+/* Navbar CSS Classes - Reusable styles following DRY principles */
+.navbar-link {
+  color: var(--navbar-text);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--navbar-font-size);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.navbar-link-with-icon {
+  display: flex;
+  align-items: center;
+}
+
+.navbar-text {
+  color: var(--navbar-text);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--navbar-font-size);
+  white-space: nowrap;
+}
+
+.navbar-button {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--navbar-font-size);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.navbar-button-primary {
+  background-color: var(--navbar-button-bg);
+  color: var(--navbar-button-text);
+  border: 1px solid var(--navbar-button-border);
+}
+
+.navbar-button-secondary {
+  background-color: var(--navbar-bg);
+  color: var(--navbar-button-text);
+  border: 1px solid var(--navbar-button-text);
+}
+
+.navbar-button-filled {
+  background-color: var(--navbar-button-text);
+  color: var(--navbar-bg);
+}
+
+.navbar-mobile-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--navbar-radius-md);
+  color: var(--navbar-text);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--navbar-font-size);
+  text-decoration: none;
+}
+
+.navbar-mobile-button {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--navbar-radius-md);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--navbar-font-size);
+  text-align: center;
+  text-decoration: none;
+}
+
+/* Footer CSS Classes - Reusable styles following DRY principles */
+.footer-link {
+  color: var(--footer-text);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  text-decoration: none;
+  opacity: 0.9;
+  transition: opacity 0.2s;
+}
+
+.footer-link:hover {
+  opacity: 1;
+}
+
+.footer-heading {
+  color: var(--footer-text);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .footer-heading {
+    font-size: 1.125rem; /* 18px - Desktop */
+  }
+}
+
+.footer-text {
+  color: var(--footer-text);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  opacity: 0.8;
+}
+
+@media (min-width: 768px) {
+  .footer-text {
+    font-size: 0.875rem; /* 14px - Desktop */
+  }
+}
+
+.footer-divider {
+  border-top: 1px solid var(--footer-border);
+  margin-top: 3rem;
+  margin-bottom: 3rem;
+}
+
+/* Scrollbar hide utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+
+/* Reusable container — mirrors the navbar inner-div behaviour exactly:
+   px-4 (mobile) → px-6 (sm) → px-8 (md) → xl: 80% centred, zero padding.
+   This keeps every section edge-aligned with the navbar logo / Log-In button. */
+.container-80 {
+  width: 100%;
+  padding-left: 1rem;   /* px-4 */
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-80 {
+    padding-left: 1.5rem;  /* px-6 */
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .container-80 {
+    padding-left: 2rem;   /* px-8 */
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container-80 {
+    width: 80%;
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Infinite scroll animation for company logos */
+@keyframes infinite-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-infinite-scroll {
+  animation: infinite-scroll 30s linear infinite;
+  display: flex;
+  width: fit-content;
+}
+
+@media (max-width: 640px) {
+  .custom-hidden {
+    display: none;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* 08/01/2026 - Added CSS Classes for Why Choose Credepath Section */
+/* Feature Text Size Classes - Reusable text styles for feature sections */
+.feature-heading {
+  font-weight: 500; /* font-semibold */
+  font-size: 1.125rem; /* 20px - text-xl */
+  margin-bottom: 0.5rem; /* 8px - mb-2 */
+  color: var( --color-black);
+}
+
+@media (min-width: 768px) {
+  .feature-heading {
+    font-weight: 500;
+    font-size: 1.25rem; /* font-medium */
+  }
+}
+
+.feature-description {
+  font-size: 0.875rem; /* 14px - text-sm */
+  color: var(--color-black-shade-700);
+}
+
+@media (min-width: 768px) {
+  .feature-description {
+    font-size: 1rem; /* 16px - text-base */
+    color: var(--color-black);
+  }
+}
