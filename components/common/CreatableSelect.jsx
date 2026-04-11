@@ -27,6 +27,12 @@ export default function CreatableSelect({
   const hasFocused = useRef(false);
   const hasBlurred = useRef(false);
   const didSelectRef = useRef(false);
+  // Refs so the stale useEffect closure can read current values
+  const queryRef = useRef("");
+  const valueRef = useRef(value);
+  const inputWasModifiedRef = useRef(false);
+
+  useEffect(() => { valueRef.current = value; }, [value]);
 
   const filtered =
     open && showAllOnOpen && !query
@@ -59,13 +65,20 @@ export default function CreatableSelect({
   const selectValue = (val) => {
     didSelectRef.current = true;
     onChange(val);
+    queryRef.current = "";
     setQuery("");
+    inputWasModifiedRef.current = false;
     setOpen(false);
   };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (!ref.current?.contains(e.target)) {
+        // If the user explicitly deleted the text and closed without selecting, clear the parent value
+        if (!didSelectRef.current && inputWasModifiedRef.current && queryRef.current === "" && valueRef.current) {
+          onChange?.("");
+        }
+        inputWasModifiedRef.current = false;
         setOpen(false);
         triggerBlur();
       }
@@ -115,15 +128,40 @@ export default function CreatableSelect({
             hasFocused.current = true;
             hasBlurred.current = false;
             openDropdown();
-            setQuery(showAllOnOpen ? "" : value || "");
+            const initial = showAllOnOpen ? "" : value || "";
+            queryRef.current = initial;
+            setQuery(initial);
           }}
           onChange={(e) => {
             if (isOff) return;
+            queryRef.current = e.target.value;
+            inputWasModifiedRef.current = true;
             setQuery(e.target.value);
             openDropdown();
           }}
-          className={`h-14 w-full rounded-xl border px-5 pr-12 text-[0.9375rem] font-medium text-(--color-black-shade-900) outline-none transition-colors duration-150 placeholder:text-(--color-black-shade-400) ${borderClass}`}
+          className={`h-14 w-full rounded-xl border px-5 ${value && !isOff ? "pr-16" : "pr-12"} text-[0.9375rem] font-medium text-(--color-black-shade-900) outline-none transition-colors duration-150 placeholder:text-(--color-black-shade-400) ${borderClass}`}
         />
+
+        {/* Clear button — shown when a value is selected */}
+        {value && !isOff && (
+          <button
+            type="button"
+            aria-label="Clear selection"
+            className="absolute right-9 top-1/2 -translate-y-1/2 flex items-center justify-center text-(--color-black-shade-400) cursor-pointer hover:text-(--color-black-shade-700)"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              onChange?.("");
+              queryRef.current = "";
+              setQuery("");
+              inputWasModifiedRef.current = false;
+            }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        )}
 
         {/* Animated arrow */}
         <span
@@ -195,7 +233,7 @@ export default function CreatableSelect({
                   width={14}
                   height={14}
                 />
-                Add &ldquo;{query}&rdquo;
+                Add "{query}"
               </li>
             )}
           </ul>

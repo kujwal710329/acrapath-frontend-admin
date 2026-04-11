@@ -78,7 +78,7 @@ export default function JobPostStatusDropdown({
           disabled ? undefined : open ? setOpen(false) : openMenu()
         }
         disabled={disabled}
-        className={`flex items-center gap-1.5 text-14 font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${STATUS_COLORS[current?.value] ?? "text-(--color-black-shade-700)"}`}
+        className={`flex items-center gap-1.5 text-xs  font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${STATUS_COLORS[current?.value] ?? "text-(--color-black-shade-700)"}`}
       >
         <span>{current?.label}</span>
         <svg
@@ -110,7 +110,7 @@ export default function JobPostStatusDropdown({
               <button
                 key={opt.value}
                 onClick={() => handleSelect(opt.value)}
-                className={`w-full text-left px-3 py-2 text-14 hover:bg-(--color-black-shade-50) transition-colors cursor-pointer ${STATUS_COLORS[opt.value] ?? ""} ${opt.value === value ? "font-semibold" : "font-medium"}`}
+                className={`w-full text-left px-3 py-2 text-xs hover:bg-(--color-black-shade-50) transition-colors cursor-pointer ${STATUS_COLORS[opt.value] ?? ""} ${opt.value === value ? "font-semibold" : "font-medium"}`}
               >
                 {opt.label}
               </button>

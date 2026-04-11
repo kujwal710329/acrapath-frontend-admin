@@ -6,7 +6,13 @@ import Label from "@/components/common/Label";
 import Heading from "@/components/common/Heading";
 import Text from "@/components/common/Text";
 import CreatableSelect from "@/components/common/CreatableSelect";
+import RichTextEditor from "@/components/common/RichTextEditor";
 import { SelectPill } from "../pills";
+
+/** Strip HTML tags to get plain-text character count for validation. */
+function stripHtml(html) {
+  return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
+}
 
 // ── Static options ────────────────────────────────────────────────────────────
 const INTERVIEW_LOCATION_OPTIONS = [
@@ -49,7 +55,7 @@ function SectionDivider() {
 // ── Validation ────────────────────────────────────────────────────────────────
 function validate(form) {
   const errs = {};
-  if (form.jobDescription.trim().length < 20)
+  if (stripHtml(form.jobDescription).length < 20)
     errs.jobDescription =
       "Please provide at least 20 characters for the job description.";
   if (!form.interviewLocationType)
@@ -98,18 +104,12 @@ export default function JobPostStepThreeForm({ defaultValues = {}, onNext, onBac
 
       <div className="mb-2">
         <Label required>Job Description</Label>
-        <textarea
+        <RichTextEditor
           value={form.jobDescription}
-          onChange={(e) => set("jobDescription")(e.target.value)}
+          onChange={set("jobDescription")}
           onBlur={touch("jobDescription")}
           placeholder="Describe the role, key responsibilities, and what makes this opportunity exciting…"
-          rows={8}
-          className={`w-full resize-none rounded-xl border px-5 py-4 text-[0.9375rem] font-medium text-(--color-black-shade-900) outline-none transition-colors placeholder:text-(--color-black-shade-400)
-            ${
-              err("jobDescription")
-                ? "border-(--color-red)"
-                : "border-(--color-black-shade-300) focus:border-(--color-primary)"
-            }`}
+          hasError={!!err("jobDescription")}
         />
         <div className="mt-1 flex items-center justify-between">
           {err("jobDescription") ? (
@@ -118,7 +118,7 @@ export default function JobPostStepThreeForm({ defaultValues = {}, onNext, onBac
             <span />
           )}
           <p className="ml-auto text-xs text-(--color-black-shade-400)">
-            {form.jobDescription.length} characters
+            {stripHtml(form.jobDescription).length} characters
           </p>
         </div>
       </div>

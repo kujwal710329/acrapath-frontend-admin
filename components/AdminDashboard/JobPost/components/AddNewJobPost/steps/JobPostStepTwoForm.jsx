@@ -8,6 +8,8 @@ import Text from "@/components/common/Text";
 import Icon from "@/components/common/Icon";
 import CreatableSelect from "@/components/common/CreatableSelect";
 import { SelectPill, TogglePill } from "../pills";
+import { TECH_SKILLS_BY_CATEGORY, STRATEGIC_SKILLS_BY_CATEGORY } from "@/constants/jobPost";
+import { filterSelectedOptions } from "@/utilities/filterSelectedOptions";
 
 // ── Static options ────────────────────────────────────────────────────────────
 const EDUCATION_OPTIONS = ["Graduate", "Post Graduate", "Diploma", "12th Pass"];
@@ -34,32 +36,7 @@ const ADDITIONAL_REQ_OPTIONS = [
 
 const GENDER_OPTIONS = ["Open to all", "Male", "Female"];
 
-const TECH_SKILLS = [
-  "Google Ads",
-  "Meta Ads",
-  "LinkedIn Ads",
-  "Conversion Tracking",
-  "Google Analytics",
-  "A/B Testing",
-  "Excel / Google Sheet",
-  "Funnel Optimisation",
-  "Copywriting",
-  "SEO",
-  "Email Marketing",
-  "Content Marketing",
-];
 
-const STRATEGIC_SKILLS = [
-  "Consumer Psychology",
-  "Creative Thinking",
-  "Growth Strategy",
-  "Campaign Management",
-  "Communication",
-  "Team Management",
-  "Problem Solving",
-  "Leadership",
-  "Analytical Thinking",
-];
 
 // ── Shared input style helpers ────────────────────────────────────────────────
 const inputBase =
@@ -126,7 +103,9 @@ function validate(form) {
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
-export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack }) {
+export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack, jobCategory = "" }) {
+  const techSkillOptions = TECH_SKILLS_BY_CATEGORY[jobCategory] ?? [];
+  const strategicSkillOptions = STRATEGIC_SKILLS_BY_CATEGORY[jobCategory] ?? [];
   const [form, setForm] = useState({
     minimumEducation: "",
     educationStream: "",
@@ -362,7 +341,7 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack 
         )}
         <CreatableSelect
           placeholder="Type or select technical skill"
-          options={TECH_SKILLS}
+          options={filterSelectedOptions(techSkillOptions, form.technicalSkills)}
           allowCreate={true}
           value=""
           error={err("technicalSkills")}
@@ -402,7 +381,7 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack 
         )}
         <CreatableSelect
           placeholder="Type or select strategic skill"
-          options={STRATEGIC_SKILLS}
+          options={filterSelectedOptions(strategicSkillOptions, form.strategicSkills)}
           allowCreate={true}
           value=""
           error={err("strategicSkills")}
