@@ -9,6 +9,7 @@ import JobPostStepThreeForm from "./steps/JobPostStepThreeForm";
 import JobPostStepFourForm from "./steps/JobPostStepFourForm";
 import { apiRequest } from "@/utilities/api";
 import { showPromise } from "@/utilities/toast";
+import { JOB_CATEGORY_API_MAP } from "@/constants/jobPost";
 
 const KEYS = {
   step1: "adminJobPost_step1",
@@ -89,6 +90,7 @@ function buildPayload(step1, step2, step3) {
   return {
     // Identity
     jobTitle: step1.jobTitle,
+    jobCategory: JOB_CATEGORY_API_MAP[step1.jobCategory],
     companyName: step1.companyName,
     companyDescription: step1.companyDescription,
 
@@ -204,6 +206,7 @@ export default function AddNewJobPost({ onBack }) {
           {step === 2 && (
             <JobPostStepTwoForm
               defaultValues={stepTwoData}
+              jobCategory={stepOneData.jobCategory}
               onBack={() => setStep(1)}
               onNext={(data) => {
                 localStorage.setItem(KEYS.step2, JSON.stringify(data));

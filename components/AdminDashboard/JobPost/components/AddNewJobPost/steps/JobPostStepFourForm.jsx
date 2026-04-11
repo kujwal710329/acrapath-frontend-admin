@@ -180,16 +180,17 @@ export default function JobPostStepFourForm({
             <span className="w-full shrink-0 text-[0.9375rem] font-medium text-(--color-black-shade-400) sm:w-52">
               Company Description
             </span>
-            <p className="flex-1 whitespace-pre-wrap text-[0.9375rem] font-medium leading-relaxed text-black">
-              {stepOneData.companyDescription}
-            </p>
+            <div
+              className="rte-content flex-1 text-[0.9375rem] font-medium text-black"
+              dangerouslySetInnerHTML={{ __html: stepOneData.companyDescription }}
+            />
           </div>
         )}
         <ReviewRow
           label="Job Title / Designation"
           value={stepOneData.jobTitle}
         />
-        <ReviewRow label="Job Role / Category" value={stepOneData.jobRole} />
+        <ReviewRow label="Job Role / Category" value={stepOneData.jobCategory} />
         <ReviewRow label="Job Type" value={stepOneData.jobType} />
         <ReviewRow
           label="Night Shift"
@@ -288,9 +289,10 @@ export default function JobPostStepFourForm({
             <span className="w-full shrink-0 text-[0.9375rem] font-medium text-(--color-black-shade-400) sm:w-52">
               Job Description
             </span>
-            <p className="flex-1 whitespace-pre-wrap text-[0.9375rem] font-medium leading-relaxed text-black">
-              {stepThreeData.jobDescription}
-            </p>
+            <div
+              className="rte-content flex-1 text-[0.9375rem] font-medium text-black"
+              dangerouslySetInnerHTML={{ __html: stepThreeData.jobDescription }}
+            />
           </div>
         )}
       </ReviewSection>

@@ -9,6 +9,14 @@ import Icon from "@/components/common/Icon";
 import { SelectPill } from "../pills";
 import CreatableSelect from "@/components/common/CreatableSelect";
 import WorkingLocationPicker from "@/components/location/WorkingLocationPicker";
+import RichTextEditor from "@/components/common/RichTextEditor";
+import { JOB_CATEGORY_OPTIONS } from "@/constants/jobPost";
+import { filterSelectedOptions } from "@/utilities/filterSelectedOptions";
+
+/** Strip HTML tags to get plain-text length for validation. */
+function stripHtml(html) {
+  return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
+}
 
 // ── Static options ────────────────────────────────────────────────────────────
 const JOB_TYPE_OPTIONS = ["Full-time", "Freelance", "Part-time", "Contract"];
@@ -39,11 +47,11 @@ const inputReadOnly =
 function SectionHeader({ title, subtitle }) {
   return (
     <div className="mb-6">
-      <Heading as="h2" className="text-lg">
+      <Heading as="h2" className="text-md">
         {title}
       </Heading>
       {subtitle && (
-        <Text className="mt-1 text-sm font-medium">{subtitle}</Text>
+        <Text className="mt-1 text-xs sm:text-sm font-medium">{subtitle}</Text>
       )}
     </div>
   );
@@ -78,7 +86,7 @@ function validate(form) {
   const errs = {};
   if (!form.companyName.trim()) errs.companyName = "Company name is required.";
   if (!form.jobTitle.trim()) errs.jobTitle = "Job title is required.";
-  if (!form.jobRole.trim()) errs.jobRole = "Job role / category is required.";
+  if (!form.jobCategory) errs.jobCategory = "Job category is required.";
   if (!form.jobType) errs.jobType = "Please select a job type.";
   if (!form.workType) errs.workType = "Please select a work type.";
   if (!form.workingLocation.address?.trim())
@@ -88,7 +96,7 @@ function validate(form) {
   if (!form.pincode.trim()) errs.pincode = "Pincode is required.";
   else if (!/^[0-9]{6}$/.test(form.pincode.trim()))
     errs.pincode = "Enter a valid 6-digit pincode.";
-  const descLen = form.companyDescription.trim().length;
+  const descLen = stripHtml(form.companyDescription).length;
   if (!descLen)
     errs.companyDescription = "Company description is required.";
   else if (descLen < 50)
@@ -115,7 +123,7 @@ export default function JobPostStepOneForm({
   const [form, setForm] = useState({
     companyName: "",
     jobTitle: "",
-    jobRole: "",
+    jobCategory: "",
     jobType: "",
     isNightShift: false,
     workType: "",
@@ -206,17 +214,12 @@ export default function JobPostStepOneForm({
       {/* Company Description */}
       <div className="mb-5">
         <FieldLabel required>Company Description</FieldLabel>
-        <textarea
+        <RichTextEditor
           value={form.companyDescription}
-          onChange={(e) => setForm({ ...form, companyDescription: e.target.value })}
+          onChange={set("companyDescription")}
           onBlur={touch("companyDescription")}
           placeholder="Describe your company — culture, mission, and what makes it a great place to work (min 50 characters)…"
-          rows={4}
-          className={`w-full resize-none rounded-xl border px-5 py-4 text-[0.9375rem] font-medium text-(--color-black-shade-900) outline-none transition-colors placeholder:text-(--color-black-shade-400) ${
-            err("companyDescription")
-              ? "border-(--color-red)"
-              : "border-(--color-black-shade-300) focus:border-(--color-primary)"
-          }`}
+          hasError={!!err("companyDescription")}
         />
         <div className="mt-1 flex items-center justify-between">
           {err("companyDescription") ? (
@@ -225,7 +228,7 @@ export default function JobPostStepOneForm({
             <span />
           )}
           <p className="ml-auto text-xs text-(--color-black-shade-400)">
-            {form.companyDescription.length} characters
+            {stripHtml(form.companyDescription).length} characters
           </p>
         </div>
       </div>
@@ -248,21 +251,25 @@ export default function JobPostStepOneForm({
         )}
       </div>
 
-      {/* Job Role */}
+      {/* Job Category */}
       <div className="mb-5">
-        <FieldLabel required info>
-          Job Role / Category
-        </FieldLabel>
-        <input
-          type="text"
-          value={form.jobRole}
-          onChange={handle("jobRole")}
-          onBlur={touch("jobRole")}
-          placeholder="Eg. Performance Marketing"
-          className={`${inputBase} ${err("jobRole") ? inputError : inputNormal}`}
+        <Label required>Job Role / Category</Label>
+        <CreatableSelect
+          placeholder="Select a category"
+          options={JOB_CATEGORY_OPTIONS}
+          allowCreate={false}
+          showAllOnOpen
+          value={form.jobCategory}
+          error={err("jobCategory")}
+          onChange={(val) => {
+            set("jobCategory")(val);
+            touch("jobCategory")();
+          }}
+          onBlur={() => touch("jobCategory")()}
+          className="mb-0!"
         />
-        {err("jobRole") && (
-          <p className="mt-1.5 text-xs text-(--color-red)">{err("jobRole")}</p>
+        {err("jobCategory") && (
+          <p className="mt-1.5 text-xs text-(--color-red)">{err("jobCategory")}</p>
         )}
       </div>
 
@@ -551,7 +558,7 @@ export default function JobPostStepOneForm({
         )}
         <CreatableSelect
           placeholder="Search or add perks..."
-          options={PERKS_OPTIONS}
+          options={filterSelectedOptions(PERKS_OPTIONS, form.perks)}
           allowCreate={false}
           value=""
           onChange={(value) => {
