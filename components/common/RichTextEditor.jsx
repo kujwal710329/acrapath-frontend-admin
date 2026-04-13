@@ -4,22 +4,56 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Placeholder from "@tiptap/extension-placeholder";
+import {
+  MdFormatBold,
+  MdFormatItalic,
+  MdFormatUnderlined,
+  MdFormatListBulleted,
+  MdFormatListNumbered,
+  MdFormatClear,
+} from "react-icons/md";
 
+// ── Toolbar button ────────────────────────────────────────────────────────────
 function ToolbarButton({ onClick, active, title, children }) {
   return (
     <button
       type="button"
       title={title}
       onMouseDown={(e) => {
-        e.preventDefault(); // keeps editor focus
+        e.preventDefault();
         onClick();
       }}
-      className={`min-w-[2rem] rounded px-2 py-1 text-sm font-semibold transition-colors
+      className={`
+        flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-base transition-all duration-100
         ${
           active
-            ? "bg-(--color-primary) text-white"
-            : "text-(--color-black-shade-700) hover:bg-(--color-black-shade-100)"
-        }`}
+            ? "bg-(--color-primary) text-white shadow-sm"
+            : "text-(--color-black-shade-500) hover:bg-(--color-black-shade-100) hover:text-(--color-black-shade-900)"
+        }
+      `}
+    >
+      {children}
+    </button>
+  );
+}
+
+function ToolbarHeadingButton({ onClick, active, title, children }) {
+  return (
+    <button
+      type="button"
+      title={title}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        onClick();
+      }}
+      className={`
+        flex h-7 cursor-pointer items-center justify-center rounded-md px-2 text-[11px] font-bold tracking-wide transition-all duration-100
+        ${
+          active
+            ? "bg-(--color-primary) text-white shadow-sm"
+            : "text-(--color-black-shade-500) hover:bg-(--color-black-shade-100) hover:text-(--color-black-shade-900)"
+        }
+      `}
     >
       {children}
     </button>
@@ -27,15 +61,17 @@ function ToolbarButton({ onClick, active, title, children }) {
 }
 
 function ToolbarDivider() {
-  return <div className="mx-1 h-5 w-px bg-(--color-black-shade-200)" />;
+  return <div className="mx-0.5 h-4 w-px shrink-0 bg-(--color-black-shade-200)" />;
 }
 
+// ── Main component ────────────────────────────────────────────────────────────
 export default function RichTextEditor({
   value,
   onChange,
   onBlur,
   placeholder,
   hasError,
+  minHeight = 200,
 }) {
   const editor = useEditor({
     immediatelyRender: false,
@@ -55,7 +91,8 @@ export default function RichTextEditor({
     },
     editorProps: {
       attributes: {
-        class: "rte-content min-h-[220px] px-5 py-4 outline-none",
+        class: `rte-content px-4 py-3.5 outline-none`,
+        style: `min-height: ${minHeight}px`,
       },
     },
   });
@@ -64,69 +101,70 @@ export default function RichTextEditor({
 
   return (
     <div
-      className={`overflow-hidden rounded-xl border transition-colors
+      className={`
+        group overflow-hidden rounded-xl border bg-white transition-all duration-150
         ${
           hasError
-            ? "border-(--color-red)"
-            : "border-(--color-black-shade-300) focus-within:border-(--color-primary)"
-        }`}
+            ? "border-(--color-red) shadow-[0_0_0_3px_color-mix(in_srgb,var(--color-red)_10%,transparent)]"
+            : "border-(--color-black-shade-200) focus-within:border-(--color-primary) focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--color-primary)_10%,transparent)]"
+        }
+      `}
     >
-      {/* ── Toolbar ───────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-0.5 border-b border-(--color-black-shade-100) bg-(--color-black-shade-50) px-2 py-1.5">
+      {/* ── Toolbar ─────────────────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center gap-0.5 border-b border-(--color-black-shade-100) bg-(--color-black-shade-50) px-2.5 py-2">
+        {/* Text formatting */}
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           active={editor.isActive("bold")}
-          title="Bold"
+          title="Bold (⌘B)"
         >
-          <strong>B</strong>
+          <MdFormatBold />
         </ToolbarButton>
 
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleItalic().run()}
           active={editor.isActive("italic")}
-          title="Italic"
+          title="Italic (⌘I)"
         >
-          <em>I</em>
+          <MdFormatItalic />
         </ToolbarButton>
 
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleUnderline().run()}
           active={editor.isActive("underline")}
-          title="Underline"
+          title="Underline (⌘U)"
         >
-          <span className="underline">U</span>
+          <MdFormatUnderlined />
         </ToolbarButton>
 
         <ToolbarDivider />
 
-        <ToolbarButton
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 2 }).run()
-          }
+        {/* Headings */}
+        <ToolbarHeadingButton
+          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
           active={editor.isActive("heading", { level: 2 })}
           title="Heading 2"
         >
           H2
-        </ToolbarButton>
+        </ToolbarHeadingButton>
 
-        <ToolbarButton
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 3 }).run()
-          }
+        <ToolbarHeadingButton
+          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
           active={editor.isActive("heading", { level: 3 })}
           title="Heading 3"
         >
           H3
-        </ToolbarButton>
+        </ToolbarHeadingButton>
 
         <ToolbarDivider />
 
+        {/* Lists */}
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           active={editor.isActive("bulletList")}
           title="Bullet list"
         >
-          • List
+          <MdFormatListBulleted />
         </ToolbarButton>
 
         <ToolbarButton
@@ -134,22 +172,22 @@ export default function RichTextEditor({
           active={editor.isActive("orderedList")}
           title="Numbered list"
         >
-          1. List
+          <MdFormatListNumbered />
         </ToolbarButton>
 
         <ToolbarDivider />
 
+        {/* Clear */}
         <ToolbarButton
-          onClick={() =>
-            editor.chain().focus().clearNodes().unsetAllMarks().run()
-          }
-          title="Clear all formatting"
+          onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
+          active={false}
+          title="Clear formatting"
         >
-          Clear
+          <MdFormatClear />
         </ToolbarButton>
       </div>
 
-      {/* ── Editor area ────────────────────────────────────────────────── */}
+      {/* ── Editor area ──────────────────────────────────────────────────── */}
       <EditorContent editor={editor} />
     </div>
   );

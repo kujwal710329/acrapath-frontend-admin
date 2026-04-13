@@ -107,6 +107,7 @@ export const ADMIN_MENU = [
   { name: "Employer", href: "/admin/employer" },
   { name: "Job Post", href: "/admin/job-post" },
   { name: "Support", href: "/admin/support" },
+  { name: "Metadata", href: "/admin/metadata" },
 ];
 
 // Error Messages

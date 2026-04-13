@@ -8,7 +8,7 @@ import Text from "@/components/common/Text";
 import Icon from "@/components/common/Icon";
 import CreatableSelect from "@/components/common/CreatableSelect";
 import { SelectPill, TogglePill } from "../pills";
-import { TECH_SKILLS_BY_CATEGORY, STRATEGIC_SKILLS_BY_CATEGORY } from "@/constants/jobPost";
+import { TECH_SKILLS_BY_CATEGORY, STRATEGIC_SKILLS_BY_CATEGORY, FIELDS_OF_STUDY } from "@/constants/jobPost";
 import { filterSelectedOptions } from "@/utilities/filterSelectedOptions";
 
 // ── Static options ────────────────────────────────────────────────────────────
@@ -35,10 +35,13 @@ const ADDITIONAL_REQ_OPTIONS = [
 ];
 
 const GENDER_OPTIONS = ["Open to all", "Male", "Female"];
+const ASSETS_OPTIONS = ["Bike", "Car", "Laptop", "Smartphone", "Two-Wheeler"];
+const REGIONAL_LANGUAGES_OPTIONS = [
+  "Hindi", "English", "Tamil", "Telugu", "Kannada", "Malayalam",
+  "Marathi", "Bengali", "Gujarati", "Punjabi", "Odia", "Urdu",
+];
 
-
-
-// ── Shared input style helpers ────────────────────────────────────────────────
+// ── Shared input styles ───────────────────────────────────────────────────────
 const inputBase =
   "h-14 w-full rounded-xl border px-5 text-[0.9375rem] font-medium outline-none transition-colors placeholder:text-(--color-black-shade-400)";
 const inputNormal =
@@ -61,12 +64,12 @@ function SectionHeader({ title, subtitle }) {
 }
 
 function SectionDivider() {
-  return <div className="my-8 border-t border-(--color-black-shade-100)" />;
+  return <div className="my-8 border-t border-(--color-black-shade-300)" />;
 }
 
 function FieldLabel({ children, required, info }) {
   return (
-    <div className="mb-2 flex items-center gap-1.5">
+    <div className="mb-4 flex items-center gap-1.5">
       <label className="text-[0.9375rem] font-medium text-(--color-black-shade-900)">
         {children}
         {required && <span className="ml-1 text-(--color-black)">*</span>}
@@ -83,6 +86,36 @@ function FieldLabel({ children, required, info }) {
   );
 }
 
+function SubSectionHeader({ title, onRemove }) {
+  return (
+    <div className="mb-3 flex items-center justify-between">
+      <p className="text-[0.9375rem] font-medium text-(--color-black-shade-900)">
+        {title}
+      </p>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="cursor-pointer text-(--color-black-shade-500) hover:text-black"
+        aria-label={`Remove ${title}`}
+      >
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+  );
+}
 
 // ── Validation ────────────────────────────────────────────────────────────────
 function validate(form) {
@@ -99,6 +132,11 @@ function validate(form) {
     errs.technicalSkills = "Please add at least 4 technical skills.";
   if (form.strategicSkills.length < 4)
     errs.strategicSkills = "Please add at least 4 strategic skills.";
+  // Optional age validation — only when values are present
+  if (form.ageMin !== "" && Number(form.ageMin) < 18)
+    errs.ageMin = "Min age must be at least 18.";
+  if (form.ageMin !== "" && form.ageMax !== "" && Number(form.ageMax) <= Number(form.ageMin))
+    errs.ageMax = "Max age must be greater than min age.";
   return errs;
 }
 
@@ -113,6 +151,10 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
     englishLevel: "",
     additionalRequirements: [],
     gender: "Open to all",
+    ageMin: "",
+    ageMax: "",
+    assets: [],
+    regionalLanguages: [],
     technicalSkills: [],
     strategicSkills: [],
     ...defaultValues,
@@ -123,17 +165,28 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
   const currentErrors = validate(form);
   const isFormValid = Object.keys(currentErrors).length === 0;
 
-  const set = (field) => (val) => setForm({ ...form, [field]: val });
-  const handle = (field) => (e) => setForm({ ...form, [field]: e.target.value });
+  const set = (field) => (val) => setForm((prev) => ({ ...prev, [field]: val }));
   const touch = (field) => () =>
     setTouched((prev) => ({ ...prev, [field]: true }));
   const err = (field) => (touched[field] ? currentErrors[field] : "");
 
   const toggleAdditionalReq = (req) => {
     const cur = form.additionalRequirements;
-    set("additionalRequirements")(
-      cur.includes(req) ? cur.filter((r) => r !== req) : [...cur, req],
-    );
+    const isRemoving = cur.includes(req);
+    const clearedValues = {};
+    if (isRemoving) {
+      if (req === "Gender") clearedValues.gender = "Open to all";
+      if (req === "Age") { clearedValues.ageMin = ""; clearedValues.ageMax = ""; }
+      if (req === "Assets") clearedValues.assets = [];
+      if (req === "Regional Languages") clearedValues.regionalLanguages = [];
+    }
+    setForm((prev) => ({
+      ...prev,
+      additionalRequirements: isRemoving
+        ? cur.filter((r) => r !== req)
+        : [...cur, req],
+      ...clearedValues,
+    }));
   };
 
   const handleSubmit = (e) => {
@@ -144,6 +197,9 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
   };
 
   const hasGender = form.additionalRequirements.includes("Gender");
+  const hasAge = form.additionalRequirements.includes("Age");
+  const hasAssets = form.additionalRequirements.includes("Assets");
+  const hasRegionalLanguages = form.additionalRequirements.includes("Regional Languages");
 
   return (
     <form onSubmit={handleSubmit} noValidate>
@@ -154,8 +210,8 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
       />
 
       {/* Minimum Education */}
-      <div className="mb-5">
-        <Label required>Minimum Education</Label>
+      <div className="mb-6">
+        <Label required className="mb-4!">Minimum Education</Label>
         <div className="flex flex-wrap gap-2">
           {EDUCATION_OPTIONS.map((opt) => (
             <SelectPill
@@ -177,27 +233,28 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
       </div>
 
       {/* Education Stream */}
-      <div className="mb-5">
+      <div className="mb-6">
         <FieldLabel required info>
           Education Stream
         </FieldLabel>
-        <input
-          type="text"
-          value={form.educationStream}
-          onChange={handle("educationStream")}
-          onBlur={touch("educationStream")}
+        <CreatableSelect
           placeholder="Eg. Computer Science"
-          className={`${inputBase} ${err("educationStream") ? inputError : inputNormal}`}
+          options={FIELDS_OF_STUDY}
+          value={form.educationStream}
+          allowCreate={true}
+          showAllOnOpen
+          error={err("educationStream")}
+          onChange={(val) => {
+            set("educationStream")(val);
+            touch("educationStream")();
+          }}
+          onBlur={() => touch("educationStream")()}
+          className="mb-0!"
         />
-        {err("educationStream") && (
-          <p className="mt-1.5 text-xs text-(--color-red)">
-            {err("educationStream")}
-          </p>
-        )}
       </div>
 
       {/* Years of Experience */}
-      <div className="mb-5">
+      <div className="mb-6">
         <FieldLabel required info>
           Total Years of Full-time Experience Required
         </FieldLabel>
@@ -220,8 +277,8 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
       </div>
 
       {/* English Level */}
-      <div className="mb-5">
-        <Label required>English Level Required</Label>
+      <div className="mb-6">
+        <Label required className="mb-4!">English Level Required</Label>
         <div className="flex flex-wrap gap-2">
           {ENGLISH_OPTIONS.map((opt) => (
             <SelectPill
@@ -250,7 +307,7 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
         subtitle="Add additional requirement so that we can help you find the right candidates"
       />
 
-      <div className="mb-5">
+      <div className="mb-6">
         <div className="flex flex-wrap gap-2">
           {ADDITIONAL_REQ_OPTIONS.map((req) => (
             <TogglePill
@@ -265,33 +322,8 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
 
       {/* Gender sub-section */}
       {hasGender && (
-        <div className="mb-5">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="text-[0.9375rem] font-medium text-(--color-black-shade-900)">
-              Gender
-            </p>
-            <button
-              type="button"
-              onClick={() => toggleAdditionalReq("Gender")}
-              className="cursor-pointer text-(--color-black-shade-500) hover:text-(--color-black)"
-              aria-label="Remove gender filter"
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          </div>
+        <div className="mb-6">
+          <SubSectionHeader title="Gender" onRemove={() => toggleAdditionalReq("Gender")} />
           <div className="flex flex-wrap gap-2">
             {GENDER_OPTIONS.map((opt) => (
               <SelectPill
@@ -299,6 +331,105 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
                 label={opt}
                 isSelected={form.gender === opt}
                 onSelect={() => set("gender")(opt)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Age sub-section */}
+      {hasAge && (
+        <div className="mb-6">
+          <SubSectionHeader title="Age" onRemove={() => toggleAdditionalReq("Age")} />
+          <div className="flex items-start gap-3">
+            <div className="flex-1">
+              <p className="mb-2 text-sm font-medium text-(--color-black-shade-700)">
+                Min Age
+              </p>
+              <input
+                type="number"
+                min="18"
+                value={form.ageMin}
+                onChange={(e) => {
+                  set("ageMin")(e.target.value);
+                  touch("ageMin")();
+                }}
+                onBlur={touch("ageMin")}
+                placeholder="e.g. 21"
+                className={`${inputBase} ${err("ageMin") ? inputError : inputNormal}`}
+              />
+              {err("ageMin") && (
+                <p className="mt-1.5 text-xs text-(--color-red)">{err("ageMin")}</p>
+              )}
+            </div>
+            <span className="shrink-0 pt-5 text-sm font-medium text-(--color-black-shade-700)">
+              to
+            </span>
+            <div className="flex-1">
+              <p className="mb-2 text-sm font-medium text-(--color-black-shade-700)">
+                Max Age
+              </p>
+              <input
+                type="number"
+                min="18"
+                value={form.ageMax}
+                onChange={(e) => {
+                  set("ageMax")(e.target.value);
+                  touch("ageMax")();
+                }}
+                onBlur={touch("ageMax")}
+                placeholder="e.g. 45"
+                className={`${inputBase} ${err("ageMax") ? inputError : inputNormal}`}
+              />
+              {err("ageMax") && (
+                <p className="mt-1.5 text-xs text-(--color-red)">{err("ageMax")}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assets sub-section */}
+      {hasAssets && (
+        <div className="mb-6">
+          <SubSectionHeader title="Assets" onRemove={() => toggleAdditionalReq("Assets")} />
+          <div className="flex flex-wrap gap-2">
+            {ASSETS_OPTIONS.map((opt) => (
+              <SelectPill
+                key={opt}
+                label={opt}
+                isSelected={form.assets.includes(opt)}
+                onSelect={() => {
+                  const next = form.assets.includes(opt)
+                    ? form.assets.filter((a) => a !== opt)
+                    : [...form.assets, opt];
+                  set("assets")(next);
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Regional Languages sub-section */}
+      {hasRegionalLanguages && (
+        <div className="mb-6">
+          <SubSectionHeader
+            title="Regional Languages"
+            onRemove={() => toggleAdditionalReq("Regional Languages")}
+          />
+          <div className="flex flex-wrap gap-2">
+            {REGIONAL_LANGUAGES_OPTIONS.map((opt) => (
+              <SelectPill
+                key={opt}
+                label={opt}
+                isSelected={form.regionalLanguages.includes(opt)}
+                onSelect={() => {
+                  const next = form.regionalLanguages.includes(opt)
+                    ? form.regionalLanguages.filter((l) => l !== opt)
+                    : [...form.regionalLanguages, opt];
+                  set("regionalLanguages")(next);
+                }}
               />
             ))}
           </div>
@@ -354,7 +485,7 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
       </div>
 
       {/* Strategic Skills */}
-      <div className="mb-5">
+      <div className="mb-6">
         <FieldLabel required info>
           Strategic Skills
         </FieldLabel>
