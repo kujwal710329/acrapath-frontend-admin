@@ -49,7 +49,7 @@ function SectionHeader({ title, subtitle }) {
 }
 
 function SectionDivider() {
-  return <div className="my-8 border-t border-(--color-black-shade-100)" />;
+  return <div className="my-8 border-t border-(--color-black-shade-300)" />;
 }
 
 // ── Validation ────────────────────────────────────────────────────────────────
@@ -103,7 +103,7 @@ export default function JobPostStepThreeForm({ defaultValues = {}, onNext, onBac
       />
 
       <div className="mb-2">
-        <Label required>Job Description</Label>
+        <Label required className="mb-4!">Job Description</Label>
         <RichTextEditor
           value={form.jobDescription}
           onChange={set("jobDescription")}
@@ -133,7 +133,7 @@ export default function JobPostStepThreeForm({ defaultValues = {}, onNext, onBac
 
       {/* Interview Location Type */}
       <div className="mb-6">
-        <Label required>Interview Location Type</Label>
+        <Label required className="mb-4!">Interview Location Type</Label>
         <div className="flex flex-wrap gap-2">
           {INTERVIEW_LOCATION_OPTIONS.map((opt) => (
             <SelectPill
@@ -155,7 +155,7 @@ export default function JobPostStepThreeForm({ defaultValues = {}, onNext, onBac
       </div>
 
       {/* Interview Process — 5 optional stages */}
-      <div className="mb-5">
+      <div className="mb-6">
         <p className="mb-4 text-[0.9375rem] font-medium text-(--color-black-shade-900)">
           Interview Process (Optional)
         </p>

@@ -1,3 +1,58 @@
+// ── Fields of Study ──────────────────────────────────────────────────────────
+
+export const FIELDS_OF_STUDY = [
+  // Engineering & Technology
+  "Computer Science",
+  "Information Technology",
+  "Electronics & Communication",
+  "Electrical Engineering",
+  "Mechanical Engineering",
+  "Civil Engineering",
+  "Chemical Engineering",
+  "Biotechnology",
+  "Computer Applications",
+  // Sciences
+  "Physics",
+  "Chemistry",
+  "Mathematics",
+  "Statistics",
+  "Biology",
+  // Business & Management
+  "Business Administration",
+  "Commerce",
+  "Finance",
+  "Marketing",
+  "Human Resources",
+  "Operations Management",
+  "Business Analytics",
+  "International Business",
+  // Arts & Humanities
+  "English",
+  "Economics",
+  "Political Science",
+  "Sociology",
+  "Psychology",
+  "History",
+  "Geography",
+  // Law & Medicine
+  "Law",
+  "Medicine",
+  "Dentistry",
+  "Ayurvedic Medicine",
+  "Homeopathic Medicine",
+  "Pharmacy",
+  "Nursing",
+  // Creative & Applied
+  "Architecture",
+  "Fine Arts",
+  "Design",
+  "Fashion Design",
+  "Interior Design",
+  "Hotel Management",
+  // Education
+  "Education",
+];
+
 // ── Job Categories ─────────────────────────────────────────────────────────────
 // Matches backend enum: development | marketing | sales | design | consultancy
 
