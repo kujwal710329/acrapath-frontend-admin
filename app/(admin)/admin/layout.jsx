@@ -1,7 +1,7 @@
 "use client";
 
-import AdminSidebar from "@/components/AdminDashboard/Layout/AdminSidebar";
-import AdminHeader from "@/components/AdminDashboard/Layout/AdminHeader";
+import AdminSidebar from "@/components/admin-dashboard/Layout/AdminSidebar";
+import AdminHeader from "@/components/admin-dashboard/Layout/AdminHeader";
 import { AdminSidebarProvider } from "@/context/AdminSidebarContext";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import ClientOnly from "@/components/common/ClientOnly";

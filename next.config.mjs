@@ -1,6 +1,7 @@
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone",
   images: {
     remotePatterns: [
       {
@@ -8,6 +9,14 @@ const nextConfig = {
         hostname: "*.s3.ap-south-1.amazonaws.com",
       },
     ],
+  },
+  turbopack: {
+    rules: {
+      "*.svg": {
+        loaders: ["@svgr/webpack"],
+        as: "*.js",
+      },
+    },
   },
   webpack(config) {
     config.module.rules.push({

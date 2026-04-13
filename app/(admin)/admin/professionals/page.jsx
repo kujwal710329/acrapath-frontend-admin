@@ -1,4 +1,4 @@
-import ProfessionalsPage from "@/components/AdminDashboard/Professionals";
+import ProfessionalsPage from "@/components/admin-dashboard/Professionals";
 
 export default function Page() {
   return (

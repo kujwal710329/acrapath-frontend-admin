@@ -9,6 +9,14 @@ import Icon from "@/components/common/Icon";
 import { SelectPill } from "../pills";
 import CreatableSelect from "@/components/common/CreatableSelect";
 import WorkingLocationPicker from "@/components/location/WorkingLocationPicker";
+import RichTextEditor from "@/components/common/RichTextEditor";
+import { JOB_CATEGORY_OPTIONS } from "@/constants/jobPost";
+import { filterSelectedOptions } from "@/utilities/filterSelectedOptions";
+
+/** Strip HTML tags to get plain-text length for validation. */
+function stripHtml(html) {
+  return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
+}
 
 // ── Static options ────────────────────────────────────────────────────────────
 const JOB_TYPE_OPTIONS = ["Full-time", "Freelance", "Part-time", "Contract"];
@@ -39,24 +47,24 @@ const inputReadOnly =
 function SectionHeader({ title, subtitle }) {
   return (
     <div className="mb-6">
-      <Heading as="h2" className="text-lg">
+      <Heading as="h2" className="text-md">
         {title}
       </Heading>
       {subtitle && (
-        <Text className="mt-1 text-sm font-medium">{subtitle}</Text>
+        <Text className="mt-1 text-xs sm:text-sm font-medium">{subtitle}</Text>
       )}
     </div>
   );
 }
 
 function SectionDivider() {
-  return <div className="my-8 border-t border-(--color-black-shade-100)" />;
+  return <div className="my-8 border-t border-(--color-black-shade-300)" />;
 }
 
 // Label with optional info icon inline
 function FieldLabel({ children, required, info }) {
   return (
-    <div className="mb-2 flex items-center gap-1.5">
+    <div className="mb-4 flex items-center gap-1.5">
       <label className="text-[0.9375rem] font-medium text-(--color-black-shade-900)">
         {children}
         {required && <span className="ml-1 text-(--color-black)">*</span>}
@@ -78,7 +86,7 @@ function validate(form) {
   const errs = {};
   if (!form.companyName.trim()) errs.companyName = "Company name is required.";
   if (!form.jobTitle.trim()) errs.jobTitle = "Job title is required.";
-  if (!form.jobRole.trim()) errs.jobRole = "Job role / category is required.";
+  if (!form.jobCategory) errs.jobCategory = "Job category is required.";
   if (!form.jobType) errs.jobType = "Please select a job type.";
   if (!form.workType) errs.workType = "Please select a work type.";
   if (!form.workingLocation.address?.trim())
@@ -88,7 +96,7 @@ function validate(form) {
   if (!form.pincode.trim()) errs.pincode = "Pincode is required.";
   else if (!/^[0-9]{6}$/.test(form.pincode.trim()))
     errs.pincode = "Enter a valid 6-digit pincode.";
-  const descLen = form.companyDescription.trim().length;
+  const descLen = stripHtml(form.companyDescription).length;
   if (!descLen)
     errs.companyDescription = "Company description is required.";
   else if (descLen < 50)
@@ -115,7 +123,7 @@ export default function JobPostStepOneForm({
   const [form, setForm] = useState({
     companyName: "",
     jobTitle: "",
-    jobRole: "",
+    jobCategory: "",
     jobType: "",
     isNightShift: false,
     workType: "",
@@ -188,8 +196,8 @@ export default function JobPostStepOneForm({
       />
 
       {/* Company Name */}
-      <div className="mb-5">
-        <Label required>Company Name</Label>
+      <div className="mb-6">
+        <Label required className="mb-4!">Company Name</Label>
         <input
           type="text"
           value={form.companyName}
@@ -204,19 +212,14 @@ export default function JobPostStepOneForm({
       </div>
 
       {/* Company Description */}
-      <div className="mb-5">
+      <div className="mb-6">
         <FieldLabel required>Company Description</FieldLabel>
-        <textarea
+        <RichTextEditor
           value={form.companyDescription}
-          onChange={(e) => setForm({ ...form, companyDescription: e.target.value })}
+          onChange={set("companyDescription")}
           onBlur={touch("companyDescription")}
           placeholder="Describe your company — culture, mission, and what makes it a great place to work (min 50 characters)…"
-          rows={4}
-          className={`w-full resize-none rounded-xl border px-5 py-4 text-[0.9375rem] font-medium text-(--color-black-shade-900) outline-none transition-colors placeholder:text-(--color-black-shade-400) ${
-            err("companyDescription")
-              ? "border-(--color-red)"
-              : "border-(--color-black-shade-300) focus:border-(--color-primary)"
-          }`}
+          hasError={!!err("companyDescription")}
         />
         <div className="mt-1 flex items-center justify-between">
           {err("companyDescription") ? (
@@ -225,13 +228,13 @@ export default function JobPostStepOneForm({
             <span />
           )}
           <p className="ml-auto text-xs text-(--color-black-shade-400)">
-            {form.companyDescription.length} characters
+            {stripHtml(form.companyDescription).length} characters
           </p>
         </div>
       </div>
 
       {/* Job Title */}
-      <div className="mb-5">
+      <div className="mb-6">
         <FieldLabel required info>
           Job Title / Designation
         </FieldLabel>
@@ -248,27 +251,28 @@ export default function JobPostStepOneForm({
         )}
       </div>
 
-      {/* Job Role */}
-      <div className="mb-5">
-        <FieldLabel required info>
-          Job Role / Category
-        </FieldLabel>
-        <input
-          type="text"
-          value={form.jobRole}
-          onChange={handle("jobRole")}
-          onBlur={touch("jobRole")}
-          placeholder="Eg. Performance Marketing"
-          className={`${inputBase} ${err("jobRole") ? inputError : inputNormal}`}
+      {/* Job Category */}
+      <div className="mb-6">
+        <Label required className="mb-4!">Job Role / Category</Label>
+        <CreatableSelect
+          placeholder="Select a category"
+          options={JOB_CATEGORY_OPTIONS}
+          allowCreate={false}
+          showAllOnOpen
+          value={form.jobCategory}
+          error={err("jobCategory")}
+          onChange={(val) => {
+            set("jobCategory")(val);
+            touch("jobCategory")();
+          }}
+          onBlur={() => touch("jobCategory")()}
+          className="mb-0!"
         />
-        {err("jobRole") && (
-          <p className="mt-1.5 text-xs text-(--color-red)">{err("jobRole")}</p>
-        )}
       </div>
 
       {/* Job Type */}
-      <div className="mb-5">
-        <Label required>Job Type</Label>
+      <div className="mb-6">
+        <Label required className="mb-4!">Job Type</Label>
         <div className="flex flex-wrap gap-2">
           {JOB_TYPE_OPTIONS.map((opt) => (
             <SelectPill
@@ -308,8 +312,8 @@ export default function JobPostStepOneForm({
       />
 
       {/* Work Type */}
-      <div className="mb-5">
-        <Label required>Work Type</Label>
+      <div className="mb-6">
+        <Label required className="mb-4!">Work Type</Label>
         <div className="flex flex-wrap gap-2">
           {WORK_TYPE_OPTIONS.map((opt) => (
             <SelectPill
@@ -326,8 +330,8 @@ export default function JobPostStepOneForm({
       </div>
 
       {/* Working Location */}
-      <div className="mb-5">
-        <Label required>Working Location</Label>
+      <div className="mb-6">
+        <Label required className="mb-4!">Working Location</Label>
         <WorkingLocationPicker
           value={form.workingLocation}
           onChange={set("workingLocation")}
@@ -342,8 +346,8 @@ export default function JobPostStepOneForm({
       </div>
 
       {/* Pincode */}
-      <div className="mb-5">
-        <Label required>Pincode</Label>
+      <div className="mb-6">
+        <Label required className="mb-4!">Pincode</Label>
         <input
           type="text"
           inputMode="numeric"
@@ -374,9 +378,9 @@ export default function JobPostStepOneForm({
       </div>
 
       {/* City & State */}
-      <div className="mb-5 flex flex-col gap-4 sm:flex-row">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row">
         <div className="flex-1">
-          <Label required>City</Label>
+          <Label required className="mb-4!">City</Label>
           <input
             type="text"
             value={pincodeLoading ? "" : form.city}
@@ -389,7 +393,7 @@ export default function JobPostStepOneForm({
           <p className="mt-1.5 min-h-5 text-xs text-(--color-red)">{err("city")}</p>
         </div>
         <div className="flex-1">
-          <Label required>State</Label>
+          <Label required className="mb-4!">State</Label>
           <input
             type="text"
             value={pincodeLoading ? "" : form.state}
@@ -433,7 +437,7 @@ export default function JobPostStepOneForm({
 
       {/* Pay Type */}
       <div className="mb-6">
-        <Label required>What is the pay type?</Label>
+        <Label required className="mb-4!">What is the pay type?</Label>
         <div className="flex flex-wrap gap-2">
           {PAY_TYPE_OPTIONS.map((opt) => (
             <SelectPill
@@ -447,7 +451,7 @@ export default function JobPostStepOneForm({
       </div>
 
       {/* Annual CTC label */}
-      <div className="mb-5">
+      <div className="mb-6">
         <p className="text-[0.9375rem] font-medium text-(--color-black-shade-900)">
           Annual CTC
         </p>
@@ -457,8 +461,8 @@ export default function JobPostStepOneForm({
       </div>
 
       {/* Fixed Salary range */}
-      <div className="mb-5">
-        <Label required>Fixed Salary</Label>
+      <div className="mb-6">
+        <Label required className="mb-4!">Fixed Salary</Label>
         <div className="flex items-start gap-3">
           <div className="flex-1">
             <div className="relative">
@@ -506,8 +510,8 @@ export default function JobPostStepOneForm({
 
       {/* Variable Salary (only if Fixed + Variable) */}
       {form.payType === "Fixed + Variable" && (
-        <div className="mb-5">
-          <Label required>Variable Salary</Label>
+        <div className="mb-6">
+          <Label required className="mb-4!">Variable Salary</Label>
           <div className="relative">
             <input
               type="number"
@@ -529,8 +533,8 @@ export default function JobPostStepOneForm({
       )}
 
       {/* Additional Perks */}
-      <div className="mb-5">
-        <Label required>Do you offer any additional perks?</Label>
+      <div className="mb-6">
+        <Label required className="mb-4!">Do you offer any additional perks?</Label>
         {form.perks.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-2">
             {form.perks.map((perk) => (
@@ -551,7 +555,7 @@ export default function JobPostStepOneForm({
         )}
         <CreatableSelect
           placeholder="Search or add perks..."
-          options={PERKS_OPTIONS}
+          options={filterSelectedOptions(PERKS_OPTIONS, form.perks)}
           allowCreate={false}
           value=""
           onChange={(value) => {

@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import JobPostTabNav from "./components/JobPostTabNav";
-import TableControls from "@/components/AdminDashboard/Professionals/components/TableControls";
+import TableControls from "@/components/admin-dashboard/Professionals/components/TableControls";
 import CurrentPostTable from "./components/CurrentPostTable";
 import JobPostRequestsTable from "./components/JobPostRequestsTable";
 import AddNewJobPost from "./components/AddNewJobPost";

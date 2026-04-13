@@ -438,6 +438,80 @@ html {
   margin-bottom: 3rem;
 }
 
+/* ── Rich Text Editor (Tiptap / ProseMirror) ─────────────────────────────── */
+.rte-content:focus {
+  outline: none;
+}
+
+/* Placeholder */
+.rte-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  font-size: 0.9375rem;
+  color: var(--color-black-shade-400);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+/* Headings */
+.rte-content h2 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-black-shade-900);
+  margin-top: 1.25rem;
+  margin-bottom: 0.375rem;
+  line-height: 1.4;
+}
+.rte-content h2:first-child {
+  margin-top: 0;
+}
+.rte-content h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-black-shade-900);
+  margin-top: 1rem;
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
+}
+.rte-content h3:first-child {
+  margin-top: 0;
+}
+
+/* Paragraph */
+.rte-content p {
+  font-size: 0.9375rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-black-shade-800);
+  line-height: 1.7;
+}
+.rte-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Lists */
+.rte-content ul,
+.rte-content ol {
+  padding-left: 1.5rem;
+  margin-bottom: 0.625rem;
+}
+.rte-content ul {
+  list-style-type: disc;
+}
+.rte-content ol {
+  list-style-type: decimal;
+}
+.rte-content li {
+  font-size: 0.9375rem;
+  margin-bottom: 0.2rem;
+  color: var(--color-black-shade-800);
+  line-height: 1.7;
+}
+
+/* Inline marks */
+.rte-content strong { font-weight: 700; }
+.rte-content em     { font-style: italic; }
+.rte-content u      { text-decoration: underline; }
+
 /* Scrollbar hide utility */
 .scrollbar-hide {
   -ms-overflow-style: none;  /* IE and Edge */

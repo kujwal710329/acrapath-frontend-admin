@@ -9,6 +9,7 @@ import JobPostStepThreeForm from "./steps/JobPostStepThreeForm";
 import JobPostStepFourForm from "./steps/JobPostStepFourForm";
 import { apiRequest } from "@/utilities/api";
 import { showPromise } from "@/utilities/toast";
+import { JOB_CATEGORY_API_MAP } from "@/constants/jobPost";
 
 const KEYS = {
   step1: "adminJobPost_step1",
@@ -89,6 +90,7 @@ function buildPayload(step1, step2, step3) {
   return {
     // Identity
     jobTitle: step1.jobTitle,
+    jobCategory: JOB_CATEGORY_API_MAP[step1.jobCategory],
     companyName: step1.companyName,
     companyDescription: step1.companyDescription,
 
@@ -117,6 +119,18 @@ function buildPayload(step1, step2, step3) {
       step2.additionalRequirements?.includes("Gender") && step2.gender
         ? step2.gender
         : undefined,
+    ...(step2.additionalRequirements?.includes("Age") && step2.ageMin
+      ? { ageMin: Number(step2.ageMin) }
+      : {}),
+    ...(step2.additionalRequirements?.includes("Age") && step2.ageMax
+      ? { ageMax: Number(step2.ageMax) }
+      : {}),
+    ...(step2.additionalRequirements?.includes("Assets") && step2.assets?.length > 0
+      ? { assets: step2.assets }
+      : {}),
+    ...(step2.additionalRequirements?.includes("Regional Languages") && step2.regionalLanguages?.length > 0
+      ? { regionalLanguages: step2.regionalLanguages }
+      : {}),
 
     // Compensation
     payMinRange: Number(step1.fixedSalaryMin) || 0,
@@ -142,6 +156,10 @@ export default function AddNewJobPost({ onBack }) {
     setStepTwoData(loadFromStorage(KEYS.step2));
     setStepThreeData(loadFromStorage(KEYS.step3));
   }, []);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [step]);
 
   const handlePublish = async () => {
     setIsSubmitting(true);
@@ -204,6 +222,7 @@ export default function AddNewJobPost({ onBack }) {
           {step === 2 && (
             <JobPostStepTwoForm
               defaultValues={stepTwoData}
+              jobCategory={stepOneData.jobCategory}
               onBack={() => setStep(1)}
               onNext={(data) => {
                 localStorage.setItem(KEYS.step2, JSON.stringify(data));

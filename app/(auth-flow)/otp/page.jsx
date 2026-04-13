@@ -1,12 +1,12 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import Button from "@/components/common/Button";
 import { IoChevronBackOutline } from "react-icons/io5";
 import { apiRequest } from "@/utilities/api";
 
-export default function OtpPage() {
+function OtpPageContent() {
   const params = useSearchParams();
   const router = useRouter();
   const email = params.get("email") || "";
@@ -182,5 +182,13 @@ export default function OtpPage() {
         </Button>
       </div>
     </div>
+  );
+}
+
+export default function OtpPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}>
+      <OtpPageContent />
+    </Suspense>
   );
 }

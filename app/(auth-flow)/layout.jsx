@@ -1,6 +1,7 @@
 import AuthNavbar from "@/components/navbars/AuthNavbar";
 
 
+
 export default function AuthLayout({ children }) {
   return (
     <>

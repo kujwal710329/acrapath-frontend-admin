@@ -62,7 +62,7 @@ export default function AuthForm() {
 
       const res = await showPromise(req, {
         loading: "Verifying email...",
-        success: "Verified",
+        success: "Email Verified",
         error: "Failed to verify email",
       });
 
