@@ -7,7 +7,7 @@ import Icon from "@/components/common/Icon";
 import FixedBackButton from "@/components/common/FixedBackButton";
 import ProfileSectionCard from "@/components/common/ProfileSectionCard";
 import { SpecificJobSkeleton } from "@/components/common/Skeleton";
-import JobPostStatusDropdown from "@/components/AdminDashboard/JobPost/components/JobPostStatusDropdown";
+import JobPostStatusDropdown from "@/components/admin-dashboard/JobPost/components/JobPostStatusDropdown";
 import { updateJobPostStatus } from "@/services/jobPost.service";
 import { showSuccess } from "@/utilities/toast";
 import CompanyAvatar from "@/components/common/CompanyAvatar";

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import StatCard from "@/components/AdminDashboard/Overview/StatCard";
-import SectionStatsCard from "@/components/AdminDashboard/Overview/SectionStatsCard";
-import DateSelector from "@/components/AdminDashboard/Overview/DateSelector";
+import StatCard from "@/components/admin-dashboard/Overview/StatCard";
+import SectionStatsCard from "@/components/admin-dashboard/Overview/SectionStatsCard";
+import DateSelector from "@/components/admin-dashboard/Overview/DateSelector";
 import { useAdminStats } from "@/hooks/useAdminStats";
 
 function formatDate(isoStr) {

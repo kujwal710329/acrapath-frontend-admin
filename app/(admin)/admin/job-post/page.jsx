@@ -1,4 +1,4 @@
-import JobPostPage from "@/components/AdminDashboard/JobPost";
+import JobPostPage from "@/components/admin-dashboard/JobPost";
 
 export default function Page() {
   return (

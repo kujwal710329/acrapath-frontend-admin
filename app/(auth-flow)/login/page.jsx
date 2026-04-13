@@ -1,5 +1,5 @@
-import AuthForm from "@/components/Auth/AuthForm";
-import AuthHeader from "@/components/Auth/AuthHeader";
+import AuthForm from "@/components/auth/AuthForm";
+import AuthHeader from "@/components/auth/AuthHeader";
 import ClientOnly from "@/components/common/ClientOnly";
 
 export default function Page() {
