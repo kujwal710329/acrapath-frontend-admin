@@ -258,6 +258,27 @@ export default function JobPostStepFourForm({
         {stepTwoData.additionalRequirements?.includes("Gender") && (
           <ReviewRow label="Gender" value={stepTwoData.gender} />
         )}
+        {stepTwoData.additionalRequirements?.includes("Age") &&
+          (stepTwoData.ageMin || stepTwoData.ageMax) && (
+            <ReviewRow
+              label="Age"
+              value={
+                stepTwoData.ageMin && stepTwoData.ageMax
+                  ? `${stepTwoData.ageMin} – ${stepTwoData.ageMax} years`
+                  : stepTwoData.ageMin
+                    ? `Min ${stepTwoData.ageMin} years`
+                    : `Max ${stepTwoData.ageMax} years`
+              }
+            />
+          )}
+        {stepTwoData.additionalRequirements?.includes("Assets") &&
+          stepTwoData.assets?.length > 0 && (
+            <ReviewRow label="Assets" value={stepTwoData.assets} />
+          )}
+        {stepTwoData.additionalRequirements?.includes("Regional Languages") &&
+          stepTwoData.regionalLanguages?.length > 0 && (
+            <ReviewRow label="Regional Languages" value={stepTwoData.regionalLanguages} />
+          )}
         {stepTwoData.technicalSkills?.length > 0 && (
           <ReviewRow
             label="Technical Skills"
