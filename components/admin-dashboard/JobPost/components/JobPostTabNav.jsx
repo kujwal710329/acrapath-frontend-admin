@@ -5,6 +5,7 @@ export const JOB_POST_TABS = [
   { key: "request", label: "Request" },
   { key: "rejected", label: "Rejected" },
   { key: "addNew", label: "Add New" },
+  { key: "topVerified", label: "Top Verified" },
 ];
 
 export default function JobPostTabNav({ activeTab, onTabChange }) {

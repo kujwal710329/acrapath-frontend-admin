@@ -5,6 +5,7 @@ import Button from "@/components/common/Button";
 import Heading from "@/components/common/Heading";
 import Text from "@/components/common/Text";
 import Icon from "@/components/common/Icon";
+import InfoTooltip from "@/components/common/InfoTooltip";
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -219,13 +220,7 @@ export default function JobPostStepFourForm({
                 ? "You will receive applications from all over India"
                 : `You will not be receiving applications outside ${stepOneData.city || "the job location"}`}
             </p>
-            <Icon
-              name="statics/Employer-Dashboard/info.svg"
-              width={16}
-              height={16}
-              alt="Info"
-              className="shrink-0"
-            />
+            <InfoTooltip align="left" text="This reflects the preference set in Step 1. When enabled, candidates from anywhere in India can apply if they are willing to relocate." />
           </div>
         )}
 

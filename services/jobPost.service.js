@@ -11,6 +11,7 @@ export const JOB_POST_TAB_STATUS_MAP = {
   currentPost: "active",
   request: "requests",
   rejected: "rejected",
+  topVerified: "active", // fetches active jobs; toggle column shown in TopVerifiedJobsTable
 };
 
 /**
@@ -34,6 +35,19 @@ export async function fetchJobPosts({
   logger.debug("[jobPosts] fetching", { tab, page, limit, search });
 
   return apiRequest(endpoint, {}, { useCache: false });
+}
+
+/**
+ * Toggle dreamjob (top verified) flag on a job
+ * PATCH /api/v1/jobs/:jobId/toggle-dreamjob
+ * Response: { success, message, data: { jobId, dreamjob } }
+ */
+export async function toggleDreamjob(jobId) {
+  logger.debug("[jobPosts] toggling dreamjob", { jobId });
+  clearEndpointCache("/jobs");
+  return apiRequest(`/jobs/${jobId}/toggle-dreamjob`, {
+    method: "PATCH",
+  });
 }
 
 /**

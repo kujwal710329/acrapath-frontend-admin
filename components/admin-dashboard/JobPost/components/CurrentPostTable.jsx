@@ -19,7 +19,7 @@ function SkeletonRow() {
       <td className="px-3 py-3.5 border border-(--color-black-shade-100)">
         <div className="h-4 w-4 rounded bg-(--color-black-shade-100)" />
       </td>
-      {Array.from({ length: 6 }).map((_, i) => (
+      {Array.from({ length: 7 }).map((_, i) => (
         <td key={i} className="px-4 py-3.5 border border-(--color-black-shade-100)">
           <div className="h-4 rounded bg-(--color-black-shade-100)" />
         </td>
@@ -46,6 +46,7 @@ const THEAD = ({ isAllSelected, onToggleAll }) => (
       <ColumnHeader>Job ID</ColumnHeader>
       <ColumnHeader>Created Date &amp; Time</ColumnHeader>
       <ColumnHeader>Company</ColumnHeader>
+      <ColumnHeader>Category</ColumnHeader>
       <ColumnHeader>Profile Seen</ColumnHeader>
       <ColumnHeader>Talbox Matches</ColumnHeader>
       <ColumnHeader>Profile Unlock</ColumnHeader>
@@ -155,6 +156,9 @@ export default function CurrentPostTable({ data = [], loading, error, onRetry, o
               </td>
               <td className="px-4 py-3.5 text-14 text-(--color-black-shade-700) border border-(--color-black-shade-100) whitespace-nowrap">
                 {row.company ?? row.companyName ?? "—"}
+              </td>
+              <td className="px-4 py-3.5 text-14 text-(--color-black-shade-600) border border-(--color-black-shade-100) whitespace-nowrap capitalize">
+                {row.jobCategory ?? "—"}
               </td>
               <td className="px-4 py-3.5 text-14 text-(--color-black-shade-700) border border-(--color-black-shade-100) whitespace-nowrap">
                 {row.profileSeen ?? "—"}

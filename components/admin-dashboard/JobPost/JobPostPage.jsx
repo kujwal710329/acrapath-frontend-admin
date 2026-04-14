@@ -6,6 +6,7 @@ import JobPostTabNav from "./components/JobPostTabNav";
 import TableControls from "@/components/admin-dashboard/Professionals/components/TableControls";
 import CurrentPostTable from "./components/CurrentPostTable";
 import JobPostRequestsTable from "./components/JobPostRequestsTable";
+import TopVerifiedJobsTable from "./components/TopVerifiedJobsTable";
 import AddNewJobPost from "./components/AddNewJobPost";
 import { useJobPosts } from "@/hooks/useJobPosts";
 
@@ -26,6 +27,7 @@ export default function JobPostPage() {
     handleSearch,
     refresh,
     updateStatus,
+    toggleDreamjob,
   } = useJobPosts({ tab: activeTab, perPage });
 
   // Header refresh button
@@ -45,6 +47,7 @@ export default function JobPostPage() {
 
   const isRequestsType = REQUESTS_TYPE_TABS.has(activeTab);
   const isAddNew = activeTab === "addNew";
+  const isTopVerified = activeTab === "topVerified";
 
   return (
     <div className="flex flex-col">
@@ -71,6 +74,14 @@ export default function JobPostPage() {
       <div>
         {isAddNew ? (
           <AddNewJobPost onBack={() => handleTabChange("currentPost")} />
+        ) : isTopVerified ? (
+          <TopVerifiedJobsTable
+            data={rows}
+            loading={loading}
+            error={error}
+            onRetry={refresh}
+            onToggleDreamjob={toggleDreamjob}
+          />
         ) : isRequestsType ? (
           <JobPostRequestsTable
             data={rows}

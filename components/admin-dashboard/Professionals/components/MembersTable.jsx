@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Icon from "@/components/common/Icon";
+import Button from "@/components/common/Button";
 import ResumeChip from "./ResumeChip";
 import {
   formatContact,
@@ -44,7 +45,7 @@ function SkeletonRow() {
       <td className="px-3 py-3.5 border border-(--color-black-shade-100)">
         <div className="h-4 w-4 rounded bg-(--color-black-shade-100)" />
       </td>
-      {Array.from({ length: 7 }).map((_, i) => (
+      {Array.from({ length: 8 }).map((_, i) => (
         <td key={i} className="px-4 py-3.5 border border-(--color-black-shade-100)">
           <div className="h-4 rounded bg-(--color-black-shade-100)" />
         </td>
@@ -71,6 +72,7 @@ const THEAD = ({ isAllSelected, onToggleAll }) => (
       <ColumnHeader>Professional ID</ColumnHeader>
       <ColumnHeader>Full Name</ColumnHeader>
       <ColumnHeader>Contact Number</ColumnHeader>
+      <ColumnHeader>Professional Category</ColumnHeader>
       <ColumnHeader>City Preference</ColumnHeader>
       <ColumnHeader withMenu>Last Active</ColumnHeader>
       <ColumnHeader withMenu>Score</ColumnHeader>
@@ -122,12 +124,9 @@ export default function MembersTable({ data = [], loading, error, onRetry, onVie
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3">
         <p className="text-14 text-(--color-black-shade-500)">{error}</p>
-        <button
-          onClick={onRetry}
-          className="px-4 py-2 rounded-lg text-14 font-medium text-(--color-primary) border border-(--color-primary) hover:bg-(--color-primary-shade-100) transition-colors cursor-pointer"
-        >
+        <Button variant="outline" onClick={onRetry} className="w-auto! h-10! px-5">
           Retry
-        </button>
+        </Button>
       </div>
     );
   }
@@ -175,6 +174,9 @@ export default function MembersTable({ data = [], loading, error, onRetry, onVie
                 </td>
                 <td className="px-4 py-3.5 text-14 text-(--color-black-shade-700) border border-(--color-black-shade-100) whitespace-nowrap">
                   {formatContact(row.countryCode, row.contactNo)}
+                </td>
+                <td className="px-4 py-3.5 text-14 text-(--color-black-shade-600) border border-(--color-black-shade-100) whitespace-nowrap capitalize">
+                  {row.professionalCategory ?? "—"}
                 </td>
                 <td className="px-4 py-3.5 text-14 text-(--color-black-shade-600) border border-(--color-black-shade-100) max-w-45">
                   <span

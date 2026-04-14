@@ -10,8 +10,9 @@ import { SelectPill } from "../pills";
 import CreatableSelect from "@/components/common/CreatableSelect";
 import WorkingLocationPicker from "@/components/location/WorkingLocationPicker";
 import RichTextEditor from "@/components/common/RichTextEditor";
-import { JOB_CATEGORY_OPTIONS } from "@/constants/jobPost";
+import { useMetadataData } from "@/hooks/useMetadata";
 import { filterSelectedOptions } from "@/utilities/filterSelectedOptions";
+import InfoTooltip from "@/components/common/InfoTooltip";
 
 /** Strip HTML tags to get plain-text length for validation. */
 function stripHtml(html) {
@@ -61,7 +62,7 @@ function SectionDivider() {
   return <div className="my-8 border-t border-(--color-black-shade-300)" />;
 }
 
-// Label with optional info icon inline
+// Label with optional info tooltip inline
 function FieldLabel({ children, required, info }) {
   return (
     <div className="mb-4 flex items-center gap-1.5">
@@ -69,14 +70,7 @@ function FieldLabel({ children, required, info }) {
         {children}
         {required && <span className="ml-1 text-(--color-black)">*</span>}
       </label>
-      {info && (
-        <Icon
-          name="statics/Employer-Dashboard/info.svg"
-          width={17}
-          height={17}
-          alt="More info"
-        />
-      )}
+      {info && <InfoTooltip text={info} />}
     </div>
   );
 }
@@ -120,6 +114,8 @@ export default function JobPostStepOneForm({
   onNext,
   onBack,
 }) {
+  const { metadata, loading: metaLoading, error: metaError } = useMetadataData();
+
   const [form, setForm] = useState({
     companyName: "",
     jobTitle: "",
@@ -235,7 +231,7 @@ export default function JobPostStepOneForm({
 
       {/* Job Title */}
       <div className="mb-6">
-        <FieldLabel required info>
+        <FieldLabel required info="Enter the specific job title or designation for this role. A clear title (e.g. 'Senior React Developer') helps attract the right candidates.">
           Job Title / Designation
         </FieldLabel>
         <input
@@ -254,11 +250,17 @@ export default function JobPostStepOneForm({
       {/* Job Category */}
       <div className="mb-6">
         <Label required className="mb-4!">Job Role / Category</Label>
+        {metaError && (
+          <p className="mb-3 rounded-lg bg-red-50 px-4 py-2.5 text-xs text-(--color-red)">
+            {metaError}
+          </p>
+        )}
         <CreatableSelect
-          placeholder="Select a category"
-          options={JOB_CATEGORY_OPTIONS}
+          placeholder={metaLoading ? "Loading categories…" : "Select a category"}
+          options={metadata.jobCategories}
           allowCreate={false}
           showAllOnOpen
+          isDisabled={metaLoading}
           value={form.jobCategory}
           error={err("jobCategory")}
           onChange={(val) => {
@@ -463,7 +465,7 @@ export default function JobPostStepOneForm({
       {/* Fixed Salary range */}
       <div className="mb-6">
         <Label required className="mb-4!">Fixed Salary</Label>
-        <div className="flex items-start gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
           <div className="flex-1">
             <div className="relative">
               <input
@@ -483,7 +485,7 @@ export default function JobPostStepOneForm({
               {err("fixedSalaryMin")}
             </p>
           </div>
-          <span className="shrink-0 pt-3.5 text-sm font-medium text-(--color-black-shade-700)">
+          <span className="hidden shrink-0 pt-3.5 text-sm font-medium text-(--color-black-shade-700) sm:block">
             to
           </span>
           <div className="flex-1">

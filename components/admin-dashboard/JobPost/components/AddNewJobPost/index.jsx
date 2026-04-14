@@ -9,7 +9,7 @@ import JobPostStepThreeForm from "./steps/JobPostStepThreeForm";
 import JobPostStepFourForm from "./steps/JobPostStepFourForm";
 import { apiRequest } from "@/utilities/api";
 import { showPromise } from "@/utilities/toast";
-import { JOB_CATEGORY_API_MAP } from "@/constants/jobPost";
+import { useMetadataData } from "@/hooks/useMetadata";
 
 const KEYS = {
   step1: "adminJobPost_step1",
@@ -56,7 +56,7 @@ const EXPERIENCE_MAP = {
   "10+ years": "Senior",
 };
 
-function buildPayload(step1, step2, step3) {
+function buildPayload(step1, step2, step3, categoryApiMap = {}) {
   // Merge technical + strategic skills into a single array
   const skills = [
     ...(step2.technicalSkills || []),
@@ -90,7 +90,7 @@ function buildPayload(step1, step2, step3) {
   return {
     // Identity
     jobTitle: step1.jobTitle,
-    jobCategory: JOB_CATEGORY_API_MAP[step1.jobCategory],
+    jobCategory: categoryApiMap[step1.jobCategory],
     companyName: step1.companyName,
     companyDescription: step1.companyDescription,
 
@@ -145,6 +145,7 @@ function buildPayload(step1, step2, step3) {
 }
 
 export default function AddNewJobPost({ onBack }) {
+  const { metadata } = useMetadataData();
   const [step, setStep] = useState(1);
   const [stepOneData, setStepOneData] = useState({});
   const [stepTwoData, setStepTwoData] = useState({});
@@ -164,7 +165,7 @@ export default function AddNewJobPost({ onBack }) {
   const handlePublish = async () => {
     setIsSubmitting(true);
     try {
-      const payload = buildPayload(stepOneData, stepTwoData, stepThreeData);
+      const payload = buildPayload(stepOneData, stepTwoData, stepThreeData, metadata.jobCategoryApiMap);
       const req = apiRequest("/jobs", {
         method: "POST",
         body: JSON.stringify(payload),
