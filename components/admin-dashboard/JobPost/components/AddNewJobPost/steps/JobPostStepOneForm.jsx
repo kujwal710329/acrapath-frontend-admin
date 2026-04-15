@@ -10,8 +10,9 @@ import { SelectPill } from "../pills";
 import CreatableSelect from "@/components/common/CreatableSelect";
 import WorkingLocationPicker from "@/components/location/WorkingLocationPicker";
 import RichTextEditor from "@/components/common/RichTextEditor";
-import { JOB_CATEGORY_OPTIONS } from "@/constants/jobPost";
+import { useMetadataData } from "@/hooks/useMetadata";
 import { filterSelectedOptions } from "@/utilities/filterSelectedOptions";
+import InfoTooltip from "@/components/common/InfoTooltip";
 
 /** Strip HTML tags to get plain-text length for validation. */
 function stripHtml(html) {
@@ -61,7 +62,7 @@ function SectionDivider() {
   return <div className="my-8 border-t border-(--color-black-shade-300)" />;
 }
 
-// Label with optional info icon inline
+// Label with optional info tooltip inline
 function FieldLabel({ children, required, info }) {
   return (
     <div className="mb-4 flex items-center gap-1.5">
@@ -69,16 +70,19 @@ function FieldLabel({ children, required, info }) {
         {children}
         {required && <span className="ml-1 text-(--color-black)">*</span>}
       </label>
-      {info && (
-        <Icon
-          name="statics/Employer-Dashboard/info.svg"
-          width={17}
-          height={17}
-          alt="More info"
-        />
-      )}
+      {info && <InfoTooltip text={info} />}
     </div>
   );
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function isValidUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 // ── Validation ────────────────────────────────────────────────────────────────
@@ -88,6 +92,10 @@ function validate(form) {
   if (!form.jobTitle.trim()) errs.jobTitle = "Job title is required.";
   if (!form.jobCategory) errs.jobCategory = "Job category is required.";
   if (!form.jobType) errs.jobType = "Please select a job type.";
+  if (form.jobSource === "external") {
+    if (!form.externalJobUrl.trim()) errs.externalJobUrl = "Careers page / application link is required.";
+    else if (!isValidUrl(form.externalJobUrl.trim())) errs.externalJobUrl = "Enter a valid URL (e.g. https://careers.company.com/apply).";
+  }
   if (!form.workType) errs.workType = "Please select a work type.";
   if (!form.workingLocation.address?.trim())
     errs.workingLocation = "Working location is required.";
@@ -120,12 +128,16 @@ export default function JobPostStepOneForm({
   onNext,
   onBack,
 }) {
+  const { metadata, loading: metaLoading, error: metaError } = useMetadataData();
+
   const [form, setForm] = useState({
     companyName: "",
     jobTitle: "",
     jobCategory: "",
     jobType: "",
     isNightShift: false,
+    jobSource: "internal",
+    externalJobUrl: "",
     workType: "",
     workingLocation: { address: "", placeId: "", lat: null, lng: null, floorPlotShop: "" },
     city: "",
@@ -235,7 +247,7 @@ export default function JobPostStepOneForm({
 
       {/* Job Title */}
       <div className="mb-6">
-        <FieldLabel required info>
+        <FieldLabel required info="Enter the specific job title or designation for this role. A clear title (e.g. 'Senior React Developer') helps attract the right candidates.">
           Job Title / Designation
         </FieldLabel>
         <input
@@ -254,11 +266,17 @@ export default function JobPostStepOneForm({
       {/* Job Category */}
       <div className="mb-6">
         <Label required className="mb-4!">Job Role / Category</Label>
+        {metaError && (
+          <p className="mb-3 rounded-lg bg-red-50 px-4 py-2.5 text-xs text-(--color-red)">
+            {metaError}
+          </p>
+        )}
         <CreatableSelect
-          placeholder="Select a category"
-          options={JOB_CATEGORY_OPTIONS}
+          placeholder={metaLoading ? "Loading categories…" : "Select a category"}
+          options={metadata.jobCategories}
           allowCreate={false}
           showAllOnOpen
+          isDisabled={metaLoading}
           value={form.jobCategory}
           error={err("jobCategory")}
           onChange={(val) => {
@@ -273,6 +291,22 @@ export default function JobPostStepOneForm({
       {/* Job Type */}
       <div className="mb-6">
         <Label required className="mb-4!">Job Type</Label>
+
+        {/* Night Shift */}
+        <div className="mb-4">
+          <label className="flex cursor-pointer items-center gap-2">
+            <input
+              type="checkbox"
+              checked={form.isNightShift}
+              onChange={(e) => set("isNightShift")(e.target.checked)}
+              className="h-4 w-4 cursor-pointer"
+            />
+            <span className="text-sm font-medium text-(--color-black-shade-700)">
+              This is a night shift job
+            </span>
+          </label>
+        </div>
+
         <div className="flex flex-wrap gap-2">
           {JOB_TYPE_OPTIONS.map((opt) => (
             <SelectPill
@@ -288,19 +322,39 @@ export default function JobPostStepOneForm({
         )}
       </div>
 
-      {/* Night Shift */}
-      <div className="mb-2">
-        <label className="flex cursor-pointer items-center gap-2">
-          <input
-            type="checkbox"
-            checked={form.isNightShift}
-            onChange={(e) => set("isNightShift")(e.target.checked)}
-            className="h-4 w-4 cursor-pointer"
+      {/* Job Sourcing */}
+      <div className="mb-6">
+        <p className="mb-4 text-[0.9375rem] font-medium text-(--color-black-shade-900)">
+          Where should candidates submit their application? *
+        </p>
+        <div className="flex gap-2">
+          <SelectPill
+            label="Through Acrapath"
+            isSelected={form.jobSource === "internal"}
+            onSelect={() => setForm({ ...form, jobSource: "internal", externalJobUrl: "" })}
           />
-          <span className="text-sm font-medium text-(--color-black-shade-700)">
-            This is a night shift job
-          </span>
-        </label>
+          <SelectPill
+            label="Your  careers page"
+            isSelected={form.jobSource === "external"}
+            onSelect={() => set("jobSource")("external")}
+          />
+        </div>
+        {form.jobSource === "external" && (
+          <div className="mt-4">
+            <Label required className="mb-4!">Careers Page / Application Link</Label>
+            <input
+              type="url"
+              value={form.externalJobUrl}
+              onChange={handle("externalJobUrl")}
+              onBlur={touch("externalJobUrl")}
+              placeholder="Paste the external job application URL"
+              className={`${inputBase} ${err("externalJobUrl") ? inputError : inputNormal}`}
+            />
+            {err("externalJobUrl") && (
+              <p className="mt-1.5 text-xs text-(--color-red)">{err("externalJobUrl")}</p>
+            )}
+          </div>
+        )}
       </div>
 
       <SectionDivider />
@@ -463,7 +517,7 @@ export default function JobPostStepOneForm({
       {/* Fixed Salary range */}
       <div className="mb-6">
         <Label required className="mb-4!">Fixed Salary</Label>
-        <div className="flex items-start gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
           <div className="flex-1">
             <div className="relative">
               <input
@@ -483,7 +537,7 @@ export default function JobPostStepOneForm({
               {err("fixedSalaryMin")}
             </p>
           </div>
-          <span className="shrink-0 pt-3.5 text-sm font-medium text-(--color-black-shade-700)">
+          <span className="hidden shrink-0 pt-3.5 text-sm font-medium text-(--color-black-shade-700) sm:block">
             to
           </span>
           <div className="flex-1">

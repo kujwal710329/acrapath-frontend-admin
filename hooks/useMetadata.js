@@ -11,6 +11,52 @@ import {
 import { logger } from "@/utilities/logger";
 import { showSuccess, showError } from "@/utilities/toast";
 
+// ── Module-level cache (used by useMetadataData) ──────────────────────────────
+// Shared across every hook instance so metadata is fetched only once per session.
+// React Strict Mode double-invokes are also deduplicated via the inflight promise.
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+const EMPTY_METADATA = Object.freeze({
+  jobCategories: [],
+  jobRolesByCategory: {},
+  strategicSkillsByCategory: {},
+  techSkillsByCategory: {},
+  fieldsOfStudy: [],
+  commonJobRoles: [],
+  jobCategoryApiMap: {},
+});
+
+let cachedData = null;
+let cacheExpiresAt = 0;
+let inflight = null; // deduplicates concurrent fetches
+
+function fetchAllMetadata() {
+  const now = Date.now();
+
+  // 1. Serve from warm cache
+  if (cachedData && now < cacheExpiresAt) {
+    return Promise.resolve(cachedData);
+  }
+
+  // 2. Re-use an already in-flight request
+  if (inflight) {
+    return inflight;
+  }
+
+  // 3. Issue new network request via the shared admin service
+  inflight = getAllMetadata()
+    .then((res) => {
+      cachedData = res?.data ?? EMPTY_METADATA;
+      cacheExpiresAt = Date.now() + CACHE_TTL;
+      return cachedData;
+    })
+    .finally(() => {
+      inflight = null;
+    });
+
+  return inflight;
+}
+
 /**
  * Valid metadata type keys returned from the API
  */
@@ -237,4 +283,66 @@ export function useMetadata() {
     seedAll,
     isPending,
   };
+}
+
+/**
+ * Read-only hook that returns all metadata from GET /api/v1/metadata/all.
+ *
+ * This is intentionally separate from `useMetadata` (the admin CRUD management
+ * hook). This hook is designed for form components that only need to read data.
+ *
+ * Fetched once per session (module-level cache, 5-min TTL).
+ * Safe defaults are returned immediately so consumers never receive undefined.
+ *
+ * @returns {{
+ *   metadata: {
+ *     jobCategories: string[],
+ *     jobRolesByCategory: Record<string, string[]>,
+ *     strategicSkillsByCategory: Record<string, string[]>,
+ *     techSkillsByCategory: Record<string, string[]>,
+ *     fieldsOfStudy: string[],
+ *     commonJobRoles: string[],
+ *     jobCategoryApiMap: Record<string, string>,
+ *   },
+ *   loading: boolean,
+ *   error: string | null,
+ * }}
+ */
+export function useMetadataData() {
+  const isCacheWarm = cachedData !== null && Date.now() < cacheExpiresAt;
+
+  const [metadata, setMetadata] = useState(isCacheWarm ? cachedData : EMPTY_METADATA);
+  const [loading, setLoading] = useState(!isCacheWarm);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // Already have fresh data — nothing to do
+    if (cachedData && Date.now() < cacheExpiresAt) {
+      setMetadata(cachedData);
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    fetchAllMetadata()
+      .then((data) => {
+        if (cancelled) return;
+        setMetadata(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err?.message || "Failed to load metadata. Please refresh the page.");
+        setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return { metadata, loading, error };
 }

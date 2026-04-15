@@ -107,6 +107,7 @@ export const ADMIN_MENU = [
   { name: "Employer", href: "/admin/employer" },
   { name: "Job Post", href: "/admin/job-post" },
   { name: "Support", href: "/admin/support" },
+  { name: "Testimonials", href: "/admin/testimonials" },
   { name: "Metadata", href: "/admin/metadata" },
 ];
 

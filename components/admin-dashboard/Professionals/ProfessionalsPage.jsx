@@ -6,6 +6,7 @@ import ProfessionalsTabNav from "./components/ProfessionalsTabNav";
 import TableControls from "./components/TableControls";
 import MembersTable from "./components/MembersTable";
 import RequestsTable from "./components/RequestsTable";
+import TopVerifiedProfessionalsTable from "./components/TopVerifiedProfessionalsTable";
 import { useProfessionals } from "@/hooks/useProfessionals";
 
 const MEMBERS_TYPE_TABS = new Set(["members", "verificationPending"]);
@@ -25,6 +26,7 @@ export default function ProfessionalsPage() {
     handleSearch,
     refresh,
     updateStatus,
+    toggleTopProfessional,
   } = useProfessionals({ tab: activeTab, perPage });
 
   // Header refresh button
@@ -43,6 +45,7 @@ export default function ProfessionalsPage() {
   );
 
   const isMembersType = MEMBERS_TYPE_TABS.has(activeTab);
+  const isTopVerified = activeTab === "topVerified";
 
   return (
     <div className="flex flex-col">
@@ -65,12 +68,21 @@ export default function ProfessionalsPage() {
 
       {/* Table */}
       <div>
-        {isMembersType ? (
+        {isTopVerified ? (
+          <TopVerifiedProfessionalsTable
+            data={rows}
+            loading={loading}
+            error={error}
+            onRetry={refresh}
+            onToggleTop={toggleTopProfessional}
+          />
+        ) : isMembersType ? (
           <MembersTable
             data={rows}
             loading={loading}
             error={error}
             onRetry={refresh}
+            onStatusChange={updateStatus}
             onView={handleView}
           />
         ) : (

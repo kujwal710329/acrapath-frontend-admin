@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { fetchJobPosts, updateJobPostStatus } from "@/services/jobPost.service";
+import { fetchJobPosts, updateJobPostStatus, toggleDreamjob as toggleDreamjobService } from "@/services/jobPost.service";
 import { DEBOUNCE_CONFIG } from "@/utilities/config";
 import { logger } from "@/utilities/logger";
 import { showSuccess } from "@/utilities/toast";
@@ -127,6 +127,28 @@ export function useJobPosts({ tab, perPage }) {
     [load]
   );
 
+  /**
+   * Optimistically toggle a row's dreamjob flag; roll back on API failure.
+   */
+  const toggleDreamjob = useCallback(
+    async (jobId) => {
+      // Optimistic flip
+      setRows((prev) =>
+        prev.map((r) => (r.jobId === jobId ? { ...r, dreamjob: !r.dreamjob } : r))
+      );
+      try {
+        const result = await toggleDreamjobService(jobId);
+        showSuccess(result?.message ?? "Top status updated successfully");
+        logger.debug("[useJobPosts] dreamjob toggled", { jobId });
+      } catch (err) {
+        // apiRequest already showed a toast — reload accurate state
+        logger.error("[useJobPosts] dreamjob toggle failed", { error: err.message });
+        load(curRef.current.page, curRef.current.search);
+      }
+    },
+    [load]
+  );
+
   return {
     rows,
     pagination,
@@ -138,5 +160,6 @@ export function useJobPosts({ tab, perPage }) {
     handleSearch,
     refresh,
     updateStatus,
+    toggleDreamjob,
   };
 }

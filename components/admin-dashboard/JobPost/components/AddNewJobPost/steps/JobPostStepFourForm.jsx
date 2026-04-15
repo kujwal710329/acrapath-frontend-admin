@@ -5,6 +5,7 @@ import Button from "@/components/common/Button";
 import Heading from "@/components/common/Heading";
 import Text from "@/components/common/Text";
 import Icon from "@/components/common/Icon";
+import InfoTooltip from "@/components/common/InfoTooltip";
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -196,6 +197,25 @@ export default function JobPostStepFourForm({
           label="Night Shift"
           value={stepOneData.isNightShift ? "Yes" : "No"}
         />
+        <ReviewRow
+          label="Application Channel"
+          value={stepOneData.jobSource === "external" ? "Your careers page" : "Through Acrapath"}
+        />
+        {stepOneData.jobSource === "external" && stepOneData.externalJobUrl && (
+          <div className="flex flex-col gap-1 py-4 sm:flex-row sm:items-start sm:gap-0">
+            <span className="w-full shrink-0 text-[0.9375rem] font-medium text-(--color-black-shade-400) sm:w-52">
+              Application Link
+            </span>
+            <a
+              href={stepOneData.externalJobUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 break-all text-[0.9375rem] font-medium text-(--color-primary) hover:underline"
+            >
+              {stepOneData.externalJobUrl}
+            </a>
+          </div>
+        )}
         <ReviewRow label="Work Type" value={stepOneData.workType} />
         <ReviewRow label="Working Location" value={stepOneData.workingLocation?.address} />
         {(stepOneData.city || stepOneData.state) && (
@@ -219,13 +239,7 @@ export default function JobPostStepFourForm({
                 ? "You will receive applications from all over India"
                 : `You will not be receiving applications outside ${stepOneData.city || "the job location"}`}
             </p>
-            <Icon
-              name="statics/Employer-Dashboard/info.svg"
-              width={16}
-              height={16}
-              alt="Info"
-              className="shrink-0"
-            />
+            <InfoTooltip align="left" text="This reflects the preference set in Step 1. When enabled, candidates from anywhere in India can apply if they are willing to relocate." />
           </div>
         )}
 

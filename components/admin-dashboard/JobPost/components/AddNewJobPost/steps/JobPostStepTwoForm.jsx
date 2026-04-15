@@ -8,8 +8,9 @@ import Text from "@/components/common/Text";
 import Icon from "@/components/common/Icon";
 import CreatableSelect from "@/components/common/CreatableSelect";
 import { SelectPill, TogglePill } from "../pills";
-import { TECH_SKILLS_BY_CATEGORY, STRATEGIC_SKILLS_BY_CATEGORY, FIELDS_OF_STUDY } from "@/constants/jobPost";
+import { useMetadataData } from "@/hooks/useMetadata";
 import { filterSelectedOptions } from "@/utilities/filterSelectedOptions";
+import InfoTooltip from "@/components/common/InfoTooltip";
 
 // ── Static options ────────────────────────────────────────────────────────────
 const EDUCATION_OPTIONS = ["Graduate", "Post Graduate", "Diploma", "12th Pass"];
@@ -74,14 +75,7 @@ function FieldLabel({ children, required, info }) {
         {children}
         {required && <span className="ml-1 text-(--color-black)">*</span>}
       </label>
-      {info && (
-        <Icon
-          name="statics/Employer-Dashboard/info.svg"
-          width={17}
-          height={17}
-          alt="More info"
-        />
-      )}
+      {info && <InfoTooltip text={info} />}
     </div>
   );
 }
@@ -142,8 +136,10 @@ function validate(form) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack, jobCategory = "" }) {
-  const techSkillOptions = TECH_SKILLS_BY_CATEGORY[jobCategory] ?? [];
-  const strategicSkillOptions = STRATEGIC_SKILLS_BY_CATEGORY[jobCategory] ?? [];
+  const { metadata, loading: metaLoading, error: metaError } = useMetadataData();
+
+  const techSkillOptions = metadata.techSkillsByCategory[jobCategory] ?? [];
+  const strategicSkillOptions = metadata.strategicSkillsByCategory[jobCategory] ?? [];
   const [form, setForm] = useState({
     minimumEducation: "",
     educationStream: "",
@@ -234,13 +230,19 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
 
       {/* Education Stream */}
       <div className="mb-6">
-        <FieldLabel required info>
+        <FieldLabel required info="Specify the field of study required (e.g. Computer Science, MBA, Electronics). You can type a custom stream if it's not listed.">
           Education Stream
         </FieldLabel>
+        {metaError && (
+          <p className="mb-3 rounded-lg bg-red-50 px-4 py-2.5 text-xs text-(--color-red)">
+            {metaError}
+          </p>
+        )}
         <CreatableSelect
-          placeholder="Eg. Computer Science"
-          options={FIELDS_OF_STUDY}
+          placeholder={metaLoading ? "Loading fields…" : "Eg. Computer Science"}
+          options={metadata.fieldsOfStudy}
           value={form.educationStream}
+          isDisabled={metaLoading}
           allowCreate={true}
           showAllOnOpen
           error={err("educationStream")}
@@ -255,7 +257,7 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
 
       {/* Years of Experience */}
       <div className="mb-6">
-        <FieldLabel required info>
+        <FieldLabel required info="Count only full-time professional experience. Internships, freelance, or part-time work are not included.">
           Total Years of Full-time Experience Required
         </FieldLabel>
         <CreatableSelect
@@ -341,7 +343,7 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
       {hasAge && (
         <div className="mb-6">
           <SubSectionHeader title="Age" onRemove={() => toggleAdditionalReq("Age")} />
-          <div className="flex items-start gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
             <div className="flex-1">
               <p className="mb-2 text-sm font-medium text-(--color-black-shade-700)">
                 Min Age
@@ -362,7 +364,7 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
                 <p className="mt-1.5 text-xs text-(--color-red)">{err("ageMin")}</p>
               )}
             </div>
-            <span className="shrink-0 pt-5 text-sm font-medium text-(--color-black-shade-700)">
+            <span className="hidden shrink-0 pt-12 text-sm font-medium text-(--color-black-shade-700) sm:block">
               to
             </span>
             <div className="flex-1">
@@ -446,7 +448,7 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
 
       {/* Technical Skills */}
       <div className="mb-6">
-        <FieldLabel required info>
+        <FieldLabel required info="Add at least 4 technical or domain-specific skills required for this role. These are used to match your job with candidates who have the right expertise.">
           Technical Skills
         </FieldLabel>
         {form.technicalSkills.length > 0 && (
@@ -471,8 +473,9 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
           </div>
         )}
         <CreatableSelect
-          placeholder="Type or select technical skill"
+          placeholder={metaLoading ? "Loading skills…" : "Type or select technical skill"}
           options={filterSelectedOptions(techSkillOptions, form.technicalSkills)}
+          isDisabled={metaLoading}
           allowCreate={true}
           value=""
           error={err("technicalSkills")}
@@ -486,7 +489,7 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
 
       {/* Strategic Skills */}
       <div className="mb-6">
-        <FieldLabel required info>
+        <FieldLabel required info="Add at least 4 soft or behavioural skills required (e.g. Communication, Leadership). These improve the quality of candidate matches.">
           Strategic Skills
         </FieldLabel>
         {form.strategicSkills.length > 0 && (
@@ -511,8 +514,9 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
           </div>
         )}
         <CreatableSelect
-          placeholder="Type or select strategic skill"
+          placeholder={metaLoading ? "Loading skills…" : "Type or select strategic skill"}
           options={filterSelectedOptions(strategicSkillOptions, form.strategicSkills)}
+          isDisabled={metaLoading}
           allowCreate={true}
           value=""
           error={err("strategicSkills")}

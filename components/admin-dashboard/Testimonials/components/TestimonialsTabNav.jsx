@@ -1,17 +1,14 @@
 "use client";
 
-export const PROFESSIONAL_TABS = [
-  { key: "members", label: "Members" },
-  { key: "requests", label: "Requests" },
-  { key: "onHold", label: "On hold" },
-  { key: "verificationPending", label: "Verification Pending" },
-  { key: "topVerified", label: "Top Verified" },
+export const TESTIMONIALS_TABS = [
+  { key: "all", label: "All Testimonials" },
+  { key: "featured", label: "Featured" },
 ];
 
-export default function ProfessionalsTabNav({ activeTab, onTabChange }) {
+export default function TestimonialsTabNav({ activeTab, onTabChange }) {
   return (
     <div className="flex items-center gap-1 flex-wrap">
-      {PROFESSIONAL_TABS.map((tab) => (
+      {TESTIMONIALS_TABS.map((tab) => (
         <button
           key={tab.key}
           onClick={() => onTabChange(tab.key)}
