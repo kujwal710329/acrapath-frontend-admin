@@ -197,6 +197,25 @@ export default function JobPostStepFourForm({
           label="Night Shift"
           value={stepOneData.isNightShift ? "Yes" : "No"}
         />
+        <ReviewRow
+          label="Application Channel"
+          value={stepOneData.jobSource === "external" ? "Your careers page" : "Through Acrapath"}
+        />
+        {stepOneData.jobSource === "external" && stepOneData.externalJobUrl && (
+          <div className="flex flex-col gap-1 py-4 sm:flex-row sm:items-start sm:gap-0">
+            <span className="w-full shrink-0 text-[0.9375rem] font-medium text-(--color-black-shade-400) sm:w-52">
+              Application Link
+            </span>
+            <a
+              href={stepOneData.externalJobUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 break-all text-[0.9375rem] font-medium text-(--color-primary) hover:underline"
+            >
+              {stepOneData.externalJobUrl}
+            </a>
+          </div>
+        )}
         <ReviewRow label="Work Type" value={stepOneData.workType} />
         <ReviewRow label="Working Location" value={stepOneData.workingLocation?.address} />
         {(stepOneData.city || stepOneData.state) && (

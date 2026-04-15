@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import TestimonialsTabNav from "./components/TestimonialsTabNav";
 import TestimonialsTable from "./components/TestimonialsTable";
 import CreateTestimonialModal from "./components/CreateTestimonialModal";
+import EditTestimonialModal from "./components/EditTestimonialModal";
 import TableControls from "@/components/admin-dashboard/Professionals/components/TableControls";
 import { useTestimonials } from "@/hooks/useTestimonials";
 
@@ -11,6 +12,7 @@ export default function TestimonialsPage() {
   const [activeTab, setActiveTab] = useState("all");
   const [perPage, setPerPage] = useState(20);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState(null);
 
   const {
     rows,
@@ -24,6 +26,7 @@ export default function TestimonialsPage() {
     toggleFeatured,
     deleteTestimonial,
     createTestimonial,
+    updateTestimonial,
   } = useTestimonials({ tab: activeTab, perPage });
 
   const handleTabChange = useCallback((tab) => {
@@ -76,6 +79,7 @@ export default function TestimonialsPage() {
           error={error}
           onRetry={refresh}
           onToggleFeatured={toggleFeatured}
+          onEdit={setEditTarget}
           onDelete={deleteTestimonial}
         />
       </div>
@@ -84,6 +88,13 @@ export default function TestimonialsPage() {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onSubmit={createTestimonial}
+      />
+
+      <EditTestimonialModal
+        open={!!editTarget}
+        testimonial={editTarget}
+        onClose={() => setEditTarget(null)}
+        onSubmit={updateTestimonial}
       />
     </div>
   );

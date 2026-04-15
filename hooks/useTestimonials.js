@@ -7,6 +7,7 @@ import {
   toggleFeaturedStatus,
   adminDeleteTestimonial,
   adminCreateTestimonial,
+  adminUpdateTestimonial,
 } from "@/services/testimonials.service";
 import { DEBOUNCE_CONFIG } from "@/utilities/config";
 import { logger } from "@/utilities/logger";
@@ -177,6 +178,25 @@ export function useTestimonials({ tab, perPage }) {
   );
 
   /**
+   * Update title/content/rating for a testimonial; reconcile row from API response.
+   */
+  const updateTestimonial = useCallback(
+    async (testimonialId, formData) => {
+      const result = await adminUpdateTestimonial(testimonialId, formData);
+      // Update the row in-place with the server-returned data
+      setRows((prev) =>
+        prev.map((r) =>
+          r._id === testimonialId ? { ...r, ...result?.data } : r
+        )
+      );
+      showSuccess(result?.message ?? "Testimonial updated successfully.");
+      logger.debug("[useTestimonials] testimonial updated", { testimonialId });
+      return result;
+    },
+    []
+  );
+
+  /**
    * Optimistically remove row; rollback + showError on failure.
    */
   const deleteTestimonial = useCallback(
@@ -213,7 +233,8 @@ export function useTestimonials({ tab, perPage }) {
     handleSearch,
     refresh,
     toggleFeatured,
-    deleteTestimonial,
     createTestimonial,
+    updateTestimonial,
+    deleteTestimonial,
   };
 }

@@ -56,17 +56,44 @@ export async function toggleFeaturedStatus(testimonialId) {
 }
 
 /**
- * Create a new testimonial (admin)
+ * Search registered users for testimonial assignment (admin)
+ * GET /api/v1/testimonials/admin/users/search?q=...
+ * Response: { success, data: [{ _id, firstName, lastName, email, role, companyName, personalInfo }] }
+ */
+export async function searchUsersForTestimonial(query = "") {
+  const params = new URLSearchParams();
+  if (query.trim()) params.set("q", query.trim());
+  logger.debug("[testimonials] searching users", { query });
+  return apiRequest(`/testimonials/admin/users/search?${params.toString()}`, {}, { useCache: false });
+}
+
+/**
+ * Create a new testimonial on behalf of a registered user (admin)
  * POST /api/v1/testimonials
- * Body: { title, content, rating, userName, designation, companyName, userRole }
+ * Body: { userId, title, content, rating }
  * Response: { success, message, data: { _id, title, content, ... } }
  */
-export async function adminCreateTestimonial({ title, content, rating, userName, designation, companyName, userRole }) {
-  logger.debug("[testimonials] creating testimonial", { title });
+export async function adminCreateTestimonial({ userId, title, content, rating }) {
+  logger.debug("[testimonials] creating testimonial", { title, userId });
   clearEndpointCache("/testimonials");
   return apiRequest("/testimonials", {
     method: "POST",
-    body: JSON.stringify({ title, content, rating, userName, designation, companyName, userRole }),
+    body: JSON.stringify({ userId, title, content, rating }),
+  }, { useCache: false });
+}
+
+/**
+ * Update testimonial title/content/rating (admin)
+ * PATCH /api/v1/testimonials/:id
+ * Body: { title?, content?, rating? }
+ * Response: { success, message, data: { _id, title, content, ... } }
+ */
+export async function adminUpdateTestimonial(testimonialId, { title, content, rating }) {
+  logger.debug("[testimonials] updating testimonial", { testimonialId });
+  clearEndpointCache("/testimonials");
+  return apiRequest(`/testimonials/${testimonialId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ title, content, rating }),
   }, { useCache: false });
 }
 

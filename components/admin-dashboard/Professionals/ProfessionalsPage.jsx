@@ -82,6 +82,7 @@ export default function ProfessionalsPage() {
             loading={loading}
             error={error}
             onRetry={refresh}
+            onStatusChange={updateStatus}
             onView={handleView}
           />
         ) : (

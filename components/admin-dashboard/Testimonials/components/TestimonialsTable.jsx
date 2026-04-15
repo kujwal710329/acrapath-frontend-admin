@@ -79,20 +79,30 @@ function getDisplayName(row) {
   return full || userId.email || "—";
 }
 
-function getDesignation(row) {
-  if (row.designation) return row.designation;
-  if (row.companyName) return row.companyName;
-  const userId = row.userId;
-  if (!userId) return "—";
+function resolveCurrentExperience(userId) {
+  const work = userId?.professionalInfo?.workExperience ?? [];
+  const intern = userId?.professionalInfo?.internshipExperience ?? [];
   return (
-    userId.personalInfo?.currentDesignation ||
-    userId.companyName ||
-    "—"
+    work.find((w) => w.currentlyWorking) ??
+    work[0] ??
+    intern.find((i) => i.currentlyWorking) ??
+    intern[0] ??
+    null
   );
 }
 
+function getDesignation(row) {
+  const userId = row.userId;
+  if (!userId) return "—";
+  // Employers store designation in personalInfo.currentDesignation
+  if (userId.personalInfo?.currentDesignation) return userId.personalInfo.currentDesignation;
+  // Employees store it in their work/internship experience
+  const exp = resolveCurrentExperience(userId);
+  if (exp?.role) return exp.role;
+  return "—";
+}
+
 function getRole(row) {
-  if (row.userRole) return capitalizeRole(row.userRole);
   return capitalizeRole(row.userId?.role);
 }
 
@@ -114,6 +124,7 @@ export default function TestimonialsTable({
   error,
   onRetry,
   onToggleFeatured,
+  onEdit,
   onDelete,
 }) {
   const [selectedRows, setSelectedRows] = useState(new Set());
@@ -296,6 +307,15 @@ export default function TestimonialsTable({
                     >
                       {isToggling ? <Spinner /> : null}
                       {row.isFeatured ? "Unfeature" : "Feature"}
+                    </button>
+
+                    {/* Edit button */}
+                    <button
+                      onClick={() => onEdit?.(row)}
+                      disabled={isDeleting || isToggling}
+                      className="inline-flex items-center gap-1.5 ml-2 rounded px-3 py-1 text-xs text-(--color-black-shade-600) border border-(--color-black-shade-300) hover:bg-(--color-black-shade-50) transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Edit
                     </button>
 
                     {/* Delete button */}

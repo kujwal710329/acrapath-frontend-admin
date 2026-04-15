@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import Icon from "@/components/common/Icon";
 import Button from "@/components/common/Button";
 import ResumeChip from "./ResumeChip";
+import StatusDropdown, { STATUS_OPTIONS } from "./StatusDropdown";
 import {
   formatContact,
   formatCities,
@@ -45,7 +46,7 @@ function SkeletonRow() {
       <td className="px-3 py-3.5 border border-(--color-black-shade-100)">
         <div className="h-4 w-4 rounded bg-(--color-black-shade-100)" />
       </td>
-      {Array.from({ length: 8 }).map((_, i) => (
+      {Array.from({ length: 9 }).map((_, i) => (
         <td key={i} className="px-4 py-3.5 border border-(--color-black-shade-100)">
           <div className="h-4 rounded bg-(--color-black-shade-100)" />
         </td>
@@ -77,6 +78,7 @@ const THEAD = ({ isAllSelected, onToggleAll }) => (
       <ColumnHeader withMenu>Last Active</ColumnHeader>
       <ColumnHeader withMenu>Score</ColumnHeader>
       <ColumnHeader>Resume</ColumnHeader>
+      <ColumnHeader withMenu>Status</ColumnHeader>
       <th className="px-4 py-3 text-center text-14 font-semibold text-(--color-black-shade-700) border border-(--color-black-shade-100) bg-(--pure-white) whitespace-nowrap">
         View
       </th>
@@ -86,7 +88,7 @@ const THEAD = ({ isAllSelected, onToggleAll }) => (
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function MembersTable({ data = [], loading, error, onRetry, onView }) {
+export default function MembersTable({ data = [], loading, error, onRetry, onStatusChange, onView }) {
   const [selectedRows, setSelectedRows] = useState(new Set());
 
   const isAllSelected = data.length > 0 && selectedRows.size === data.length;
@@ -194,6 +196,13 @@ export default function MembersTable({ data = [], loading, error, onRetry, onVie
                 </td>
                 <td className="px-4 py-3.5 border border-(--color-black-shade-100)">
                   <ResumeChip filename={resumeName} href={resumeUrl} />
+                </td>
+                <td className="px-4 py-3.5 border border-(--color-black-shade-100)">
+                  <StatusDropdown
+                    value={row.profileVerificationStatus}
+                    onChange={(val) => onStatusChange?.(row.id, val)}
+                    options={STATUS_OPTIONS}
+                  />
                 </td>
                 <td className="px-4 py-3.5 border border-(--color-black-shade-100) text-center">
                   <button

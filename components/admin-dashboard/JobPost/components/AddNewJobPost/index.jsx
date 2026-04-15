@@ -107,7 +107,10 @@ function buildPayload(step1, step2, step3, categoryApiMap = {}) {
 
     // Employment
     jobType: JOB_TYPE_MAP[step1.jobType] || "full time",
-    jobSource: "internal",
+    jobSource: step1.jobSource || "internal",
+    ...(step1.jobSource === "external" && step1.externalJobUrl
+      ? { externalJobUrl: step1.externalJobUrl }
+      : {}),
     jobSchedule: step1.isNightShift ? "night shift" : "day shift",
 
     // Requirements

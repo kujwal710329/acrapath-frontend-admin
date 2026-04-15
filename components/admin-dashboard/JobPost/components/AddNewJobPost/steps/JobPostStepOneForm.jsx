@@ -75,6 +75,16 @@ function FieldLabel({ children, required, info }) {
   );
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function isValidUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 // ── Validation ────────────────────────────────────────────────────────────────
 function validate(form) {
   const errs = {};
@@ -82,6 +92,10 @@ function validate(form) {
   if (!form.jobTitle.trim()) errs.jobTitle = "Job title is required.";
   if (!form.jobCategory) errs.jobCategory = "Job category is required.";
   if (!form.jobType) errs.jobType = "Please select a job type.";
+  if (form.jobSource === "external") {
+    if (!form.externalJobUrl.trim()) errs.externalJobUrl = "Careers page / application link is required.";
+    else if (!isValidUrl(form.externalJobUrl.trim())) errs.externalJobUrl = "Enter a valid URL (e.g. https://careers.company.com/apply).";
+  }
   if (!form.workType) errs.workType = "Please select a work type.";
   if (!form.workingLocation.address?.trim())
     errs.workingLocation = "Working location is required.";
@@ -122,6 +136,8 @@ export default function JobPostStepOneForm({
     jobCategory: "",
     jobType: "",
     isNightShift: false,
+    jobSource: "internal",
+    externalJobUrl: "",
     workType: "",
     workingLocation: { address: "", placeId: "", lat: null, lng: null, floorPlotShop: "" },
     city: "",
@@ -275,6 +291,22 @@ export default function JobPostStepOneForm({
       {/* Job Type */}
       <div className="mb-6">
         <Label required className="mb-4!">Job Type</Label>
+
+        {/* Night Shift */}
+        <div className="mb-4">
+          <label className="flex cursor-pointer items-center gap-2">
+            <input
+              type="checkbox"
+              checked={form.isNightShift}
+              onChange={(e) => set("isNightShift")(e.target.checked)}
+              className="h-4 w-4 cursor-pointer"
+            />
+            <span className="text-sm font-medium text-(--color-black-shade-700)">
+              This is a night shift job
+            </span>
+          </label>
+        </div>
+
         <div className="flex flex-wrap gap-2">
           {JOB_TYPE_OPTIONS.map((opt) => (
             <SelectPill
@@ -290,19 +322,39 @@ export default function JobPostStepOneForm({
         )}
       </div>
 
-      {/* Night Shift */}
-      <div className="mb-2">
-        <label className="flex cursor-pointer items-center gap-2">
-          <input
-            type="checkbox"
-            checked={form.isNightShift}
-            onChange={(e) => set("isNightShift")(e.target.checked)}
-            className="h-4 w-4 cursor-pointer"
+      {/* Job Sourcing */}
+      <div className="mb-6">
+        <p className="mb-4 text-[0.9375rem] font-medium text-(--color-black-shade-900)">
+          Where should candidates submit their application? *
+        </p>
+        <div className="flex gap-2">
+          <SelectPill
+            label="Through Acrapath"
+            isSelected={form.jobSource === "internal"}
+            onSelect={() => setForm({ ...form, jobSource: "internal", externalJobUrl: "" })}
           />
-          <span className="text-sm font-medium text-(--color-black-shade-700)">
-            This is a night shift job
-          </span>
-        </label>
+          <SelectPill
+            label="Your  careers page"
+            isSelected={form.jobSource === "external"}
+            onSelect={() => set("jobSource")("external")}
+          />
+        </div>
+        {form.jobSource === "external" && (
+          <div className="mt-4">
+            <Label required className="mb-4!">Careers Page / Application Link</Label>
+            <input
+              type="url"
+              value={form.externalJobUrl}
+              onChange={handle("externalJobUrl")}
+              onBlur={touch("externalJobUrl")}
+              placeholder="Paste the external job application URL"
+              className={`${inputBase} ${err("externalJobUrl") ? inputError : inputNormal}`}
+            />
+            {err("externalJobUrl") && (
+              <p className="mt-1.5 text-xs text-(--color-red)">{err("externalJobUrl")}</p>
+            )}
+          </div>
+        )}
       </div>
 
       <SectionDivider />

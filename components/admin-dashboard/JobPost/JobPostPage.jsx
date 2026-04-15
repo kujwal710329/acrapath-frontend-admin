@@ -97,6 +97,7 @@ export default function JobPostPage() {
             loading={loading}
             error={error}
             onRetry={refresh}
+            onStatusChange={updateStatus}
             onView={handleView}
           />
         )}
