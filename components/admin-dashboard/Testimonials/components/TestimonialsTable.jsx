@@ -21,7 +21,7 @@ function SkeletonRow() {
       <td className="px-3 py-3.5 border border-(--color-black-shade-100)">
         <div className="h-4 w-4 rounded bg-(--color-black-shade-100)" />
       </td>
-      {Array.from({ length: 7 }).map((_, i) => (
+      {Array.from({ length: 8 }).map((_, i) => (
         <td key={i} className="px-4 py-3.5 border border-(--color-black-shade-100)">
           <div className="h-4 rounded bg-(--color-black-shade-100)" />
         </td>
@@ -57,6 +57,7 @@ const THEAD = ({ isAllSelected, onToggleAll }) => (
       <ColumnHeader>Name</ColumnHeader>
       <ColumnHeader>Role</ColumnHeader>
       <ColumnHeader>Designation</ColumnHeader>
+      <ColumnHeader>Company</ColumnHeader>
       <ColumnHeader>Title</ColumnHeader>
       <ColumnHeader>Rating</ColumnHeader>
       <ColumnHeader>Featured</ColumnHeader>
@@ -82,11 +83,14 @@ function getDisplayName(row) {
 function resolveCurrentExperience(userId) {
   const work = userId?.professionalInfo?.workExperience ?? [];
   const intern = userId?.professionalInfo?.internshipExperience ?? [];
+  // Prefer currentlyWorking, else most recent by joiningDate
+  const sortedWork = [...work].sort((a, b) => new Date(b.joiningDate) - new Date(a.joiningDate));
+  const sortedIntern = [...intern].sort((a, b) => new Date(b.joiningDate) - new Date(a.joiningDate));
   return (
-    work.find((w) => w.currentlyWorking) ??
-    work[0] ??
-    intern.find((i) => i.currentlyWorking) ??
-    intern[0] ??
+    sortedWork.find((w) => w.currentlyWorking) ??
+    sortedWork[0] ??
+    sortedIntern.find((i) => i.currentlyWorking) ??
+    sortedIntern[0] ??
     null
   );
 }
@@ -100,6 +104,14 @@ function getDesignation(row) {
   const exp = resolveCurrentExperience(userId);
   if (exp?.role) return exp.role;
   return "—";
+}
+
+function getCompany(row) {
+  const userId = row.userId;
+  if (!userId) return "—";
+  if (userId.companyName) return userId.companyName;
+  const exp = resolveCurrentExperience(userId);
+  return exp?.companyName || "—";
 }
 
 function getRole(row) {
@@ -270,6 +282,11 @@ export default function TestimonialsTable({
                   {/* Designation */}
                   <td className="px-4 py-3.5 text-14 text-(--color-black-shade-600) border border-(--color-black-shade-100) whitespace-nowrap">
                     {getDesignation(row)}
+                  </td>
+
+                  {/* Company */}
+                  <td className="px-4 py-3.5 text-14 text-(--color-black-shade-600) border border-(--color-black-shade-100) whitespace-nowrap">
+                    {getCompany(row)}
                   </td>
 
                   {/* Title */}

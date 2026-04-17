@@ -50,11 +50,14 @@ function RatingPicker({ value, onChange }) {
 function resolveCurrentExperience(user) {
   const work = user?.professionalInfo?.workExperience ?? [];
   const intern = user?.professionalInfo?.internshipExperience ?? [];
+  // Prefer currentlyWorking, else most recent by joiningDate
+  const sortedWork = [...work].sort((a, b) => new Date(b.joiningDate) - new Date(a.joiningDate));
+  const sortedIntern = [...intern].sort((a, b) => new Date(b.joiningDate) - new Date(a.joiningDate));
   return (
-    work.find((w) => w.currentlyWorking) ??
-    work[0] ??
-    intern.find((i) => i.currentlyWorking) ??
-    intern[0] ??
+    sortedWork.find((w) => w.currentlyWorking) ??
+    sortedWork[0] ??
+    sortedIntern.find((i) => i.currentlyWorking) ??
+    sortedIntern[0] ??
     null
   );
 }

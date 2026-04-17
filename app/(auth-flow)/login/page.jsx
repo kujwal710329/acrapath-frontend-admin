@@ -8,7 +8,7 @@ export default function Page() {
       <div className="mx-auto grid h-full max-w-[75rem] grid-rows-[auto_1fr] px-4">
         <ClientOnly>
           <AuthHeader
-            title="Credepath Admin Portal"
+            title="Acrapath Admin Portal"
             description="Sign in to manage professionals, employers, job posts, and platform operations."
           />
 

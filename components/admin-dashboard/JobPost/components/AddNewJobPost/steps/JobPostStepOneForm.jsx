@@ -215,7 +215,7 @@ export default function JobPostStepOneForm({
           value={form.companyName}
           onChange={handle("companyName")}
           onBlur={touch("companyName")}
-          placeholder="Eg. Credepath Technologies"
+          placeholder="Eg. Acrapath Technologies"
           className={`${inputBase} ${err("companyName") ? inputError : inputNormal}`}
         />
         {err("companyName") && (

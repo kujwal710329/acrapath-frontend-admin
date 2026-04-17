@@ -8,7 +8,7 @@ export default function AuthNavbar() {
         <Link href="/">
           <Image
             src="/static/Icons/Logo_credpath.svg"
-            alt="Credepath"
+            alt="Acrapath"
             width={140}
             height={32}
             priority
