@@ -8,11 +8,14 @@ import Text from "@/components/common/Text";
 import CreatableSelect from "@/components/common/CreatableSelect";
 import RichTextEditor from "@/components/common/RichTextEditor";
 import { SelectPill } from "../pills";
+import { filterSelectedOptions } from "@/utilities/filterSelectedOptions";
 
 /** Strip HTML tags to get plain-text character count for validation. */
 function stripHtml(html) {
   return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
 }
+
+const MAX_DESC_LENGTH = 10000;
 
 // ── Static options ────────────────────────────────────────────────────────────
 const INTERVIEW_LOCATION_OPTIONS = [
@@ -55,9 +58,12 @@ function SectionDivider() {
 // ── Validation ────────────────────────────────────────────────────────────────
 function validate(form) {
   const errs = {};
-  if (stripHtml(form.jobDescription).length < 20)
+  const descLength = stripHtml(form.jobDescription).length;
+  if (descLength < 20)
     errs.jobDescription =
       "Please provide at least 20 characters for the job description.";
+  else if (descLength > MAX_DESC_LENGTH)
+    errs.jobDescription = `Job description cannot exceed ${MAX_DESC_LENGTH.toLocaleString()} characters.`;
   if (!form.interviewLocationType)
     errs.interviewLocationType = "Please select an interview location type.";
   return errs;
@@ -117,8 +123,8 @@ export default function JobPostStepThreeForm({ defaultValues = {}, onNext, onBac
           ) : (
             <span />
           )}
-          <p className="ml-auto text-xs text-(--color-black-shade-400)">
-            {stripHtml(form.jobDescription).length} characters
+          <p className={`ml-auto text-xs ${stripHtml(form.jobDescription).length > MAX_DESC_LENGTH ? "text-(--color-red)" : "text-(--color-black-shade-400)"}`}>
+            {stripHtml(form.jobDescription).length.toLocaleString()} / {MAX_DESC_LENGTH.toLocaleString()}
           </p>
         </div>
       </div>
@@ -160,22 +166,26 @@ export default function JobPostStepThreeForm({ defaultValues = {}, onNext, onBac
           Interview Process (Optional)
         </p>
         <div className="flex flex-col gap-4">
-          {form.interviewStages.map((stage, index) => (
-            <div key={index}>
-              <p className="mb-2 text-sm font-medium text-(--color-black-shade-700)">
-                Stage {index + 1}
-              </p>
-              <CreatableSelect
-                placeholder={`Choose Stage ${index + 1}`}
-                options={INTERVIEW_STAGE_OPTIONS}
-                value={stage}
-                allowCreate={false}
-                showAllOnOpen
-                onChange={(val) => setStage(index, val)}
-                className="mb-0!"
-              />
-            </div>
-          ))}
+          {form.interviewStages.map((stage, index) => {
+            const otherSelected = form.interviewStages.filter((s, i) => i !== index && s !== "");
+            const availableOptions = filterSelectedOptions(INTERVIEW_STAGE_OPTIONS, otherSelected);
+            return (
+              <div key={index}>
+                <p className="mb-2 text-sm font-medium text-(--color-black-shade-700)">
+                  Stage {index + 1}
+                </p>
+                <CreatableSelect
+                  placeholder={`Choose Stage ${index + 1}`}
+                  options={availableOptions}
+                  value={stage}
+                  allowCreate={false}
+                  showAllOnOpen
+                  onChange={(val) => setStage(index, val)}
+                  className="mb-0!"
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
 

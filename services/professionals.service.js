@@ -12,6 +12,7 @@ export const TAB_STATUS_MAP = {
   requests: "requests",
   onHold: "on_hold",
   verificationPending: "pending",
+  topVerified: null, // uses fetchAllEmployees — no profileVerificationStatus filter
 };
 
 /**
@@ -36,6 +37,37 @@ export async function fetchProfessionals({
   logger.debug("[professionals] fetching", { tab, page, limit, search });
 
   return apiRequest(endpoint, {}, { useCache: false });
+}
+
+/**
+ * Fetch all employees (no profileVerificationStatus filter) — used by Top Verified tab
+ * GET /api/v1/users?role=employee&page=&limit=&search=
+ */
+export async function fetchAllEmployees({ page = 1, limit = 20, search = "" } = {}) {
+  const params = new URLSearchParams({
+    role: "employee",
+    page: String(page),
+    limit: String(limit),
+  });
+  if (search.trim()) params.set("search", search.trim());
+
+  const endpoint = `/users?${params.toString()}`;
+  logger.debug("[professionals] fetching all employees", { page, limit, search });
+
+  return apiRequest(endpoint, {}, { useCache: false });
+}
+
+/**
+ * Toggle top professional status for a user
+ * PATCH /api/v1/users/admin/top-verified-professionals/:userId/toggle
+ * Response: { success, message, data: { sfUserId, isTopProfessional } }
+ */
+export async function toggleTopProfessionalStatus(userId) {
+  logger.debug("[professionals] toggling top professional status", { userId });
+  clearEndpointCache("/users");
+  return apiRequest(`/users/admin/top-verified-professionals/${userId}/toggle`, {
+    method: "PATCH",
+  });
 }
 
 /**

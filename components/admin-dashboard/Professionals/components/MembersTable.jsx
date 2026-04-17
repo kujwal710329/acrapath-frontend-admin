@@ -2,7 +2,9 @@
 
 import { useState, useCallback } from "react";
 import Icon from "@/components/common/Icon";
+import Button from "@/components/common/Button";
 import ResumeChip from "./ResumeChip";
+import StatusDropdown, { STATUS_OPTIONS } from "./StatusDropdown";
 import {
   formatContact,
   formatCities,
@@ -44,7 +46,7 @@ function SkeletonRow() {
       <td className="px-3 py-3.5 border border-(--color-black-shade-100)">
         <div className="h-4 w-4 rounded bg-(--color-black-shade-100)" />
       </td>
-      {Array.from({ length: 7 }).map((_, i) => (
+      {Array.from({ length: 9 }).map((_, i) => (
         <td key={i} className="px-4 py-3.5 border border-(--color-black-shade-100)">
           <div className="h-4 rounded bg-(--color-black-shade-100)" />
         </td>
@@ -71,10 +73,12 @@ const THEAD = ({ isAllSelected, onToggleAll }) => (
       <ColumnHeader>Professional ID</ColumnHeader>
       <ColumnHeader>Full Name</ColumnHeader>
       <ColumnHeader>Contact Number</ColumnHeader>
+      <ColumnHeader>Professional Category</ColumnHeader>
       <ColumnHeader>City Preference</ColumnHeader>
       <ColumnHeader withMenu>Last Active</ColumnHeader>
       <ColumnHeader withMenu>Score</ColumnHeader>
       <ColumnHeader>Resume</ColumnHeader>
+      <ColumnHeader withMenu>Status</ColumnHeader>
       <th className="px-4 py-3 text-center text-14 font-semibold text-(--color-black-shade-700) border border-(--color-black-shade-100) bg-(--pure-white) whitespace-nowrap">
         View
       </th>
@@ -84,7 +88,7 @@ const THEAD = ({ isAllSelected, onToggleAll }) => (
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function MembersTable({ data = [], loading, error, onRetry, onView }) {
+export default function MembersTable({ data = [], loading, error, onRetry, onStatusChange, onView }) {
   const [selectedRows, setSelectedRows] = useState(new Set());
 
   const isAllSelected = data.length > 0 && selectedRows.size === data.length;
@@ -122,12 +126,9 @@ export default function MembersTable({ data = [], loading, error, onRetry, onVie
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3">
         <p className="text-14 text-(--color-black-shade-500)">{error}</p>
-        <button
-          onClick={onRetry}
-          className="px-4 py-2 rounded-lg text-14 font-medium text-(--color-primary) border border-(--color-primary) hover:bg-(--color-primary-shade-100) transition-colors cursor-pointer"
-        >
+        <Button variant="outline" onClick={onRetry} className="w-auto! h-10! px-5">
           Retry
-        </button>
+        </Button>
       </div>
     );
   }
@@ -176,6 +177,9 @@ export default function MembersTable({ data = [], loading, error, onRetry, onVie
                 <td className="px-4 py-3.5 text-14 text-(--color-black-shade-700) border border-(--color-black-shade-100) whitespace-nowrap">
                   {formatContact(row.countryCode, row.contactNo)}
                 </td>
+                <td className="px-4 py-3.5 text-14 text-(--color-black-shade-600) border border-(--color-black-shade-100) whitespace-nowrap capitalize">
+                  {row.professionalCategory ?? "—"}
+                </td>
                 <td className="px-4 py-3.5 text-14 text-(--color-black-shade-600) border border-(--color-black-shade-100) max-w-45">
                   <span
                     className="block truncate"
@@ -192,6 +196,13 @@ export default function MembersTable({ data = [], loading, error, onRetry, onVie
                 </td>
                 <td className="px-4 py-3.5 border border-(--color-black-shade-100)">
                   <ResumeChip filename={resumeName} href={resumeUrl} />
+                </td>
+                <td className="px-4 py-3.5 border border-(--color-black-shade-100)">
+                  <StatusDropdown
+                    value={row.profileVerificationStatus}
+                    onChange={(val) => onStatusChange?.(row.id, val)}
+                    options={STATUS_OPTIONS}
+                  />
                 </td>
                 <td className="px-4 py-3.5 border border-(--color-black-shade-100) text-center">
                   <button

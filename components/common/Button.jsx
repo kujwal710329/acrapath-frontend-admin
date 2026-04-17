@@ -26,6 +26,8 @@ export default function Button({
       "h-12 w-full rounded-xl px-5 text-14 bg-(--color-secondary) text-white hover:bg-(--color-secondary-shade-700)",
     outline:
       "h-12 w-full rounded-xl px-5 text-14 bg-(--pure-white) border border-(--color-primary) text-(--color-primary) hover:bg-(--color-primary-shade-100)",
+    danger:
+      "h-12 w-full rounded-xl px-5 text-14 bg-red-500 text-white hover:bg-red-600",
     subcategory: isActive
       ? "rounded-full px-5 py-2 text-14 border bg-(--color-primary) text-white border-(--color-primary)"
       : "rounded-full px-5 py-2 text-14 border bg-(--pure-white) text-(--color-black-shade-700) border-(--color-black-shade-300) hover:border-(--color-primary) hover:text-(--color-primary)",

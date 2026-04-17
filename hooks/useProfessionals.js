@@ -3,7 +3,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   fetchProfessionals,
+  fetchAllEmployees,
   updateVerificationStatus,
+  toggleTopProfessionalStatus,
 } from "@/services/professionals.service";
 import { DEBOUNCE_CONFIG } from "@/utilities/config";
 import { logger } from "@/utilities/logger";
@@ -42,12 +44,10 @@ export function useProfessionals({ tab, perPage }) {
       setError(null);
 
       try {
-        const result = await fetchProfessionals({
-          tab,
-          page: nextPage,
-          limit: perPage,
-          search: nextSearch,
-        });
+        const result =
+          tab === "topVerified"
+            ? await fetchAllEmployees({ page: nextPage, limit: perPage, search: nextSearch })
+            : await fetchProfessionals({ tab, page: nextPage, limit: perPage, search: nextSearch });
 
         if (reqIdRef.current !== id) return; // stale — discard
 
@@ -150,6 +150,43 @@ export function useProfessionals({ tab, perPage }) {
     [load]
   );
 
+  /**
+   * Optimistically toggle a row's isTopProfessional; reconcile from API response.
+   */
+  const toggleTopProfessional = useCallback(
+    async (userId) => {
+      // Optimistic flip
+      setRows((prev) =>
+        prev.map((r) =>
+          (r.sfUserId ?? r.id) === userId
+            ? { ...r, isTopProfessional: !r.isTopProfessional }
+            : r
+        )
+      );
+      try {
+        const result = await toggleTopProfessionalStatus(userId);
+        // Reconcile with actual server state from response
+        const serverValue = result?.data?.isTopProfessional;
+        if (serverValue !== undefined) {
+          setRows((prev) =>
+            prev.map((r) =>
+              (r.sfUserId ?? r.id) === userId
+                ? { ...r, isTopProfessional: serverValue }
+                : r
+            )
+          );
+        }
+        showSuccess(result?.message ?? "Top status updated successfully");
+        logger.debug("[useProfessionals] top status toggled", { userId });
+      } catch (err) {
+        // apiRequest already showed a toast — reload accurate state
+        logger.error("[useProfessionals] top status toggle failed", { error: err.message });
+        load(curRef.current.page, curRef.current.search);
+      }
+    },
+    [load]
+  );
+
   return {
     rows,
     pagination,
@@ -161,5 +198,6 @@ export function useProfessionals({ tab, perPage }) {
     handleSearch,
     refresh,
     updateStatus,
+    toggleTopProfessional,
   };
 }

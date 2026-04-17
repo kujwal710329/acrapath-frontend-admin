@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Icon from "@/components/common/Icon";
+import JobPostStatusDropdown from "./JobPostStatusDropdown";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -19,7 +20,7 @@ function SkeletonRow() {
       <td className="px-3 py-3.5 border border-(--color-black-shade-100)">
         <div className="h-4 w-4 rounded bg-(--color-black-shade-100)" />
       </td>
-      {Array.from({ length: 6 }).map((_, i) => (
+      {Array.from({ length: 8 }).map((_, i) => (
         <td key={i} className="px-4 py-3.5 border border-(--color-black-shade-100)">
           <div className="h-4 rounded bg-(--color-black-shade-100)" />
         </td>
@@ -46,9 +47,11 @@ const THEAD = ({ isAllSelected, onToggleAll }) => (
       <ColumnHeader>Job ID</ColumnHeader>
       <ColumnHeader>Created Date &amp; Time</ColumnHeader>
       <ColumnHeader>Company</ColumnHeader>
+      <ColumnHeader>Category</ColumnHeader>
       <ColumnHeader>Profile Seen</ColumnHeader>
       <ColumnHeader>Talbox Matches</ColumnHeader>
       <ColumnHeader>Profile Unlock</ColumnHeader>
+      <ColumnHeader>Status</ColumnHeader>
       <th className="px-4 py-3 text-center text-14 font-semibold text-(--color-black-shade-700) border border-(--color-black-shade-100) bg-(--pure-white) whitespace-nowrap">
         View
       </th>
@@ -58,7 +61,7 @@ const THEAD = ({ isAllSelected, onToggleAll }) => (
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function CurrentPostTable({ data = [], loading, error, onRetry, onView }) {
+export default function CurrentPostTable({ data = [], loading, error, onRetry, onStatusChange, onView }) {
   const [selectedRows, setSelectedRows] = useState(new Set());
 
   const isAllSelected = data.length > 0 && selectedRows.size === data.length;
@@ -156,6 +159,9 @@ export default function CurrentPostTable({ data = [], loading, error, onRetry, o
               <td className="px-4 py-3.5 text-14 text-(--color-black-shade-700) border border-(--color-black-shade-100) whitespace-nowrap">
                 {row.company ?? row.companyName ?? "—"}
               </td>
+              <td className="px-4 py-3.5 text-14 text-(--color-black-shade-600) border border-(--color-black-shade-100) whitespace-nowrap capitalize">
+                {row.jobCategory ?? "—"}
+              </td>
               <td className="px-4 py-3.5 text-14 text-(--color-black-shade-700) border border-(--color-black-shade-100) whitespace-nowrap">
                 {row.profileSeen ?? "—"}
               </td>
@@ -164,6 +170,12 @@ export default function CurrentPostTable({ data = [], loading, error, onRetry, o
               </td>
               <td className="px-4 py-3.5 text-14 text-(--color-black-shade-700) border border-(--color-black-shade-100) whitespace-nowrap">
                 {row.profileUnlock ?? "—"}
+              </td>
+              <td className="px-4 py-3.5 border border-(--color-black-shade-100)">
+                <JobPostStatusDropdown
+                  value={row.status ?? "active"}
+                  onChange={(val) => onStatusChange?.(row.jobId ?? row.id, val)}
+                />
               </td>
               <td className="px-4 py-3.5 border border-(--color-black-shade-100)">
                 <div className="flex items-center justify-center gap-2">
