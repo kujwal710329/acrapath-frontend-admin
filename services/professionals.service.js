@@ -82,3 +82,28 @@ export async function updateVerificationStatus(userId, profileVerificationStatus
     body: JSON.stringify({ profileVerificationStatus }),
   });
 }
+
+/**
+ * Create a professional profile as admin (no user self-registration required)
+ * POST /api/v1/users/admin/create-professional
+ */
+export async function createAdminProfessional(payload) {
+  logger.debug("[professionals] admin creating professional", { email: payload.email });
+  clearEndpointCache("/users");
+  return apiRequest("/users/admin/create-professional", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * Get S3 presigned upload URL for a document during admin professional creation
+ * POST /api/v1/users/admin/professional-presigned-url
+ */
+export async function getAdminProfessionalPresignedUrl({ documentType, fileName, tempId }) {
+  logger.debug("[professionals] getting admin presigned url", { documentType, tempId });
+  return apiRequest("/users/admin/professional-presigned-url", {
+    method: "POST",
+    body: JSON.stringify({ documentType, fileName, tempId }),
+  });
+}

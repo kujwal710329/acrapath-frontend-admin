@@ -7,6 +7,7 @@ import TableControls from "./components/TableControls";
 import MembersTable from "./components/MembersTable";
 import RequestsTable from "./components/RequestsTable";
 import TopVerifiedProfessionalsTable from "./components/TopVerifiedProfessionalsTable";
+import AddNewProfessional from "./components/AddNewProfessional";
 import { useProfessionals } from "@/hooks/useProfessionals";
 
 const MEMBERS_TYPE_TABS = new Set(["members", "verificationPending"]);
@@ -46,6 +47,18 @@ export default function ProfessionalsPage() {
 
   const isMembersType = MEMBERS_TYPE_TABS.has(activeTab);
   const isTopVerified = activeTab === "topVerified";
+  const isAddNew = activeTab === "addNew";
+
+  if (isAddNew) {
+    return (
+      <AddNewProfessional
+        onBack={() => {
+          setActiveTab("members");
+          refresh();
+        }}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col">

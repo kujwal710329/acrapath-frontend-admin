@@ -73,7 +73,7 @@ function FieldLabel({ children, required, info }) {
     <div className="mb-4 flex items-center gap-1.5">
       <label className="text-[0.9375rem] font-medium text-(--color-black-shade-900)">
         {children}
-        {required && <span className="ml-1 text-(--color-black)">*</span>}
+        {required && <span className="ml-1 text-red-500">*</span>}
       </label>
       {info && <InfoTooltip text={info} />}
     </div>
@@ -442,7 +442,7 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
 
       {/* ── Skills ───────────────────────────────────────────────────────── */}
       <SectionHeader
-        title="Skills *"
+        title={<>Skills <span className="text-red-500">*</span></>}
         subtitle="Add skills so that we can help you find the right candidates"
       />
 

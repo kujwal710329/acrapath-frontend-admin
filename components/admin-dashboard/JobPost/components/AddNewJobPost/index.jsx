@@ -150,16 +150,18 @@ function buildPayload(step1, step2, step3, categoryApiMap = {}) {
 export default function AddNewJobPost({ onBack }) {
   const { metadata } = useMetadataData();
   const [step, setStep] = useState(1);
-  const [stepOneData, setStepOneData] = useState({});
-  const [stepTwoData, setStepTwoData] = useState({});
-  const [stepThreeData, setStepThreeData] = useState({});
+  // Load synchronously on first client render so step forms see the data immediately.
+  // typeof window guard prevents crashes during SSR.
+  const [stepOneData, setStepOneData] = useState(() =>
+    typeof window !== "undefined" ? loadFromStorage(KEYS.step1) : {}
+  );
+  const [stepTwoData, setStepTwoData] = useState(() =>
+    typeof window !== "undefined" ? loadFromStorage(KEYS.step2) : {}
+  );
+  const [stepThreeData, setStepThreeData] = useState(() =>
+    typeof window !== "undefined" ? loadFromStorage(KEYS.step3) : {}
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    setStepOneData(loadFromStorage(KEYS.step1));
-    setStepTwoData(loadFromStorage(KEYS.step2));
-    setStepThreeData(loadFromStorage(KEYS.step3));
-  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
