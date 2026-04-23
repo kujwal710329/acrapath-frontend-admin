@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -73,6 +74,11 @@ export default function RichTextEditor({
   hasError,
   minHeight = 200,
 }) {
+  // Tracks whether the current onChange call originated from user input inside
+  // the editor (true) vs. a prop sync from the parent (false). Prevents the
+  // setContent → onUpdate → onChange → setContent feedback loop.
+  const isPropUpdate = useRef(false);
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -84,6 +90,7 @@ export default function RichTextEditor({
     ],
     content: value || "",
     onUpdate: ({ editor }) => {
+      if (isPropUpdate.current) return;
       onChange(editor.getHTML());
     },
     onBlur: () => {
@@ -96,6 +103,18 @@ export default function RichTextEditor({
       },
     },
   });
+
+  // When the parent changes `value` externally (e.g., after loading from
+  // localStorage or an API response), push the new content into the editor.
+  useEffect(() => {
+    if (!editor || editor.isDestroyed) return;
+    const currentHtml = editor.getHTML();
+    if (value !== undefined && value !== currentHtml) {
+      isPropUpdate.current = true;
+      editor.commands.setContent(value || "");
+      isPropUpdate.current = false;
+    }
+  }, [editor, value]);
 
   if (!editor) return null;
 

@@ -12,7 +12,7 @@ export default function Label({
       <div>
         <label className="block text-[0.9375rem] font-medium text-(--color-black-shade-900)">
           {children}
-          {required && <span className="ml-1 text-(--color-black)">*</span>}
+          {required && <span className="ml-1 text-red-500">*</span>}
         </label>
 
         {subText && (

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Icon from "@/components/common/Icon";
 
 export default function CreatableSelect({
   label,
@@ -20,19 +19,25 @@ export default function CreatableSelect({
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [dropUp, setDropUp] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
 
   const isOff = isDisabled || disabled;
 
   const ref = useRef(null);
+  const listRef = useRef(null);
   const hasFocused = useRef(false);
   const hasBlurred = useRef(false);
   const didSelectRef = useRef(false);
-  // Refs so the stale useEffect closure can read current values
   const queryRef = useRef("");
   const valueRef = useRef(value);
   const inputWasModifiedRef = useRef(false);
+  // Keep latest callbacks so the stale handleClickOutside closure always calls current props
+  const onChangeRef = useRef(onChange);
+  const onBlurRef = useRef(onBlur);
 
-  useEffect(() => { valueRef.current = value; }, [value]);
+  valueRef.current = value;
+  onChangeRef.current = onChange;
+  onBlurRef.current = onBlur;
 
   const filtered =
     open && showAllOnOpen && !query
@@ -49,7 +54,7 @@ export default function CreatableSelect({
     if (hasFocused.current && !hasBlurred.current) {
       hasBlurred.current = true;
       hasFocused.current = false;
-      onBlur?.(didSelectRef.current);
+      onBlurRef.current?.(didSelectRef.current);
       didSelectRef.current = false;
     }
   };
@@ -64,19 +69,62 @@ export default function CreatableSelect({
 
   const selectValue = (val) => {
     didSelectRef.current = true;
-    onChange(val);
+    onChangeRef.current(val);
     queryRef.current = "";
     setQuery("");
     inputWasModifiedRef.current = false;
+    setActiveIndex(-1);
     setOpen(false);
+  };
+
+  // Build the full list of navigable items (filtered options + optional "Add" item)
+  const getNavigableItems = () => {
+    const items = [...filtered];
+    if (allowCreate && query && !exists) items.push(`__create__:${query}`);
+    return items;
+  };
+
+  const scrollItemIntoView = (index) => {
+    if (!listRef.current) return;
+    const item = listRef.current.children[index];
+    if (item) item.scrollIntoView({ block: "nearest" });
+  };
+
+  const handleKeyDown = (e) => {
+    if (isOff) return;
+    const items = getNavigableItems();
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (!open) { openDropdown(); return; }
+      const next = activeIndex < items.length - 1 ? activeIndex + 1 : 0;
+      setActiveIndex(next);
+      scrollItemIntoView(next);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (!open) { openDropdown(); return; }
+      const prev = activeIndex > 0 ? activeIndex - 1 : items.length - 1;
+      setActiveIndex(prev);
+      scrollItemIntoView(prev);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (!open) { openDropdown(); return; }
+      if (activeIndex >= 0 && activeIndex < items.length) {
+        const item = items[activeIndex];
+        selectValue(item.startsWith("__create__:") ? item.slice(11) : item);
+      }
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setOpen(false);
+      setActiveIndex(-1);
+    }
   };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (!ref.current?.contains(e.target)) {
-        // If the user explicitly deleted the text and closed without selecting, clear the parent value
         if (!didSelectRef.current && inputWasModifiedRef.current && queryRef.current === "" && valueRef.current) {
-          onChange?.("");
+          onChangeRef.current?.("");
         }
         inputWasModifiedRef.current = false;
         setOpen(false);
@@ -89,7 +137,6 @@ export default function CreatableSelect({
 
   const displayValue = open ? query : value;
 
-  // Determine border class based on state priority: disabled > error > open > default
   let borderClass;
   if (isOff) {
     borderClass =
@@ -103,7 +150,6 @@ export default function CreatableSelect({
       "border-(--color-black-shade-300) hover:border-(--color-black-shade-400) focus:border-(--color-primary)";
   }
 
-  // Arrow color matches error state
   const arrowColor = error
     ? "var(--color-red)"
     : open
@@ -137,12 +183,13 @@ export default function CreatableSelect({
             queryRef.current = e.target.value;
             inputWasModifiedRef.current = true;
             setQuery(e.target.value);
+            setActiveIndex(-1);
             openDropdown();
           }}
+          onKeyDown={handleKeyDown}
           className={`h-14 w-full rounded-xl border px-5 ${value && !isOff ? "pr-16" : "pr-12"} text-[0.9375rem] font-medium text-(--color-black-shade-900) outline-none transition-colors duration-150 placeholder:text-(--color-black-shade-400) ${borderClass}`}
         />
 
-        {/* Clear button — shown when a value is selected */}
         {value && !isOff && (
           <button
             type="button"
@@ -150,7 +197,7 @@ export default function CreatableSelect({
             className="absolute right-9 top-1/2 -translate-y-1/2 flex items-center justify-center text-(--color-black-shade-400) cursor-pointer hover:text-(--color-black-shade-700)"
             onMouseDown={(e) => {
               e.preventDefault();
-              onChange?.("");
+              onChangeRef.current?.("");
               queryRef.current = "";
               setQuery("");
               inputWasModifiedRef.current = false;
@@ -163,55 +210,37 @@ export default function CreatableSelect({
           </button>
         )}
 
-        {/* Animated arrow */}
         <span
           className={`pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
           style={{ color: arrowColor }}
         >
-          <svg
-            width="10"
-            height="6"
-            viewBox="0 0 10 6"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M1 1l4 4 4-4"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+          <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
+            <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </span>
 
         {open && !isOff && (
-          <ul className={`absolute z-20 max-h-56 w-full overflow-auto rounded-xl border border-(--color-black-shade-100) bg-white py-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.10)] ${dropUp ? "bottom-full mb-1.5" : "top-full mt-1.5"}`}>
+          <ul
+            ref={listRef}
+            className={`absolute z-20 max-h-56 w-full overflow-auto rounded-xl border border-(--color-black-shade-100) bg-white py-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.10)] ${dropUp ? "bottom-full mb-1.5" : "top-full mt-1.5"}`}
+          >
             {filtered.length > 0 ? (
-              filtered.map((opt) => (
+              filtered.map((opt, idx) => (
                 <li
                   key={opt}
                   onMouseDown={() => selectValue(opt)}
+                  onMouseEnter={() => setActiveIndex(idx)}
                   className={`mx-1.5 flex cursor-pointer items-center justify-between rounded-lg px-3.5 py-2.5 text-sm transition-colors ${
                     opt === value
                       ? "bg-(--color-primary-shade-100) font-semibold text-(--color-primary)"
-                      : "font-medium text-(--color-black-shade-800) hover:bg-(--color-black-shade-50)"
+                      : idx === activeIndex
+                        ? "bg-(--color-black-shade-50) font-medium text-(--color-black-shade-800)"
+                        : "font-medium text-(--color-black-shade-800) hover:bg-(--color-black-shade-50)"
                   }`}
                 >
                   <span>{opt}</span>
                   {opt === value && (
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="shrink-0"
-                      aria-hidden="true"
-                    >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0" aria-hidden="true">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
                   )}
@@ -226,14 +255,13 @@ export default function CreatableSelect({
             {allowCreate && query && !exists && (
               <li
                 onMouseDown={() => selectValue(query)}
-                className="mx-1.5 mt-0.5 flex cursor-pointer items-center gap-2 rounded-lg border-t border-(--color-black-shade-100) px-3.5 py-2.5 text-sm font-medium text-(--color-primary) hover:bg-(--color-black-shade-50)"
+                onMouseEnter={() => setActiveIndex(filtered.length)}
+                className={`mx-1.5 mt-0.5 flex cursor-pointer items-center gap-2 rounded-lg border-t border-(--color-black-shade-100) px-3.5 py-2.5 text-sm font-medium text-(--color-primary) ${filtered.length === activeIndex ? "bg-(--color-black-shade-50)" : "hover:bg-(--color-black-shade-50)"}`}
               >
-                <Icon
-                  name="statics/login/plus-icon.svg"
-                  width={14}
-                  height={14}
-                />
-                Add "{query}"
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Add &ldquo;{query}&rdquo;
               </li>
             )}
           </ul>

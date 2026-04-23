@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import StarRating from "./StarRating";
 import Button from "@/components/common/Button";
 import ConfirmModal from "@/components/common/ConfirmModal";
+import { CATEGORY_LABELS, CATEGORY_BADGE_STYLES } from "@/constants/testimonialCategories";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -21,7 +22,7 @@ function SkeletonRow() {
       <td className="px-3 py-3.5 border border-(--color-black-shade-100)">
         <div className="h-4 w-4 rounded bg-(--color-black-shade-100)" />
       </td>
-      {Array.from({ length: 8 }).map((_, i) => (
+      {Array.from({ length: 9 }).map((_, i) => (
         <td key={i} className="px-4 py-3.5 border border-(--color-black-shade-100)">
           <div className="h-4 rounded bg-(--color-black-shade-100)" />
         </td>
@@ -61,6 +62,7 @@ const THEAD = ({ isAllSelected, onToggleAll }) => (
       <ColumnHeader>Title</ColumnHeader>
       <ColumnHeader>Rating</ColumnHeader>
       <ColumnHeader>Featured</ColumnHeader>
+      <ColumnHeader>Category</ColumnHeader>
       <th className="px-4 py-3 text-left text-14 font-semibold text-(--color-black-shade-700) border border-(--color-black-shade-100) bg-(--pure-white) whitespace-nowrap">
         Actions
       </th>
@@ -307,6 +309,17 @@ export default function TestimonialsTable({
                       <span className="text-amber-500 font-medium">★ Featured</span>
                     ) : (
                       <span className="text-(--color-black-shade-400)">—</span>
+                    )}
+                  </td>
+
+                  {/* Category */}
+                  <td className="px-4 py-3.5 text-14 border border-(--color-black-shade-100) whitespace-nowrap">
+                    {row.category ? (
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-12 font-medium ${CATEGORY_BADGE_STYLES[row.category] ?? "bg-(--color-black-shade-100) text-(--color-black-shade-600) border border-(--color-black-shade-200)"}`}>
+                        {CATEGORY_LABELS[row.category] ?? row.category}
+                      </span>
+                    ) : (
+                      <span className="text-12 text-(--color-black-shade-400)">Universal</span>
                     )}
                   </td>
 

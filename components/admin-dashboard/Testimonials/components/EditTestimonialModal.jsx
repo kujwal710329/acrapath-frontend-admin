@@ -5,6 +5,8 @@ import { showError } from "@/utilities/toast";
 import Heading from "@/components/common/Heading";
 import Label from "@/components/common/Label";
 import Button from "@/components/common/Button";
+import CreatableSelect from "@/components/common/CreatableSelect";
+import { CATEGORY_OPTIONS, CATEGORY_LABELS, LABEL_TO_CATEGORY } from "@/constants/testimonialCategories";
 
 // ── Shared input style helpers (matches CreateTestimonialModal) ───────────────
 const inputBase =
@@ -134,7 +136,7 @@ function UserInfoStrip({ testimonial }) {
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
 export default function EditTestimonialModal({ open, testimonial, onClose, onSubmit }) {
-  const [form, setForm] = useState({ title: "", content: "", rating: 5 });
+  const [form, setForm] = useState({ title: "", content: "", rating: 5, category: "" });
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -145,6 +147,7 @@ export default function EditTestimonialModal({ open, testimonial, onClose, onSub
         title: testimonial.title ?? "",
         content: testimonial.content ?? "",
         rating: testimonial.rating ?? 5,
+        category: CATEGORY_LABELS[testimonial.category] ?? "",
       });
       setErrors({});
     }
@@ -186,6 +189,7 @@ export default function EditTestimonialModal({ open, testimonial, onClose, onSub
           title: form.title.trim(),
           content: form.content.trim(),
           rating: form.rating,
+          category: LABEL_TO_CATEGORY[form.category] || null,
         });
         onClose();
       } catch (err) {
@@ -229,6 +233,20 @@ export default function EditTestimonialModal({ open, testimonial, onClose, onSub
             <div>
               <Label className="mb-4!">User</Label>
               <UserInfoStrip testimonial={testimonial} />
+            </div>
+
+            {/* Category */}
+            <div>
+              <Label className="mb-4!">Category</Label>
+              <CreatableSelect
+                options={CATEGORY_OPTIONS}
+                value={form.category}
+                onChange={(v) => setForm((prev) => ({ ...prev, category: v }))}
+                placeholder="Select a category (optional — leave blank for universal)"
+                allowCreate={false}
+                showAllOnOpen={true}
+                className="mb-0!"
+              />
             </div>
 
             {/* Title */}
