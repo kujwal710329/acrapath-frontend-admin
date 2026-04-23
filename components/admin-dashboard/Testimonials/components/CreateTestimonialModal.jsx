@@ -5,12 +5,15 @@ import { showError } from "@/utilities/toast";
 import Heading from "@/components/common/Heading";
 import Label from "@/components/common/Label";
 import Button from "@/components/common/Button";
+import CreatableSelect from "@/components/common/CreatableSelect";
 import { searchUsersForTestimonial } from "@/services/testimonials.service";
+import { CATEGORY_OPTIONS, LABEL_TO_CATEGORY } from "@/constants/testimonialCategories";
 
 const EMPTY_FORM = {
   title: "",
   content: "",
   rating: 5,
+  category: "",
 };
 
 // ── Shared input style helpers ────────────────────────────────────────────────
@@ -338,6 +341,7 @@ export default function CreateTestimonialModal({ open, onClose, onSubmit }) {
           title: form.title.trim(),
           content: form.content.trim(),
           rating: form.rating,
+          category: LABEL_TO_CATEGORY[form.category] || null,
         });
         onClose();
       } catch (err) {
@@ -392,6 +396,20 @@ export default function CreateTestimonialModal({ open, onClose, onSubmit }) {
 
             {/* Auto-populated user info (read-only) */}
             <UserInfoStrip user={selectedUser} />
+
+            {/* Category */}
+            <div>
+              <Label className="mb-4!">Category</Label>
+              <CreatableSelect
+                options={CATEGORY_OPTIONS}
+                value={form.category}
+                onChange={(v) => setForm((prev) => ({ ...prev, category: v }))}
+                placeholder="Select a category (optional — leave blank for universal)"
+                allowCreate={false}
+                showAllOnOpen={true}
+                className="mb-0!"
+              />
+            </div>
 
             {/* Title */}
             <div>

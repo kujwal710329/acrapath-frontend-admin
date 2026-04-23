@@ -68,7 +68,7 @@ function FieldLabel({ children, required, info }) {
     <div className="mb-4 flex items-center gap-1.5">
       <label className="text-[0.9375rem] font-medium text-(--color-black-shade-900)">
         {children}
-        {required && <span className="ml-1 text-(--color-black)">*</span>}
+        {required && <span className="ml-1 text-red-500">*</span>}
       </label>
       {info && <InfoTooltip text={info} />}
     </div>
@@ -325,7 +325,7 @@ export default function JobPostStepOneForm({
       {/* Job Sourcing */}
       <div className="mb-6">
         <p className="mb-4 text-[0.9375rem] font-medium text-(--color-black-shade-900)">
-          Where should candidates submit their application? *
+          Where should candidates submit their application? <span className="text-red-500">*</span>
         </p>
         <div className="flex gap-2">
           <SelectPill
@@ -465,7 +465,7 @@ export default function JobPostStepOneForm({
       <div className="mb-2">
         <p className="mb-3 text-[0.9375rem] font-medium text-(--color-black-shade-900)">
           Receive candidate applications from anywhere in India, if they are
-          willing to relocate for this job? *
+          willing to relocate for this job? <span className="text-red-500">*</span>
         </p>
         <div className="flex gap-2">
           <SelectPill
@@ -588,7 +588,7 @@ export default function JobPostStepOneForm({
 
       {/* Additional Perks */}
       <div className="mb-6">
-        <Label required className="mb-4!">Do you offer any additional perks?</Label>
+        <Label className="mb-4!">Do you offer any additional perks?</Label>
         {form.perks.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-2">
             {form.perks.map((perk) => (

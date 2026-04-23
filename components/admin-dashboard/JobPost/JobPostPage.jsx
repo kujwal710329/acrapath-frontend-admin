@@ -72,34 +72,40 @@ export default function JobPostPage() {
 
       {/* Table */}
       <div>
-        {isAddNew ? (
+        {/* Keep AddNewJobPost mounted at all times so in-progress form state
+            survives tab switches. CSS hidden prevents any visual output. */}
+        <div className={isAddNew ? "" : "hidden"}>
           <AddNewJobPost onBack={() => handleTabChange("currentPost")} />
-        ) : isTopVerified ? (
-          <TopVerifiedJobsTable
-            data={rows}
-            loading={loading}
-            error={error}
-            onRetry={refresh}
-            onToggleDreamjob={toggleDreamjob}
-          />
-        ) : isRequestsType ? (
-          <JobPostRequestsTable
-            data={rows}
-            loading={loading}
-            error={error}
-            onRetry={refresh}
-            onStatusChange={updateStatus}
-            onView={handleView}
-          />
-        ) : (
-          <CurrentPostTable
-            data={rows}
-            loading={loading}
-            error={error}
-            onRetry={refresh}
-            onStatusChange={updateStatus}
-            onView={handleView}
-          />
+        </div>
+
+        {!isAddNew && (
+          isTopVerified ? (
+            <TopVerifiedJobsTable
+              data={rows}
+              loading={loading}
+              error={error}
+              onRetry={refresh}
+              onToggleDreamjob={toggleDreamjob}
+            />
+          ) : isRequestsType ? (
+            <JobPostRequestsTable
+              data={rows}
+              loading={loading}
+              error={error}
+              onRetry={refresh}
+              onStatusChange={updateStatus}
+              onView={handleView}
+            />
+          ) : (
+            <CurrentPostTable
+              data={rows}
+              loading={loading}
+              error={error}
+              onRetry={refresh}
+              onStatusChange={updateStatus}
+              onView={handleView}
+            />
+          )
         )}
       </div>
     </div>

@@ -73,12 +73,12 @@ export async function searchUsersForTestimonial(query = "") {
  * Body: { userId, title, content, rating }
  * Response: { success, message, data: { _id, title, content, ... } }
  */
-export async function adminCreateTestimonial({ userId, title, content, rating }) {
+export async function adminCreateTestimonial({ userId, title, content, rating, category }) {
   logger.debug("[testimonials] creating testimonial", { title, userId });
   clearEndpointCache("/testimonials");
   return apiRequest("/testimonials", {
     method: "POST",
-    body: JSON.stringify({ userId, title, content, rating }),
+    body: JSON.stringify({ userId, title, content, rating, category: category || null }),
   }, { useCache: false });
 }
 
@@ -88,12 +88,12 @@ export async function adminCreateTestimonial({ userId, title, content, rating })
  * Body: { title?, content?, rating? }
  * Response: { success, message, data: { _id, title, content, ... } }
  */
-export async function adminUpdateTestimonial(testimonialId, { title, content, rating }) {
+export async function adminUpdateTestimonial(testimonialId, { title, content, rating, category }) {
   logger.debug("[testimonials] updating testimonial", { testimonialId });
   clearEndpointCache("/testimonials");
   return apiRequest(`/testimonials/${testimonialId}`, {
     method: "PATCH",
-    body: JSON.stringify({ title, content, rating }),
+    body: JSON.stringify({ title, content, rating, category: category !== undefined ? (category || null) : undefined }),
   }, { useCache: false });
 }
 
