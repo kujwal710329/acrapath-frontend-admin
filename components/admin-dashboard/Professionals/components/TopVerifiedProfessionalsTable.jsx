@@ -95,14 +95,20 @@ export default function TopVerifiedProfessionalsTable({
   error,
   onRetry,
   onToggleTop,
+  onView,
+  onDelete,
 }) {
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [togglingIds, setTogglingIds] = useState(new Set());
   const [expandedSkillRows, setExpandedSkillRows] = useState(new Set());
 
-  // Confirmation modal state
+  // Toggle top confirmation modal state
   const [confirmPending, setConfirmPending] = useState(null);
   // null | { id: string, label: string, isTop: boolean }
+
+  // Delete confirmation modal state
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  // null | { id: string, name: string }
 
   const toggleSkillExpand = useCallback((rowKey) => {
     setExpandedSkillRows((prev) => {
@@ -209,6 +215,21 @@ export default function TopVerifiedProfessionalsTable({
         confirmVariant="primary"
       />
 
+      <ConfirmModal
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={() => {
+          if (!confirmDelete) return;
+          const { id } = confirmDelete;
+          setConfirmDelete(null);
+          onDelete?.(id);
+        }}
+        title="Delete Professional?"
+        description={`Are you sure you want to delete ${confirmDelete?.name ?? "this professional"}? This action cannot be undone.`}
+        confirmLabel="Delete"
+        confirmVariant="danger"
+      />
+
       <div className="w-full overflow-x-auto">
         <table className="w-full border-collapse">
           <THEAD isAllSelected={isAllSelected} onToggleAll={toggleAll} />
@@ -303,23 +324,35 @@ export default function TopVerifiedProfessionalsTable({
                   </td>
 
                   {/* Actions */}
-                  <td className="px-4 py-3.5 border border-(--color-black-shade-100) text-center">
-                    <button
-                      onClick={() => handleToggle(row)}
-                      disabled={isToggling}
-                      className={`inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-                        isTop
-                          ? "text-red-600 bg-red-50 border border-red-200 hover:bg-red-100"
-                          : "text-(--color-primary) bg-(--color-primary-shade-100) border border-(--color-primary) hover:opacity-80"
-                      }`}
-                    >
-                      {isToggling ? <Spinner /> : null}
-                      {isToggling
-                        ? "Updating…"
-                        : isTop
-                        ? "Remove Top"
-                        : "Mark as Top"}
-                    </button>
+                  <td className="px-4 py-3.5 border border-(--color-black-shade-100)">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => onView?.(row)}
+                        className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold text-(--color-primary) bg-(--color-primary-shade-100) border border-(--color-primary) hover:opacity-80 transition-colors cursor-pointer"
+                        aria-label={`View ${row.fullName || row.name}`}
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => handleToggle(row)}
+                        disabled={isToggling}
+                        className={`inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                          isTop
+                            ? "text-orange-600 bg-orange-50 border border-orange-200 hover:bg-orange-100"
+                            : "text-green-700 bg-green-50 border border-green-200 hover:bg-green-100"
+                        }`}
+                      >
+                        {isToggling ? <Spinner /> : null}
+                        {isToggling ? "Updating…" : isTop ? "Remove Top" : "Mark as Top"}
+                      </button>
+                      <button
+                        onClick={() => setConfirmDelete({ id: userId, name: row.fullName || row.name || "this professional" })}
+                        className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors cursor-pointer"
+                        aria-label={`Delete ${row.fullName || row.name}`}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
