@@ -6,6 +6,7 @@ import {
   fetchAllEmployees,
   updateVerificationStatus,
   toggleTopProfessionalStatus,
+  adminDeleteProfessional,
 } from "@/services/professionals.service";
 import { DEBOUNCE_CONFIG } from "@/utilities/config";
 import { logger } from "@/utilities/logger";
@@ -187,6 +188,24 @@ export function useProfessionals({ tab, perPage }) {
     [load]
   );
 
+  /**
+   * Optimistically remove a row; roll back on API failure.
+   */
+  const deleteProfessional = useCallback(
+    async (userId) => {
+      setRows((prev) => prev.filter((r) => r.id !== userId));
+      try {
+        await adminDeleteProfessional(userId);
+        showSuccess("Professional deleted successfully");
+        logger.debug("[useProfessionals] professional deleted", { userId });
+      } catch (err) {
+        logger.error("[useProfessionals] delete failed", { error: err.message });
+        load(curRef.current.page, curRef.current.search);
+      }
+    },
+    [load]
+  );
+
   return {
     rows,
     pagination,
@@ -199,5 +218,6 @@ export function useProfessionals({ tab, perPage }) {
     refresh,
     updateStatus,
     toggleTopProfessional,
+    deleteProfessional,
   };
 }

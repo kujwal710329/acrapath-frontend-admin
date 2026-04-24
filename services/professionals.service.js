@@ -107,3 +107,13 @@ export async function getAdminProfessionalPresignedUrl({ documentType, fileName,
     body: JSON.stringify({ documentType, fileName, tempId }),
   });
 }
+
+/**
+ * Permanently delete a professional account (admin only)
+ * DELETE /api/v1/users/:userId/admin-delete
+ */
+export async function adminDeleteProfessional(userId) {
+  logger.debug("[professionals] admin deleting professional", { userId });
+  clearEndpointCache("/users");
+  return apiRequest(`/users/${userId}/admin-delete`, { method: "DELETE" });
+}

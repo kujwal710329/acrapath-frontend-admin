@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import Icon from "@/components/common/Icon";
 import Button from "@/components/common/Button";
+import ConfirmModal from "@/components/common/ConfirmModal";
 import ResumeChip from "./ResumeChip";
 import StatusDropdown, { STATUS_OPTIONS } from "./StatusDropdown";
 import {
@@ -80,7 +81,7 @@ const THEAD = ({ isAllSelected, onToggleAll }) => (
       <ColumnHeader withMenu>Status</ColumnHeader>
       <ColumnHeader>Resume</ColumnHeader>
       <th className="px-4 py-3 text-center text-14 font-semibold text-(--color-black-shade-700) border border-(--color-black-shade-100) bg-(--pure-white) whitespace-nowrap">
-        View
+        Actions
       </th>
     </tr>
   </thead>
@@ -95,8 +96,10 @@ export default function RequestsTable({
   onRetry,
   onStatusChange,
   onView,
+  onDelete,
 }) {
   const [selectedRows, setSelectedRows] = useState(new Set());
+  const [confirmDelete, setConfirmDelete] = useState(null); // null | { id, name }
 
   const isAllSelected = data.length > 0 && selectedRows.size === data.length;
 
@@ -154,77 +157,98 @@ export default function RequestsTable({
   }
 
   return (
-    <div className="w-full overflow-x-auto">
-      <table className="w-full border-collapse">
-        <THEAD isAllSelected={isAllSelected} onToggleAll={toggleAll} />
-        <tbody>
-          {data.map((row, idx) => {
-            const resumeName = getResumeName(row.resumeCV);
-            const resumeUrl = getResumeUrl(row.resumeCV);
-            const openToRoles = getOpenToRoles(row);
-            return (
-              <tr
-                key={row.id ?? idx}
-                className="hover:bg-(--color-black-shade-50) transition-colors"
-              >
-                <td className="px-3 py-3.5 border border-(--color-black-shade-100)">
-                  <input
-                    type="checkbox"
-                    checked={selectedRows.has(idx)}
-                    onChange={() => toggleRow(idx)}
-                    className="h-4 w-4 rounded border-(--color-black-shade-300) cursor-pointer accent-(--color-primary)"
-                    aria-label={`Select ${row.fullName}`}
-                  />
-                </td>
-                <td className="px-4 py-3.5 text-14 text-(--color-black-shade-700) border border-(--color-black-shade-100) whitespace-nowrap">
-                  {row.fullName || row.name || "—"}
-                </td>
-                <td className="px-4 py-3.5 text-14 text-(--color-black-shade-700) border border-(--color-black-shade-100) whitespace-nowrap">
-                  {formatContact(row.countryCode, row.contactNo)}
-                </td>
-                <td className="px-4 py-3.5 text-14 text-(--color-black-shade-600) border border-(--color-black-shade-100) whitespace-nowrap capitalize">
-                  {row.professionalCategory ?? "—"}
-                </td>
-                <td className="px-4 py-3.5 text-14 text-(--color-black-shade-600) border border-(--color-black-shade-100) whitespace-nowrap">
-                  {formatShortDate(row.joinedAt)}
-                </td>
-                <td className="px-4 py-3.5 text-14 text-(--color-black-shade-600) border border-(--color-black-shade-100) max-w-50">
-                  <span className="block truncate" title={openToRoles}>
-                    {openToRoles}
-                  </span>
-                </td>
-                <td className="px-4 py-3.5 text-14 text-(--color-black-shade-700) border border-(--color-black-shade-100) whitespace-nowrap">
-                  {formatExperience(row.exp)}
-                </td>
-                <td className="px-4 py-3.5 border border-(--color-black-shade-100)">
-                  <StatusDropdown
-                    value={row.profileVerificationStatus}
-                    onChange={(val) => onStatusChange?.(row.id, val)}
-                    options={STATUS_OPTIONS}
-                  />
-                </td>
-                <td className="px-4 py-3.5 border border-(--color-black-shade-100)">
-                  <ResumeChip filename={resumeName} href={resumeUrl} />
-                </td>
-                <td className="px-4 py-3.5 border border-(--color-black-shade-100) text-center">
-                  <button
-                    onClick={() => onView?.(row)}
-                    className="inline-flex items-center justify-center cursor-pointer hover:opacity-70 transition-opacity"
-                    aria-label={`View ${row.fullName}`}
-                  >
-                    <Icon
-                      name="statics/Employee-Dashboard/eye-icon.svg"
-                      width={26}
-                      height={26}
-                      alt="view"
+    <>
+      <ConfirmModal
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={() => {
+          if (!confirmDelete) return;
+          const { id } = confirmDelete;
+          setConfirmDelete(null);
+          onDelete?.(id);
+        }}
+        title="Delete Professional?"
+        description={`Are you sure you want to delete ${confirmDelete?.name ?? "this professional"}? This action cannot be undone.`}
+        confirmLabel="Delete"
+        confirmVariant="danger"
+      />
+
+      <div className="w-full overflow-x-auto">
+        <table className="w-full border-collapse">
+          <THEAD isAllSelected={isAllSelected} onToggleAll={toggleAll} />
+          <tbody>
+            {data.map((row, idx) => {
+              const resumeName = getResumeName(row.resumeCV);
+              const resumeUrl = getResumeUrl(row.resumeCV);
+              const openToRoles = getOpenToRoles(row);
+              return (
+                <tr
+                  key={row.id ?? idx}
+                  className="hover:bg-(--color-black-shade-50) transition-colors"
+                >
+                  <td className="px-3 py-3.5 border border-(--color-black-shade-100)">
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.has(idx)}
+                      onChange={() => toggleRow(idx)}
+                      className="h-4 w-4 rounded border-(--color-black-shade-300) cursor-pointer accent-(--color-primary)"
+                      aria-label={`Select ${row.fullName}`}
                     />
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+                  </td>
+                  <td className="px-4 py-3.5 text-14 text-(--color-black-shade-700) border border-(--color-black-shade-100) whitespace-nowrap">
+                    {row.fullName || row.name || "—"}
+                  </td>
+                  <td className="px-4 py-3.5 text-14 text-(--color-black-shade-700) border border-(--color-black-shade-100) whitespace-nowrap">
+                    {formatContact(row.countryCode, row.contactNo)}
+                  </td>
+                  <td className="px-4 py-3.5 text-14 text-(--color-black-shade-600) border border-(--color-black-shade-100) whitespace-nowrap capitalize">
+                    {row.professionalCategory ?? "—"}
+                  </td>
+                  <td className="px-4 py-3.5 text-14 text-(--color-black-shade-600) border border-(--color-black-shade-100) whitespace-nowrap">
+                    {formatShortDate(row.joinedAt)}
+                  </td>
+                  <td className="px-4 py-3.5 text-14 text-(--color-black-shade-600) border border-(--color-black-shade-100) max-w-50">
+                    <span className="block truncate" title={openToRoles}>
+                      {openToRoles}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3.5 text-14 text-(--color-black-shade-700) border border-(--color-black-shade-100) whitespace-nowrap">
+                    {formatExperience(row.exp)}
+                  </td>
+                  <td className="px-4 py-3.5 border border-(--color-black-shade-100)">
+                    <StatusDropdown
+                      value={row.profileVerificationStatus}
+                      onChange={(val) => onStatusChange?.(row.id, val)}
+                      options={STATUS_OPTIONS}
+                    />
+                  </td>
+                  <td className="px-4 py-3.5 border border-(--color-black-shade-100)">
+                    <ResumeChip filename={resumeName} href={resumeUrl} />
+                  </td>
+                  <td className="px-4 py-3.5 border border-(--color-black-shade-100)">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => onView?.(row)}
+                        className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold text-(--color-primary) bg-(--color-primary-shade-100) border border-(--color-primary) hover:opacity-80 transition-colors cursor-pointer"
+                        aria-label={`View ${row.fullName}`}
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => setConfirmDelete({ id: row.id, name: row.fullName || row.name || "this professional" })}
+                        className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors cursor-pointer"
+                        aria-label={`Delete ${row.fullName}`}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }

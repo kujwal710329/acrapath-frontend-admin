@@ -126,6 +126,24 @@ function EduEntry({ entry, index, onChange, onRemove, canRemove, fieldOptions, e
         </div>
       </div>
 
+      {/* Currently Studying toggle */}
+      <div className="mb-4 flex items-center gap-3">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={entry.currentlyStudying}
+          onClick={() => set("currentlyStudying", !entry.currentlyStudying)}
+          className={`relative shrink-0 h-7 w-12 cursor-pointer rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-(--color-primary) focus:ring-offset-1
+            ${entry.currentlyStudying ? "bg-(--color-secondary)" : "bg-(--color-black-shade-300)"}`}
+        >
+          <span
+            className={`absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200
+              ${entry.currentlyStudying ? "translate-x-5" : "translate-x-0"}`}
+          />
+        </button>
+        <span className="text-sm font-medium text-(--color-black-shade-800)">Currently studying here</span>
+      </div>
+
       {/* Dates */}
       <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
         <div className="mb-4">
@@ -139,38 +157,21 @@ function EduEntry({ entry, index, onChange, onRemove, canRemove, fieldOptions, e
           />
           <FieldError msg={errors.startDate} />
         </div>
-        {!entry.currentlyStudying && (
-          <div className="mb-4">
-            <Label htmlFor={`ed-${index}`} required>End Year</Label>
-            <input
-              id={`ed-${index}`}
-              type="date"
-              value={entry.endDate}
-              min={entry.startDate || undefined}
-              onChange={(e) => set("endDate", e.target.value)}
-              className={`${inputBase} ${errors.endDate ? inputError : inputNormal}`}
-            />
-            <FieldError msg={errors.endDate} />
-          </div>
-        )}
-      </div>
-
-      {/* Currently Studying toggle */}
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          role="switch"
-          aria-checked={entry.currentlyStudying}
-          onClick={() => set("currentlyStudying", !entry.currentlyStudying)}
-          className={`relative h-6 w-11 cursor-pointer rounded-full transition-colors focus:outline-none
-            ${entry.currentlyStudying ? "bg-(--color-secondary)" : "bg-(--color-black-shade-300)"}`}
-        >
-          <span
-            className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform
-              ${entry.currentlyStudying ? "translate-x-5" : "translate-x-0.5"}`}
+        <div className="mb-4">
+          <Label htmlFor={`ed-${index}`}>
+            End Year{!entry.currentlyStudying && <span className="ml-0.5 text-(--color-red)">*</span>}
+            {entry.currentlyStudying && <span className="ml-1 text-xs font-normal text-(--color-black-shade-400)">(tentative)</span>}
+          </Label>
+          <input
+            id={`ed-${index}`}
+            type="date"
+            value={entry.endDate}
+            min={entry.startDate || undefined}
+            onChange={(e) => set("endDate", e.target.value)}
+            className={`${inputBase} ${errors.endDate ? inputError : inputNormal}`}
           />
-        </button>
-        <span className="text-sm font-medium text-(--color-black-shade-800)">Currently studying here</span>
+          <FieldError msg={errors.endDate} />
+        </div>
       </div>
     </div>
   );
@@ -182,17 +183,23 @@ export default function ProfessionalStepFiveForm({ defaultValues = {}, onBack, o
 
   const [entries, setEntries] = useState(
     defaultValues.educationDetails?.length > 0
-      ? defaultValues.educationDetails
+      ? defaultValues.educationDetails.map((e) => ({ ...emptyEntry(), ...e }))
       : [emptyEntry()]
   );
   const [errors, setErrors] = useState([]);
   const [submitted, setSubmitted] = useState(false);
 
-  const updateEntry = (index, updated) =>
-    setEntries((prev) => prev.map((e, i) => (i === index ? updated : e)));
+  const updateEntry = (index, updated) => {
+    const next = entries.map((e, i) => (i === index ? updated : e));
+    setEntries(next);
+    if (submitted) setErrors(validateAll(next));
+  };
 
-  const removeEntry = (index) =>
-    setEntries((prev) => prev.filter((_, i) => i !== index));
+  const removeEntry = (index) => {
+    const next = entries.filter((_, i) => i !== index);
+    setEntries(next);
+    if (submitted) setErrors(validateAll(next));
+  };
 
   const addEntry = () => setEntries((prev) => [...prev, emptyEntry()]);
 

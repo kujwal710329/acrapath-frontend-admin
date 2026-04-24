@@ -28,6 +28,7 @@ export default function JobPostPage() {
     refresh,
     updateStatus,
     toggleDreamjob,
+    deleteJob,
   } = useJobPosts({ tab: activeTab, perPage });
 
   // Header refresh button
@@ -86,6 +87,8 @@ export default function JobPostPage() {
               error={error}
               onRetry={refresh}
               onToggleDreamjob={toggleDreamjob}
+              onView={handleView}
+              onDelete={deleteJob}
             />
           ) : isRequestsType ? (
             <JobPostRequestsTable
@@ -95,6 +98,7 @@ export default function JobPostPage() {
               onRetry={refresh}
               onStatusChange={updateStatus}
               onView={handleView}
+              onDelete={deleteJob}
             />
           ) : (
             <CurrentPostTable
@@ -104,6 +108,7 @@ export default function JobPostPage() {
               onRetry={refresh}
               onStatusChange={updateStatus}
               onView={handleView}
+              onDelete={deleteJob}
             />
           )
         )}

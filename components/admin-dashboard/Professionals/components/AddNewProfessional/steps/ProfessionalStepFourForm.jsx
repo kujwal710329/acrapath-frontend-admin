@@ -92,33 +92,31 @@ function WorkEntry({ entry, index, onChange, onRemove, canRemove, roleOptions, e
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
-        <div className="mb-4">
-          <Label htmlFor={`salary-${index}`}>Salary (₹ per annum)</Label>
-          <input
-            id={`salary-${index}`}
-            type="number"
-            min="0"
-            value={entry.salary}
-            placeholder="e.g. 800000"
-            onChange={(e) => set("salary", e.target.value)}
-            className={`${inputBase} ${inputNormal}`}
-          />
-        </div>
-        <div className="mb-4 flex items-end">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              role="switch"
-              aria-checked={entry.currentlyWorking}
-              onClick={() => set("currentlyWorking", !entry.currentlyWorking)}
-              className={`relative shrink-0 h-7 w-12 cursor-pointer rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-(--color-primary) focus:ring-offset-1 ${entry.currentlyWorking ? "bg-(--color-secondary)" : "bg-(--color-black-shade-300)"}`}
-            >
-              <span className={`absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${entry.currentlyWorking ? "translate-x-5" : "translate-x-0"}`} />
-            </button>
-            <span className="text-sm font-medium text-(--color-black-shade-800)">Currently working here</span>
-          </div>
-        </div>
+      <div className="mb-4">
+        <Label htmlFor={`salary-${index}`}>Salary (₹ per annum)</Label>
+        <input
+          id={`salary-${index}`}
+          type="number"
+          min="0"
+          value={entry.salary}
+          placeholder="e.g. 800000"
+          onChange={(e) => set("salary", e.target.value)}
+          className={`${inputBase} ${inputNormal}`}
+        />
+      </div>
+
+      {/* Currently Working toggle */}
+      <div className="mb-4 flex items-center gap-3">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={entry.currentlyWorking}
+          onClick={() => set("currentlyWorking", !entry.currentlyWorking)}
+          className={`relative shrink-0 h-7 w-12 cursor-pointer rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-(--color-primary) focus:ring-offset-1 ${entry.currentlyWorking ? "bg-(--color-secondary)" : "bg-(--color-black-shade-300)"}`}
+        >
+          <span className={`absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${entry.currentlyWorking ? "translate-x-5" : "translate-x-0"}`} />
+        </button>
+        <span className="text-sm font-medium text-(--color-black-shade-800)">Currently working here</span>
       </div>
 
       <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
@@ -231,11 +229,15 @@ export default function ProfessionalStepFourForm({
     [];
 
   const updateEntry = (index, updated) => {
-    setEntries((prev) => prev.map((e, i) => (i === index ? updated : e)));
+    const next = entries.map((e, i) => (i === index ? updated : e));
+    setEntries(next);
+    if (submitted) setErrors(validateAll(next));
   };
 
   const removeEntry = (index) => {
-    setEntries((prev) => prev.filter((_, i) => i !== index));
+    const next = entries.filter((_, i) => i !== index);
+    setEntries(next);
+    if (submitted) setErrors(validateAll(next));
   };
 
   const addEntry = () => {

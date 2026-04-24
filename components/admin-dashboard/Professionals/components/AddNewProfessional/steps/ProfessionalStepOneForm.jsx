@@ -127,8 +127,7 @@ export default function ProfessionalStepOneForm({ defaultValues = {}, onBack, on
     if (!form.lastName.trim()) errs.lastName = "Last name is required.";
     if (!form.email.trim()) errs.email = "Email is required.";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Enter a valid email address.";
-    if (!form.contactNo.trim()) errs.contactNo = "Contact number is required.";
-    else if (!isValidPhone(form.contactNo)) errs.contactNo = "Enter a valid phone number for the selected country.";
+    if (form.contactNo.trim() && !isValidPhone(form.contactNo)) errs.contactNo = "Enter a valid phone number for the selected country.";
     if (!selectedCountry) errs.country = "Country is required.";
     if (!selectedState) errs.state = "State is required.";
     if (!form.city.trim()) errs.city = "City is required.";
@@ -244,7 +243,7 @@ export default function ProfessionalStepOneForm({ defaultValues = {}, onBack, on
 
       {/* Phone */}
       <div className="mb-4">
-        <Label required>Contact Number</Label>
+        <Label>Contact Number</Label>
         <div className="flex gap-2">
           <CountryCodeSelect
             value={form.countryIso}
@@ -263,8 +262,7 @@ export default function ProfessionalStepOneForm({ defaultValues = {}, onBack, on
             }}
             onBlur={() => {
               touch("contactNo");
-              if (!form.contactNo.trim()) setErr("contactNo", "Contact number is required.");
-              else if (!isValidPhone(form.contactNo)) setErr("contactNo", "Enter a valid phone number for the selected country.");
+              if (form.contactNo.trim() && !isValidPhone(form.contactNo)) setErr("contactNo", "Enter a valid phone number for the selected country.");
             }}
             className={`${inputBase} flex-1 ${touched.contactNo && errors.contactNo ? inputError : inputNormal}`}
           />
