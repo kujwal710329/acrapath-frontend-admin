@@ -28,6 +28,7 @@ export default function ProfessionalsPage() {
     refresh,
     updateStatus,
     toggleTopProfessional,
+    deleteProfessional,
   } = useProfessionals({ tab: activeTab, perPage });
 
   // Header refresh button
@@ -88,6 +89,8 @@ export default function ProfessionalsPage() {
             error={error}
             onRetry={refresh}
             onToggleTop={toggleTopProfessional}
+            onView={handleView}
+            onDelete={deleteProfessional}
           />
         ) : isMembersType ? (
           <MembersTable
@@ -97,6 +100,7 @@ export default function ProfessionalsPage() {
             onRetry={refresh}
             onStatusChange={updateStatus}
             onView={handleView}
+            onDelete={deleteProfessional}
           />
         ) : (
           <RequestsTable
@@ -106,6 +110,7 @@ export default function ProfessionalsPage() {
             onRetry={refresh}
             onStatusChange={updateStatus}
             onView={handleView}
+            onDelete={deleteProfessional}
           />
         )}
       </div>

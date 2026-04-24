@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { fetchJobPosts, updateJobPostStatus, toggleDreamjob as toggleDreamjobService } from "@/services/jobPost.service";
+import { fetchJobPosts, updateJobPostStatus, toggleDreamjob as toggleDreamjobService, adminDeleteJob } from "@/services/jobPost.service";
 import { DEBOUNCE_CONFIG } from "@/utilities/config";
 import { logger } from "@/utilities/logger";
 import { showSuccess } from "@/utilities/toast";
@@ -149,6 +149,24 @@ export function useJobPosts({ tab, perPage }) {
     [load]
   );
 
+  /**
+   * Optimistically remove a row; roll back on API failure.
+   */
+  const deleteJob = useCallback(
+    async (jobId) => {
+      setRows((prev) => prev.filter((r) => (r.jobId ?? r.id) !== jobId));
+      try {
+        await adminDeleteJob(jobId);
+        showSuccess("Job post deleted successfully");
+        logger.debug("[useJobPosts] job deleted", { jobId });
+      } catch (err) {
+        logger.error("[useJobPosts] delete failed", { error: err.message });
+        load(curRef.current.page, curRef.current.search);
+      }
+    },
+    [load]
+  );
+
   return {
     rows,
     pagination,
@@ -161,5 +179,6 @@ export function useJobPosts({ tab, perPage }) {
     refresh,
     updateStatus,
     toggleDreamjob,
+    deleteJob,
   };
 }

@@ -112,18 +112,19 @@ function UploadCard({
 }
 
 export default function ProfessionalStepSixForm({ defaultValues = {}, tempId, onBack, onNext }) {
+  // Keys live under defaultValues.documents — preview URLs are blob: and expire after navigation
   const [resume, setResume] = useState({
-    key: defaultValues.resumeCV || "",
+    key: defaultValues.documents?.resumeCV || "",
     name: defaultValues.resumeName || "",
-    previewUrl: defaultValues.resumePreviewUrl || "",
+    previewUrl: "",
     uploading: false,
     progress: 0,
   });
 
   const [photo, setPhoto] = useState({
-    key: defaultValues.profilePhoto || "",
+    key: defaultValues.documents?.profilePhoto || "",
     name: defaultValues.photoName || "",
-    previewUrl: defaultValues.photoPreviewUrl || "",
+    previewUrl: "",
     uploading: false,
     progress: 0,
   });
@@ -237,6 +238,13 @@ export default function ProfessionalStepSixForm({ defaultValues = {}, tempId, on
             <input type="file" accept="image/jpeg,image/jpg,image/png" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageSelect(f); e.target.value = ""; }} />
             {photo.previewUrl ? (
               <img src={photo.previewUrl} alt="Profile" className="h-full w-full rounded-full object-cover" />
+            ) : photo.key ? (
+              <div className="h-full w-full rounded-full bg-(--color-secondary)/10 flex flex-col items-center justify-center gap-0.5">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-(--color-secondary)">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-[9px] font-semibold text-(--color-secondary) leading-none">Uploaded</span>
+              </div>
             ) : (
               <div className="h-full w-full rounded-full bg-(--color-primary-shade-100) flex items-center justify-center">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-(--color-black-shade-400)">

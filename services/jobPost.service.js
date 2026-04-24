@@ -62,3 +62,13 @@ export async function updateJobPostStatus(jobId, status) {
     body: JSON.stringify({ status }),
   });
 }
+
+/**
+ * Permanently delete a job post (admin only)
+ * DELETE /api/v1/jobs/:jobId
+ */
+export async function adminDeleteJob(jobId) {
+  logger.debug("[jobPosts] admin deleting job", { jobId });
+  clearEndpointCache("/jobs");
+  return apiRequest(`/jobs/${jobId}`, { method: "DELETE" });
+}
