@@ -117,3 +117,33 @@ export async function adminDeleteProfessional(userId) {
   clearEndpointCache("/users");
   return apiRequest(`/users/${userId}/admin-delete`, { method: "DELETE" });
 }
+
+/**
+ * Archive or unarchive a professional account (admin only)
+ * Archive  → accountStatus: "inactive"
+ * Unarchive → accountStatus: "active"
+ * PATCH /api/v1/users/:userId/admin-account-status
+ */
+export async function adminUpdateAccountStatus(userId, accountStatus) {
+  logger.debug("[professionals] admin updating account status", { userId, accountStatus });
+  clearEndpointCache("/users");
+  return apiRequest(`/users/${userId}/admin-account-status`, {
+    method: "PATCH",
+    body: JSON.stringify({ accountStatus }),
+  });
+}
+
+/**
+ * Update any editable field on a professional's profile (admin only)
+ * PATCH /api/v1/users/:userId/admin-update
+ * Body: { personalInfo?: {...}, professionalInfo?: {...}, firstName?, middleName?, lastName? }
+ * Sends only changed fields (partial PATCH).
+ */
+export async function adminUpdateProfessionalProfile(userId, payload) {
+  logger.debug("[professionals] admin updating profile fields", { userId, fields: Object.keys(payload) });
+  clearEndpointCache("/users");
+  return apiRequest(`/users/${userId}/admin-update`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
