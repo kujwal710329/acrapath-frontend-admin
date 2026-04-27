@@ -72,3 +72,18 @@ export async function adminDeleteJob(jobId) {
   clearEndpointCache("/jobs");
   return apiRequest(`/jobs/${jobId}`, { method: "DELETE" });
 }
+
+/**
+ * Update any editable field on a job post (admin only)
+ * Bypasses the restricted-fields list (jobTitle, jobType) that applies to employer edits.
+ * PATCH /api/v1/jobs/:jobId/admin-update
+ * Body: any subset of job model fields (partial PATCH — only send changed fields)
+ */
+export async function adminUpdateJobPost(jobId, payload) {
+  logger.debug("[jobPosts] admin updating job fields", { jobId, fields: Object.keys(payload) });
+  clearEndpointCache("/jobs");
+  return apiRequest(`/jobs/${jobId}/admin-update`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
