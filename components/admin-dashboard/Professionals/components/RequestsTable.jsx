@@ -13,6 +13,7 @@ import {
   getOpenToRoles,
   getResumeName,
   getResumeUrl,
+  getDisplayName,
 } from "@/utilities/professionals.helpers";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -96,10 +97,12 @@ export default function RequestsTable({
   onRetry,
   onStatusChange,
   onView,
+  onArchive,
   onDelete,
 }) {
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [confirmDelete, setConfirmDelete] = useState(null); // null | { id, name }
+  const [confirmArchive, setConfirmArchive] = useState(null); // null | { id, name, isArchived }
 
   const isAllSelected = data.length > 0 && selectedRows.size === data.length;
 
@@ -159,6 +162,25 @@ export default function RequestsTable({
   return (
     <>
       <ConfirmModal
+        open={!!confirmArchive}
+        onClose={() => setConfirmArchive(null)}
+        onConfirm={() => {
+          if (!confirmArchive) return;
+          const { id, isArchived } = confirmArchive;
+          setConfirmArchive(null);
+          onArchive?.(id, isArchived ? "inactive" : "active");
+        }}
+        title={confirmArchive?.isArchived ? "Unarchive Professional?" : "Archive Professional?"}
+        description={
+          confirmArchive?.isArchived
+            ? `Reactivate ${confirmArchive?.name ?? "this professional"}? They will become visible on public pages again.`
+            : `Are you sure you want to archive ${confirmArchive?.name ?? "this professional"}? They will be hidden from all public pages.`
+        }
+        confirmLabel={confirmArchive?.isArchived ? "Unarchive" : "Archive"}
+        confirmVariant="primary"
+      />
+
+      <ConfirmModal
         open={!!confirmDelete}
         onClose={() => setConfirmDelete(null)}
         onConfirm={() => {
@@ -181,10 +203,11 @@ export default function RequestsTable({
               const resumeName = getResumeName(row.resumeCV);
               const resumeUrl = getResumeUrl(row.resumeCV);
               const openToRoles = getOpenToRoles(row);
+              const isArchived = row.accountStatus === "inactive";
               return (
                 <tr
                   key={row.id ?? idx}
-                  className="hover:bg-(--color-black-shade-50) transition-colors"
+                  className={`transition-colors ${isArchived ? "opacity-60 bg-amber-50/40" : "hover:bg-(--color-black-shade-50)"}`}
                 >
                   <td className="px-3 py-3.5 border border-(--color-black-shade-100)">
                     <input
@@ -196,7 +219,7 @@ export default function RequestsTable({
                     />
                   </td>
                   <td className="px-4 py-3.5 text-14 text-(--color-black-shade-700) border border-(--color-black-shade-100) whitespace-nowrap">
-                    {row.fullName || row.name || "—"}
+                    {getDisplayName(row)}
                   </td>
                   <td className="px-4 py-3.5 text-14 text-(--color-black-shade-700) border border-(--color-black-shade-100) whitespace-nowrap">
                     {formatContact(row.countryCode, row.contactNo)}
@@ -235,7 +258,18 @@ export default function RequestsTable({
                         View
                       </button>
                       <button
-                        onClick={() => setConfirmDelete({ id: row.id, name: row.fullName || row.name || "this professional" })}
+                        onClick={() => setConfirmArchive({ id: row.id, name: getDisplayName(row) || "this professional", isArchived })}
+                        className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
+                          isArchived
+                            ? "text-green-700 bg-green-50 border border-green-200 hover:bg-green-100"
+                            : "text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100"
+                        }`}
+                        aria-label={isArchived ? `Unarchive ${row.fullName}` : `Archive ${row.fullName}`}
+                      >
+                        {isArchived ? "Unarchive" : "Archive"}
+                      </button>
+                      <button
+                        onClick={() => setConfirmDelete({ id: row.id, name: getDisplayName(row) || "this professional" })}
                         className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors cursor-pointer"
                         aria-label={`Delete ${row.fullName}`}
                       >

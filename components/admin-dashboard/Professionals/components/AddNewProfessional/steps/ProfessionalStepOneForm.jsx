@@ -302,7 +302,7 @@ export default function ProfessionalStepOneForm({ defaultValues = {}, onBack, on
 
       {/* Country */}
       <div className="mb-4">
-        <Label required>Country</Label>
+        <Label required>Current Country</Label>
         <CreatableSelect
           placeholder="Select country"
           options={countriesList}
@@ -320,7 +320,7 @@ export default function ProfessionalStepOneForm({ defaultValues = {}, onBack, on
 
       {/* State */}
       <div className="mb-4">
-        <Label required>State</Label>
+        <Label required>Current State</Label>
         <CreatableSelect
           placeholder="Select state"
           options={statesList}

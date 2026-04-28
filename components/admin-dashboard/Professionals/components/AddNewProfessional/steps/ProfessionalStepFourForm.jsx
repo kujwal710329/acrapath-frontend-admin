@@ -5,6 +5,12 @@ import Button from "@/components/common/Button";
 import Label from "@/components/common/Label";
 import CreatableSelect from "@/components/common/CreatableSelect";
 import { useMetadataData } from "@/hooks/useMetadata";
+import {
+  sanitizeSalaryInput,
+  formatIndianNumber,
+  salaryInWords,
+  handleSalaryKeyDown,
+} from "@/utilities/salaryValidation";
 
 const inputBase =
   "h-14 w-full rounded-xl border px-5 text-[0.9375rem] font-medium outline-none transition-colors placeholder:text-(--color-black-shade-400)";
@@ -92,19 +98,6 @@ function WorkEntry({ entry, index, onChange, onRemove, canRemove, roleOptions, e
         </div>
       </div>
 
-      <div className="mb-4">
-        <Label htmlFor={`salary-${index}`}>Salary (₹ per annum)</Label>
-        <input
-          id={`salary-${index}`}
-          type="number"
-          min="0"
-          value={entry.salary}
-          placeholder="e.g. 800000"
-          onChange={(e) => set("salary", e.target.value)}
-          className={`${inputBase} ${inputNormal}`}
-        />
-      </div>
-
       {/* Currently Working toggle */}
       <div className="mb-4 flex items-center gap-3">
         <button
@@ -119,14 +112,36 @@ function WorkEntry({ entry, index, onChange, onRemove, canRemove, roleOptions, e
         <span className="text-sm font-medium text-(--color-black-shade-800)">Currently working here</span>
       </div>
 
+      {/* Salary — only shown when currently working */}
+      {entry.currentlyWorking && (
+        <div className="mb-4">
+          <Label htmlFor={`salary-${index}`}>Current Salary (₹ per annum)</Label>
+          <input
+            id={`salary-${index}`}
+            type="text"
+            inputMode="numeric"
+            value={formatIndianNumber(entry.salary)}
+            placeholder="e.g. 8,00,000"
+            onChange={(e) => set("salary", sanitizeSalaryInput(e.target.value))}
+            onKeyDown={handleSalaryKeyDown}
+            className={`${inputBase} ${inputNormal}`}
+          />
+          {entry.salary && (
+            <p className="mt-1.5 text-xs text-(--color-black-shade-500)">
+              {salaryInWords(entry.salary)} rupees per annum
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
         <div className="mb-4">
-          <Label htmlFor={`jd-${index}`} required>Joining Date</Label>
+          <Label htmlFor={`jd-${index}`} required>Joining Month</Label>
           <input
             id={`jd-${index}`}
-            type="date"
+            type="month"
             value={entry.joiningDate}
-            max={new Date().toISOString().split("T")[0]}
+            max={new Date().toISOString().slice(0, 7)}
             onChange={(e) => set("joiningDate", e.target.value)}
             className={`${inputBase} ${errors.joiningDate ? inputError : inputNormal}`}
           />
@@ -134,13 +149,13 @@ function WorkEntry({ entry, index, onChange, onRemove, canRemove, roleOptions, e
         </div>
         {!entry.currentlyWorking && (
           <div className="mb-4">
-            <Label htmlFor={`rd-${index}`} required>Relieving Date</Label>
+            <Label htmlFor={`rd-${index}`} required>Relieving Month</Label>
             <input
               id={`rd-${index}`}
-              type="date"
+              type="month"
               value={entry.relievingDate}
               min={entry.joiningDate || undefined}
-              max={new Date().toISOString().split("T")[0]}
+              max={new Date().toISOString().slice(0, 7)}
               onChange={(e) => set("relievingDate", e.target.value)}
               className={`${inputBase} ${errors.relievingDate ? inputError : inputNormal}`}
             />
@@ -216,7 +231,13 @@ export default function ProfessionalStepFourForm({
 
   const [entries, setEntries] = useState(
     defaultValues.workExperience?.length > 0
-      ? defaultValues.workExperience.map((e) => ({ ...emptyEntry(), ...e, salary: e.salary ?? "" }))
+      ? defaultValues.workExperience.map((e) => ({
+          ...emptyEntry(),
+          ...e,
+          salary: e.salary ?? "",
+          joiningDate: e.joiningDate ? String(e.joiningDate).slice(0, 7) : "",
+          relievingDate: e.relievingDate ? String(e.relievingDate).slice(0, 7) : "",
+        }))
       : [emptyEntry()]
   );
   const [errors, setErrors] = useState([]);
@@ -273,10 +294,10 @@ export default function ProfessionalStepFourForm({
     const workExperience = entries.map((e) => ({
       companyName: e.companyName.trim(),
       role: e.role.trim(),
-      salary: e.salary ? Number(e.salary) : undefined,
+      salary: e.currentlyWorking && e.salary ? Number(e.salary) : undefined,
       salaryPeriod: "per annum",
-      joiningDate: e.joiningDate,
-      relievingDate: e.currentlyWorking ? undefined : e.relievingDate,
+      joiningDate: e.joiningDate ? String(e.joiningDate).slice(0, 7) : undefined,
+      relievingDate: e.currentlyWorking ? undefined : e.relievingDate ? String(e.relievingDate).slice(0, 7) : undefined,
       currentlyWorking: e.currentlyWorking,
       points: (e.points || []).filter(Boolean).map((p) => p.trim()),
     }));

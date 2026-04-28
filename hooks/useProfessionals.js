@@ -7,6 +7,7 @@ import {
   updateVerificationStatus,
   toggleTopProfessionalStatus,
   adminDeleteProfessional,
+  adminUpdateAccountStatus,
 } from "@/services/professionals.service";
 import { DEBOUNCE_CONFIG } from "@/utilities/config";
 import { logger } from "@/utilities/logger";
@@ -189,6 +190,28 @@ export function useProfessionals({ tab, perPage }) {
   );
 
   /**
+   * Optimistically toggle accountStatus between "inactive" (archive) and "active" (unarchive).
+   * Row stays visible in admin table — only public pages hide inactive professionals.
+   */
+  const archiveProfessional = useCallback(
+    async (userId, currentAccountStatus) => {
+      const newStatus = currentAccountStatus === "inactive" ? "active" : "inactive";
+      setRows((prev) =>
+        prev.map((r) => (r.id === userId ? { ...r, accountStatus: newStatus } : r))
+      );
+      try {
+        await adminUpdateAccountStatus(userId, newStatus);
+        showSuccess(newStatus === "inactive" ? "Professional archived" : "Professional unarchived");
+        logger.debug("[useProfessionals] account status updated", { userId, newStatus });
+      } catch (err) {
+        logger.error("[useProfessionals] archive failed", { error: err.message });
+        load(curRef.current.page, curRef.current.search);
+      }
+    },
+    [load]
+  );
+
+  /**
    * Optimistically remove a row; roll back on API failure.
    */
   const deleteProfessional = useCallback(
@@ -218,6 +241,7 @@ export function useProfessionals({ tab, perPage }) {
     refresh,
     updateStatus,
     toggleTopProfessional,
+    archiveProfessional,
     deleteProfessional,
   };
 }

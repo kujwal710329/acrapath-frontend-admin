@@ -147,10 +147,10 @@ function EduEntry({ entry, index, onChange, onRemove, canRemove, fieldOptions, e
       {/* Dates */}
       <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
         <div className="mb-4">
-          <Label htmlFor={`sd-${index}`} required>Start Year</Label>
+          <Label htmlFor={`sd-${index}`} required>Start Month</Label>
           <input
             id={`sd-${index}`}
-            type="date"
+            type="month"
             value={entry.startDate}
             onChange={(e) => set("startDate", e.target.value)}
             className={`${inputBase} ${errors.startDate ? inputError : inputNormal}`}
@@ -159,12 +159,12 @@ function EduEntry({ entry, index, onChange, onRemove, canRemove, fieldOptions, e
         </div>
         <div className="mb-4">
           <Label htmlFor={`ed-${index}`}>
-            End Year{!entry.currentlyStudying && <span className="ml-0.5 text-(--color-red)">*</span>}
+            End Month{!entry.currentlyStudying && <span className="ml-0.5 text-(--color-red)">*</span>}
             {entry.currentlyStudying && <span className="ml-1 text-xs font-normal text-(--color-black-shade-400)">(tentative)</span>}
           </Label>
           <input
             id={`ed-${index}`}
-            type="date"
+            type="month"
             value={entry.endDate}
             min={entry.startDate || undefined}
             onChange={(e) => set("endDate", e.target.value)}
@@ -183,7 +183,12 @@ export default function ProfessionalStepFiveForm({ defaultValues = {}, onBack, o
 
   const [entries, setEntries] = useState(
     defaultValues.educationDetails?.length > 0
-      ? defaultValues.educationDetails.map((e) => ({ ...emptyEntry(), ...e }))
+      ? defaultValues.educationDetails.map((e) => ({
+          ...emptyEntry(),
+          ...e,
+          startDate: e.startDate ? String(e.startDate).slice(0, 7) : "",
+          endDate: e.endDate ? String(e.endDate).slice(0, 7) : "",
+        }))
       : [emptyEntry()]
   );
   const [errors, setErrors] = useState([]);
@@ -228,8 +233,8 @@ export default function ProfessionalStepFiveForm({ defaultValues = {}, onBack, o
       collegeName: e.collegeName.trim(),
       grade: e.grade || undefined,
       gradeType: e.gradeType,
-      startDate: e.startDate,
-      endDate: e.currentlyStudying ? undefined : e.endDate,
+      startDate: e.startDate ? String(e.startDate).slice(0, 7) : undefined,
+      endDate: e.currentlyStudying ? undefined : e.endDate ? String(e.endDate).slice(0, 7) : undefined,
       currentlyStudying: e.currentlyStudying,
     }));
 

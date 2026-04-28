@@ -1,6 +1,7 @@
 "use client";
 
 import Button from "@/components/common/Button";
+import { formatIndianNumber } from "@/utilities/salaryValidation";
 
 function ReviewSection({ title, children, onEdit, slug }) {
   return (
@@ -135,7 +136,7 @@ export default function ProfessionalStepSevenForm({
               <p className="text-sm font-semibold text-(--color-black-shade-900)">{w.role} @ {w.companyName}</p>
               <p className="text-xs text-(--color-black-shade-500)">
                 {w.joiningDate} — {w.currentlyWorking ? "Present" : w.relievingDate}
-                {w.salary ? ` · ₹ ${(w.salary / 100000).toFixed(1)} LPA` : ""}
+                {w.salary ? ` · ₹ ${formatIndianNumber(w.salary)} p.a.` : ""}
               </p>
               {w.points?.length > 0 && (
                 <ul className="mt-1 space-y-0.5">
