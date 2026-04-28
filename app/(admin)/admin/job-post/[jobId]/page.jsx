@@ -436,7 +436,10 @@ function SkillsModal({ job, onSave, onClose, isLoading, onSetDirty }) {
 
   const removeSkill = (skill) => { setSkills((p) => p.filter((s) => s !== skill)); onSetDirty(); };
 
-  const metaSkills = metadata.skills || [];
+  const metaSkills = [
+    ...Object.values(metadata.techSkillsByCategory || {}).flat(),
+    ...Object.values(metadata.strategicSkillsByCategory || {}).flat(),
+  ].filter((v, i, arr) => arr.indexOf(v) === i);
   const available = metaSkills.filter((s) => !skills.map((x) => x.toLowerCase()).includes(s.toLowerCase()));
 
   const handleSave = () => {
@@ -635,7 +638,7 @@ export default function AdminJobDetailPage() {
     const snapshot = job;
     try {
       const res = await adminUpdateJobPost(jobId, payload);
-      setJob((prev) => ({ ...prev, ...res.data }));
+      setJob((prev) => ({ ...prev, ...res.data, dreamjob: prev.dreamjob }));
       showSuccess(successMsg ?? "Changes saved successfully.");
       editState.forceClose();
     } catch {

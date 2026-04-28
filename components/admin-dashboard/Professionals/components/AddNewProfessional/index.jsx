@@ -63,6 +63,13 @@ const SLUG_TO_STEP = {
   documents: 6,
 };
 
+// Converts any month value (YYYY-MM or YYYY-MM-DD or YYYY-MM-DD-01...) to YYYY-MM-01
+function toMonthFirstDate(val) {
+  if (!val) return undefined;
+  const s = String(val).slice(0, 7);
+  return s.length === 7 ? `${s}-01` : undefined;
+}
+
 function buildPayload(s1, s2, s3, s4, s5, s6) {
   return {
     // Auth identity
@@ -85,8 +92,16 @@ function buildPayload(s1, s2, s3, s4, s5, s6) {
     // Professional info
     skills: s3.skills || [],
     profileSummary: s3.profileSummary,
-    workExperience: s4.workExperience || [],
-    educationDetails: s5.educationDetails || [],
+    workExperience: (s4.workExperience || []).map((e) => ({
+      ...e,
+      joiningDate: toMonthFirstDate(e.joiningDate),
+      relievingDate: e.currentlyWorking ? undefined : toMonthFirstDate(e.relievingDate),
+    })),
+    educationDetails: (s5.educationDetails || []).map((e) => ({
+      ...e,
+      startDate: toMonthFirstDate(e.startDate),
+      endDate: e.currentlyStudying ? undefined : toMonthFirstDate(e.endDate),
+    })),
 
     // Documents
     documents: s6.documents || {},

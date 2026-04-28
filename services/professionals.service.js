@@ -147,3 +147,36 @@ export async function adminUpdateProfessionalProfile(userId, payload) {
     body: JSON.stringify(payload),
   });
 }
+
+/**
+ * Get a presigned S3 upload URL for a document on an existing professional's profile (admin only)
+ * POST /api/v1/users/:userId/admin-document-presigned-url
+ */
+export async function adminDocumentPresignedUrl(userId, { documentType, fileName }) {
+  return apiRequest(`/users/${userId}/admin-document-presigned-url`, {
+    method: "POST",
+    body: JSON.stringify({ documentType, fileName }),
+  }, { useCache: false });
+}
+
+/**
+ * Save an uploaded S3 document key to a professional's profile (admin only)
+ * PATCH /api/v1/users/:userId/admin-save-document
+ */
+export async function adminSaveDocument(userId, { documentType, documentKey, experienceType, experienceIndex }) {
+  return apiRequest(`/users/${userId}/admin-save-document`, {
+    method: "PATCH",
+    body: JSON.stringify({ documentType, documentKey, experienceType, experienceIndex }),
+  }, { useCache: false });
+}
+
+/**
+ * Remove a document from a professional's profile (admin only)
+ * DELETE /api/v1/users/:userId/admin-document
+ */
+export async function adminDeleteDocument(userId, { documentType, experienceType, experienceIndex }) {
+  return apiRequest(`/users/${userId}/admin-document`, {
+    method: "DELETE",
+    body: JSON.stringify({ documentType, experienceType, experienceIndex }),
+  }, { useCache: false });
+}

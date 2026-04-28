@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { apiRequest } from "@/utilities/api";
-import { adminUpdateProfessionalProfile } from "@/services/professionals.service";
+import { adminUpdateProfessionalProfile, adminDocumentPresignedUrl, adminSaveDocument, adminDeleteDocument } from "@/services/professionals.service";
 import { showSuccess, showError } from "@/utilities/toast";
 import Button from "@/components/common/Button";
 import Icon from "@/components/common/Icon";
@@ -293,6 +293,40 @@ function PageSkeleton() {
           <div key={i} className="h-40 rounded-xl bg-(--color-black-shade-100)" />
         ))}
       </main>
+    </div>
+  );
+}
+
+/* ─── DocSlot — per-document upload/view/replace/remove row ───────── */
+
+function DocSlot({ label, url, uploading, error, fileName, onUpload, onRemove }) {
+  return (
+    <div className="flex-1 min-w-0">
+      <p className="text-14 font-semibold" style={{ color: "var(--color-black-shade-700)" }}>{label}</p>
+      {uploading ? (
+        <div className="mt-1 flex items-center gap-2">
+          <svg className="w-3.5 h-3.5 shrink-0 animate-spin" style={{ color: "var(--color-primary)" }} fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+          </svg>
+          <span className="text-12" style={{ color: "var(--color-black-shade-500)" }}>Uploading…</span>
+        </div>
+      ) : url ? (
+        <div>
+          {fileName && <p className="text-11 mt-0.5 truncate" style={{ color: "var(--color-black-shade-500)" }}>{fileName}</p>}
+          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+            <a href={url} target="_blank" rel="noopener noreferrer" className="text-12 font-medium hover:underline" style={{ color: "var(--color-primary)" }}>View</a>
+            <button type="button" onClick={onUpload} className="text-12 font-medium hover:underline cursor-pointer" style={{ color: "var(--color-black-shade-600)" }}>Replace</button>
+            <button type="button" onClick={onRemove} className="text-12 font-medium hover:underline cursor-pointer" style={{ color: "var(--color-red)" }}>Remove</button>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <p className="text-12 mt-0.5" style={{ color: "var(--color-black-shade-400)" }}>Not uploaded</p>
+          <button type="button" onClick={onUpload} className="mt-1.5 text-12 font-medium hover:underline cursor-pointer" style={{ color: "var(--color-primary)" }}>Upload File</button>
+        </div>
+      )}
+      {error && <p className="mt-1 text-11" style={{ color: "var(--color-red)" }}>{error}</p>}
     </div>
   );
 }
@@ -1175,6 +1209,13 @@ export default function AdminProfessionalDetailPage() {
   /* ── Confirm-delete state for array items ───────────────────────── */
   const [confirmDelete, setConfirmDelete] = useState(null); // { section, idx }
 
+  /* ── Document upload state ──────────────────────────────────────── */
+  const [docUrls, setDocUrls] = useState({}); // local URL overrides after upload
+  const [docUpload, setDocUpload] = useState({}); // { [docKey]: { loading, error } }
+  const [confirmRemoveDoc, setConfirmRemoveDoc] = useState(null); // pending remove target
+  const fileInputRef = useRef(null);
+  const uploadTargetRef = useRef(null); // { docKey, documentType, accept, maxSizeMB, experienceType?, experienceIndex? }
+
   const toggle = (section) => setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
 
   useEffect(() => {
@@ -1250,6 +1291,52 @@ export default function AdminProfessionalDetailPage() {
     }
   }, [id]);
 
+  /* ── Document upload handlers ───────────────────────────────────── */
+  const triggerDocUpload = useCallback((target) => {
+    uploadTargetRef.current = target;
+    if (fileInputRef.current) {
+      fileInputRef.current.accept = target.accept;
+      fileInputRef.current.value = "";
+      fileInputRef.current.click();
+    }
+  }, []);
+
+  const handleFileSelected = useCallback(async (e) => {
+    const file = e.target.files?.[0];
+    const target = uploadTargetRef.current;
+    if (!file || !target) return;
+    const { docKey, documentType, maxSizeMB = 5, experienceType, experienceIndex } = target;
+    const maxBytes = maxSizeMB * 1024 * 1024;
+    if (file.size > maxBytes) {
+      setDocUpload((prev) => ({ ...prev, [docKey]: { loading: false, error: `File must be under ${maxSizeMB}MB.` } }));
+      return;
+    }
+    setDocUpload((prev) => ({ ...prev, [docKey]: { loading: true, error: null } }));
+    try {
+      const { data: presigned } = await adminDocumentPresignedUrl(id, { documentType, fileName: file.name });
+      const s3Res = await fetch(presigned.uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+      if (!s3Res.ok) throw new Error("S3 upload failed");
+      const { data: saved } = await adminSaveDocument(id, { documentType, documentKey: presigned.documentKey, experienceType, experienceIndex });
+      setDocUrls((prev) => ({ ...prev, [docKey]: { s3PresignedUrl: saved.downloadUrl, s3BucketKeyInDB: presigned.documentKey, fileName: file.name } }));
+      setDocUpload((prev) => ({ ...prev, [docKey]: { loading: false, error: null } }));
+      showSuccess("Document uploaded successfully.");
+    } catch {
+      setDocUpload((prev) => ({ ...prev, [docKey]: { loading: false, error: "Upload failed. Please try again." } }));
+    }
+  }, [id]);
+
+  const handleDocDelete = useCallback(async ({ docKey, documentType, experienceType, experienceIndex }) => {
+    setDocUpload((prev) => ({ ...prev, [docKey]: { loading: true, error: null } }));
+    try {
+      await adminDeleteDocument(id, { documentType, experienceType, experienceIndex });
+      setDocUrls((prev) => { const n = { ...prev }; delete n[docKey]; return n; });
+      setDocUpload((prev) => ({ ...prev, [docKey]: { loading: false, error: null } }));
+      showSuccess("Document removed.");
+    } catch {
+      setDocUpload((prev) => ({ ...prev, [docKey]: { loading: false, error: "Failed to remove document." } }));
+    }
+  }, [id]);
+
   if (loading) return <PageSkeleton />;
 
   if (!user) {
@@ -1279,14 +1366,27 @@ export default function AdminProfessionalDetailPage() {
   const educationDetails = (user.educationDetails ?? []).filter((e) => e.collegeName || e.degreeLevel).slice().sort((a, b) => (DEGREE_RANK[a.degreeLevel] ?? 99) - (DEGREE_RANK[b.degreeLevel] ?? 99));
   const achievements = (user.achievements ?? []).filter(Boolean);
   const documentUrls = user.documentUrls ?? {};
+
+  // Resolve document URL: local upload override takes priority over backend presigned URL
+  const getDocUrl = (key) => docUrls[key]?.s3PresignedUrl || documentUrls[key]?.s3PresignedUrl || null;
+
+  // Resolve experience letter URL by experience type + index
+  const getExpLetterUrl = (type, idx) => {
+    const localKey = `exp_${type}_${idx}`;
+    if (docUrls[localKey]?.s3PresignedUrl) return docUrls[localKey].s3PresignedUrl;
+    const expArr = type === "work" ? workExperience : internshipExperience;
+    const letter = user.experienceLetters?.find((l) => l.type === type && l.companyName === expArr[idx]?.companyName);
+    return letter?.url || null;
+  };
+
   const contactItems = [
     user.contactNo && { label: "Contact Number", icon: "statics/user-profile/phone.svg", value: `${user.countryCode ?? ""} ${user.contactNo}`.trim(), href: `tel:+${user.countryCode ?? ""}${user.contactNo}` },
     user.whatsappNo && { label: "WhatsApp Number", icon: "statics/user-profile/whatsapp.svg", value: user.whatsappNo, href: `https://wa.me/${user.countryCode ?? ""}${user.whatsappNo}` },
     user.email && { label: "Email", icon: "statics/user-profile/email.svg", value: user.email, href: `mailto:${user.email}` },
     user.linkedin && { label: "LinkedIn", icon: "statics/user-profile/LinkedIn.svg", value: user.linkedin, href: user.linkedin },
   ].filter(Boolean);
-  const expLetters = user.experienceLetters?.length ? user.experienceLetters : workExperience.map((e) => ({ company: e.companyName, url: null }));
-  const profileImage = documentUrls.profilePhoto?.s3PresignedUrl || documentUrls.professionalPhoto?.s3PresignedUrl || null;
+
+  const profileImage = docUrls.profilePhoto?.s3PresignedUrl || documentUrls.profilePhoto?.s3PresignedUrl || documentUrls.professionalPhoto?.s3PresignedUrl || null;
   const preferredLocations = jobPreferences.preferredLocations ?? user.preferredLocations ?? [];
 
   const summaryCards = [
@@ -1496,6 +1596,29 @@ export default function AdminProfessionalDetailPage() {
         />
       )}
 
+      {/* ── Document remove confirmation ─────────────────────────────── */}
+      <ConfirmModal
+        open={!!confirmRemoveDoc}
+        onClose={() => setConfirmRemoveDoc(null)}
+        onConfirm={() => {
+          if (!confirmRemoveDoc) return;
+          handleDocDelete(confirmRemoveDoc);
+          setConfirmRemoveDoc(null);
+        }}
+        title="Remove document?"
+        description="This will remove the document from this professional's profile."
+        confirmLabel="Remove"
+        confirmVariant="danger"
+      />
+
+      {/* ── Hidden file input shared by all document upload slots ───── */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        onChange={handleFileSelected}
+      />
+
       <div className="container-80 py-6 flex flex-col lg:flex-row gap-6 lg:gap-8">
 
         {/* ═══ LEFT SIDEBAR ══════════════════════════════════════════ */}
@@ -1503,14 +1626,47 @@ export default function AdminProfessionalDetailPage() {
           <div className="flex flex-col gap-5">
 
             {/* Profile Photo */}
-            <div className="w-88 h-80 mx-auto lg:w-full lg:h-auto overflow-hidden rounded-xl border border-(--color-black-shade-200)">
-              {profileImage ? (
-                <img src={profileImage} alt={displayName} className="w-full aspect-square object-cover object-top" />
-              ) : (
-                <div className="w-full aspect-square flex items-center justify-center text-5xl font-bold text-white" style={{ background: "var(--color-primary)" }}>
-                  {displayName.charAt(0).toUpperCase()}
+            <div className="flex flex-col items-center lg:items-stretch gap-2">
+              <button
+                type="button"
+                onClick={() => triggerDocUpload({ docKey: "profilePhoto", documentType: "profilePhoto", accept: "image/jpeg,image/png,image/webp", maxSizeMB: 2 })}
+                className="w-88 h-80 mx-auto lg:w-full lg:h-auto overflow-hidden rounded-xl border border-(--color-black-shade-200) relative group cursor-pointer focus:outline-none"
+                aria-label="Change profile photo"
+                disabled={docUpload.profilePhoto?.loading}
+              >
+                {profileImage ? (
+                  <img src={profileImage} alt={displayName} className="w-full aspect-square object-cover object-top" />
+                ) : (
+                  <div className="w-full aspect-square flex items-center justify-center text-5xl font-bold text-white" style={{ background: "var(--color-primary)" }}>
+                    {displayName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity flex items-center justify-center">
+                  {docUpload.profilePhoto?.loading ? (
+                    <svg className="w-8 h-8 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  )}
                 </div>
+              </button>
+              {docUpload.profilePhoto?.error && (
+                <p className="text-11 text-center" style={{ color: "var(--color-red)" }}>{docUpload.profilePhoto.error}</p>
               )}
+              <button
+                type="button"
+                onClick={() => triggerDocUpload({ docKey: "profilePhoto", documentType: "profilePhoto", accept: "image/jpeg,image/png,image/webp", maxSizeMB: 2 })}
+                disabled={docUpload.profilePhoto?.loading}
+                className="text-12 font-medium hover:underline cursor-pointer disabled:opacity-50"
+                style={{ color: "var(--color-primary)" }}
+              >
+                {docUpload.profilePhoto?.loading ? "Uploading…" : "Change Photo"}
+              </button>
             </div>
 
             <Button className="w-auto! min-w-88 mx-auto lg:w-full! lg:mx-0 lg:min-w-44">Hire {displayName}</Button>
@@ -1558,61 +1714,74 @@ export default function AdminProfessionalDetailPage() {
                   <SidebarCard title="Resume">
                     <div className="flex items-start gap-3">
                       <Icon name="statics/user-profile/user.svg" width={20} height={20} alt="resume" />
-                      <div>
-                        <p className="text-14 font-semibold" style={{ color: "var(--color-black-shade-700)" }}>Resume / CV</p>
-                        {documentUrls.resumeCV?.s3PresignedUrl ? (
-                          <a href={documentUrls.resumeCV.s3PresignedUrl} target="_blank" rel="noopener noreferrer" className="text-12 mt-1.5 inline-block hover:underline" style={{ color: "var(--color-primary)" }}>View Resume</a>
-                        ) : (
-                          <p className="text-12 mt-0.5" style={{ color: "var(--color-black-shade-400)" }}>Not uploaded</p>
-                        )}
-                      </div>
+                      <DocSlot
+                        label="Resume / CV"
+                        url={getDocUrl("resumeCV")}
+                        uploading={docUpload.resumeCV?.loading}
+                        error={docUpload.resumeCV?.error}
+                        fileName={docUrls.resumeCV?.fileName}
+                        onUpload={() => triggerDocUpload({ docKey: "resumeCV", documentType: "resumeCV", accept: "application/pdf", maxSizeMB: 5 })}
+                        onRemove={() => setConfirmRemoveDoc({ docKey: "resumeCV", documentType: "resumeCV" })}
+                      />
                     </div>
                   </SidebarCard>
 
                   <SidebarCard title="Identity Proof">
                     <div className="flex items-start gap-3">
                       <Icon name="statics/user-profile/user.svg" width={20} height={20} alt="identity" />
-                      <div>
-                        <p className="text-14 font-semibold" style={{ color: "var(--color-black-shade-700)" }}>{user.identityProofType || "Aadhar Card"}</p>
-                        {documentUrls.identityProof?.s3PresignedUrl ? (
-                          <a href={documentUrls.identityProof.s3PresignedUrl} target="_blank" rel="noopener noreferrer" className="text-12 mt-1.5 inline-block hover:underline" style={{ color: "var(--color-primary)" }}>View Identity Proof</a>
-                        ) : (
-                          <p className="text-12 mt-0.5" style={{ color: "var(--color-black-shade-400)" }}>Not uploaded</p>
-                        )}
-                      </div>
+                      <DocSlot
+                        label={user.identityProofType || "Aadhar Card"}
+                        url={getDocUrl("identityProof")}
+                        uploading={docUpload.identityProof?.loading}
+                        error={docUpload.identityProof?.error}
+                        fileName={docUrls.identityProof?.fileName}
+                        onUpload={() => triggerDocUpload({ docKey: "identityProof", documentType: "identityProofFile", accept: "application/pdf,image/jpeg,image/png,image/webp", maxSizeMB: 5 })}
+                        onRemove={() => setConfirmRemoveDoc({ docKey: "identityProof", documentType: "identityProofFile" })}
+                      />
                     </div>
                   </SidebarCard>
 
                   <SidebarCard title="Current Company Salary Proof">
                     <div className="flex items-start gap-3">
                       <Icon name="statics/user-profile/compnay.svg" width={20} height={20} alt="company" />
-                      <div>
-                        <p className="text-12 font-medium" style={{ color: "var(--color-black-shade-700)" }}>{company || "—"}</p>
-                        {documentUrls.salaryProof?.s3PresignedUrl ? (
-                          <a href={documentUrls.salaryProof.s3PresignedUrl} target="_blank" rel="noopener noreferrer" className="text-12 mt-1.5 inline-block hover:underline" style={{ color: "var(--color-primary)" }}>View Offer Letter / Payslip</a>
-                        ) : (
-                          <p className="text-12 mt-0.5" style={{ color: "var(--color-black-shade-400)" }}>Not uploaded</p>
-                        )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-12 font-medium mb-1" style={{ color: "var(--color-black-shade-600)" }}>{company || "—"}</p>
+                        <DocSlot
+                          label="Offer Letter / Payslip"
+                          url={getDocUrl("salaryProof")}
+                          uploading={docUpload.salaryProof?.loading}
+                          error={docUpload.salaryProof?.error}
+                          fileName={docUrls.salaryProof?.fileName}
+                          onUpload={() => triggerDocUpload({ docKey: "salaryProof", documentType: "salaryProof", accept: "application/pdf", maxSizeMB: 5 })}
+                          onRemove={() => setConfirmRemoveDoc({ docKey: "salaryProof", documentType: "salaryProof" })}
+                        />
                       </div>
                     </div>
                   </SidebarCard>
 
-                  {expLetters.length > 0 && (
+                  {workExperience.length > 0 && (
                     <SidebarCard title="Experience Letter">
                       <div className="space-y-4">
-                        {expLetters.map((item, i) => (
-                          <div key={i} className="flex items-start gap-3">
-                            <Icon name="statics/user-profile/compnay.svg" width={20} height={20} alt="company" />
-                            <div>
-                              <p className="text-12 font-medium" style={{ color: "var(--color-black-shade-700)" }}>{item.company || "Company"}</p>
-                              {item.url ? (
-                                <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-12 mt-1 inline-block hover:underline" style={{ color: "var(--color-primary)" }}>View Experience Letter</a>
-                              ) : (
-                                <p className="text-12 mt-0.5" style={{ color: "var(--color-black-shade-400)" }}>Not uploaded</p>
-                              )}
+                        {workExperience.map((exp, i) => {
+                          const docKey = `exp_work_${i}`;
+                          return (
+                            <div key={i} className="flex items-start gap-3">
+                              <Icon name="statics/user-profile/compnay.svg" width={20} height={20} alt="company" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-12 font-medium mb-1" style={{ color: "var(--color-black-shade-600)" }}>{exp.companyName || "Company"}</p>
+                                <DocSlot
+                                  label="Experience Letter"
+                                  url={getExpLetterUrl("work", i)}
+                                  uploading={docUpload[docKey]?.loading}
+                                  error={docUpload[docKey]?.error}
+                                  fileName={docUrls[docKey]?.fileName}
+                                  onUpload={() => triggerDocUpload({ docKey, documentType: "experienceLetter", accept: "application/pdf", maxSizeMB: 5, experienceType: "work", experienceIndex: i })}
+                                  onRemove={() => setConfirmRemoveDoc({ docKey, documentType: "experienceLetter", experienceType: "work", experienceIndex: i })}
+                                />
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </SidebarCard>
                   )}
