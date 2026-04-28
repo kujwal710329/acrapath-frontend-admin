@@ -34,10 +34,14 @@ export default function CreatableSelect({
   // Keep latest callbacks so the stale handleClickOutside closure always calls current props
   const onChangeRef = useRef(onChange);
   const onBlurRef = useRef(onBlur);
+  const optionsRef = useRef(options);
+  const allowCreateRef = useRef(allowCreate);
 
   valueRef.current = value;
   onChangeRef.current = onChange;
   onBlurRef.current = onBlur;
+  optionsRef.current = options;
+  allowCreateRef.current = allowCreate;
 
   const filtered =
     open && showAllOnOpen && !query
@@ -123,10 +127,26 @@ export default function CreatableSelect({
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (!ref.current?.contains(e.target)) {
-        if (!didSelectRef.current && inputWasModifiedRef.current && queryRef.current === "" && valueRef.current) {
-          onChangeRef.current?.("");
+        if (!didSelectRef.current && inputWasModifiedRef.current) {
+          const q = queryRef.current;
+          if (q) {
+            const exactMatch = optionsRef.current.find(
+              (opt) => opt.toLowerCase() === q.toLowerCase()
+            );
+            if (exactMatch) {
+              didSelectRef.current = true;
+              onChangeRef.current?.(exactMatch);
+              queryRef.current = "";
+            } else if (allowCreateRef.current) {
+              didSelectRef.current = true;
+              onChangeRef.current?.(q);
+              queryRef.current = "";
+            }
+          } else if (valueRef.current) {
+            onChangeRef.current?.("");
+          }
+          inputWasModifiedRef.current = false;
         }
-        inputWasModifiedRef.current = false;
         setOpen(false);
         triggerBlur();
       }

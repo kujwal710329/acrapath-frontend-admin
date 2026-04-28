@@ -64,6 +64,16 @@ export function getResumeUrl(s3Path) {
 }
 
 /**
+ * Derive display name from separate name parts, falling back to fullName / name.
+ * firstName + middleName + lastName takes priority over the denormalised fullName field.
+ */
+export function getDisplayName(row) {
+  const parts = [row?.firstName, row?.middleName, row?.lastName].filter(Boolean);
+  if (parts.length > 0) return parts.join(" ");
+  return row?.fullName || row?.name || "—";
+}
+
+/**
  * Best-effort "open to roles" label from the user object.
  * Uses designation → skills → "N/A"
  */

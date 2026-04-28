@@ -117,3 +117,66 @@ export async function adminDeleteProfessional(userId) {
   clearEndpointCache("/users");
   return apiRequest(`/users/${userId}/admin-delete`, { method: "DELETE" });
 }
+
+/**
+ * Archive or unarchive a professional account (admin only)
+ * Archive  → accountStatus: "inactive"
+ * Unarchive → accountStatus: "active"
+ * PATCH /api/v1/users/:userId/admin-account-status
+ */
+export async function adminUpdateAccountStatus(userId, accountStatus) {
+  logger.debug("[professionals] admin updating account status", { userId, accountStatus });
+  clearEndpointCache("/users");
+  return apiRequest(`/users/${userId}/admin-account-status`, {
+    method: "PATCH",
+    body: JSON.stringify({ accountStatus }),
+  });
+}
+
+/**
+ * Update any editable field on a professional's profile (admin only)
+ * PATCH /api/v1/users/:userId/admin-update
+ * Body: { personalInfo?: {...}, professionalInfo?: {...}, firstName?, middleName?, lastName? }
+ * Sends only changed fields (partial PATCH).
+ */
+export async function adminUpdateProfessionalProfile(userId, payload) {
+  logger.debug("[professionals] admin updating profile fields", { userId, fields: Object.keys(payload) });
+  clearEndpointCache("/users");
+  return apiRequest(`/users/${userId}/admin-update`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * Get a presigned S3 upload URL for a document on an existing professional's profile (admin only)
+ * POST /api/v1/users/:userId/admin-document-presigned-url
+ */
+export async function adminDocumentPresignedUrl(userId, { documentType, fileName }) {
+  return apiRequest(`/users/${userId}/admin-document-presigned-url`, {
+    method: "POST",
+    body: JSON.stringify({ documentType, fileName }),
+  }, { useCache: false });
+}
+
+/**
+ * Save an uploaded S3 document key to a professional's profile (admin only)
+ * PATCH /api/v1/users/:userId/admin-save-document
+ */
+export async function adminSaveDocument(userId, { documentType, documentKey, experienceType, experienceIndex }) {
+  return apiRequest(`/users/${userId}/admin-save-document`, {
+    method: "PATCH",
+    body: JSON.stringify({ documentType, documentKey, experienceType, experienceIndex }),
+  }, { useCache: false });
+}
+
+/**
+ * Remove a document from a professional's profile (admin only)
+ * DELETE /api/v1/users/:userId/admin-document
+ */
+export async function adminDeleteDocument(userId, { documentType, experienceType, experienceIndex }) {
+  return apiRequest(`/users/${userId}/admin-document`, {
+    method: "DELETE",
+    body: JSON.stringify({ documentType, experienceType, experienceIndex }),
+  }, { useCache: false });
+}

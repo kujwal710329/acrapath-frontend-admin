@@ -28,6 +28,7 @@ export default function ProfessionalsPage() {
     refresh,
     updateStatus,
     toggleTopProfessional,
+    archiveProfessional,
     deleteProfessional,
   } = useProfessionals({ tab: activeTab, perPage });
 
@@ -90,6 +91,7 @@ export default function ProfessionalsPage() {
             onRetry={refresh}
             onToggleTop={toggleTopProfessional}
             onView={handleView}
+            onArchive={archiveProfessional}
             onDelete={deleteProfessional}
           />
         ) : isMembersType ? (
@@ -100,6 +102,7 @@ export default function ProfessionalsPage() {
             onRetry={refresh}
             onStatusChange={updateStatus}
             onView={handleView}
+            onArchive={archiveProfessional}
             onDelete={deleteProfessional}
           />
         ) : (
@@ -110,6 +113,7 @@ export default function ProfessionalsPage() {
             onRetry={refresh}
             onStatusChange={updateStatus}
             onView={handleView}
+            onArchive={archiveProfessional}
             onDelete={deleteProfessional}
           />
         )}
