@@ -6,6 +6,7 @@ import { apiRequest } from "@/utilities/api";
 import { adminUpdateProfessionalProfile, adminDocumentPresignedUrl, adminSaveDocument, adminDeleteDocument } from "@/services/professionals.service";
 import { showSuccess, showError } from "@/utilities/toast";
 import Button from "@/components/common/Button";
+import Input from "@/components/common/Input";
 import Icon from "@/components/common/Icon";
 import Label from "@/components/common/Label";
 import FixedBackButton from "@/components/common/FixedBackButton";
@@ -33,14 +34,6 @@ const ENUM_TO_METADATA_KEY = {
   consultant: "Consultancy",
 };
 
-const EXPERIENCE_OPTIONS = [
-  "Fresher",
-  "Less than 1 year",
-  "1–2 years",
-  "2–4 years",
-  "4–7 years",
-  "7+ years",
-];
 
 const DEGREE_LEVEL_OPTIONS = [
   "Bachelor's",
@@ -402,7 +395,7 @@ function ProfessionalInfoModal({ user, onSave, onClose, isLoading, onSetDirty })
     if (!form.firstName.trim()) e.firstName = "First name is required.";
     if (!form.lastName.trim()) e.lastName = "Last name is required.";
     if (!form.professionalCategory) e.professionalCategory = "Category is required.";
-    if (!form.yearsOfExperience) e.yearsOfExperience = "Experience is required.";
+    if (form.yearsOfExperience === "") e.yearsOfExperience = "Experience is required.";
     if (!form.openToRoles.length) e.openToRoles = "Select at least one role.";
     return e;
   };
@@ -414,7 +407,7 @@ function ProfessionalInfoModal({ user, onSave, onClose, isLoading, onSetDirty })
       firstName: form.firstName.trim(),
       middleName: form.middleName.trim(),
       lastName: form.lastName.trim(),
-      personalInfo: { currentDesignation: form.currentDesignation.trim(), professionalCategory: form.professionalCategory, yearsOfExperience: form.yearsOfExperience, openToRoles: form.openToRoles },
+      personalInfo: { currentDesignation: form.currentDesignation.trim(), professionalCategory: form.professionalCategory, yearsOfExperience: parseFloat(form.yearsOfExperience), openToRoles: form.openToRoles },
     });
   };
 
@@ -451,11 +444,15 @@ function ProfessionalInfoModal({ user, onSave, onClose, isLoading, onSetDirty })
       </div>
       <div className="mb-4">
         <Label required>Years of Experience</Label>
-        <CreatableSelect
-          options={EXPERIENCE_OPTIONS} value={form.yearsOfExperience}
-          allowCreate={false} showAllOnOpen placeholder="Select experience"
-          error={errors.yearsOfExperience} onChange={(v) => set("yearsOfExperience", v)} className="mb-0!"
+        <Input
+          type="number"
+          min="0"
+          step="0.5"
+          placeholder="e.g. 0 for fresher, 1.5, 2, 5.5"
+          value={form.yearsOfExperience}
+          onChange={(e) => { set("yearsOfExperience", e.target.value); if (e.target.value !== "") setErrors((p) => { const n = { ...p }; delete n.yearsOfExperience; return n; }); }}
         />
+        {errors.yearsOfExperience && <p className="mt-1 text-xs text-(--color-red)">{errors.yearsOfExperience}</p>}
       </div>
       <div className="mb-4">
         <div className="mb-2 flex items-center justify-between">
@@ -1353,7 +1350,12 @@ export default function AdminProfessionalDetailPage() {
   const displayName = [user.firstName, user.middleName, user.lastName].filter(Boolean).join(" ") || user.fullName || user.name || "";
   const roleLabel = user.currentDesignation || user.designation || "";
   const company = user.company && user.company !== "N/A" ? user.company : "";
-  const experience = user.yearsOfExperience || "";
+  const _rawExp = user.yearsOfExperience;
+  const experience = _rawExp === null || _rawExp === undefined || _rawExp === ""
+    ? ""
+    : Number(_rawExp) === 0
+    ? "Fresher"
+    : `${_rawExp} years Experience`;
   const rawSkills = user.skills ?? [];
   const skills = rawSkills.map((s) => (typeof s === "string" ? s : s.name));
   const about = user.profileSummary || "";

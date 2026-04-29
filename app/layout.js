@@ -15,6 +15,7 @@ export default function RootLayout({ children }) {
     <html lang="en" className={`${poppins.className} ${poppins.variable}`}>
       <body
         className={`${poppins.className} ${poppins.variable} antialiased flex flex-col min-h-screen`}
+        suppressHydrationWarning
       >
         <AuthProvider>
           {children}

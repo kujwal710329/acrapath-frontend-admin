@@ -227,7 +227,7 @@ export default function ProfessionalStepFourForm({
   onNext,
 }) {
   const { metadata } = useMetadataData();
-  const isFresher = yearsOfExperience === "Fresher";
+  const isFresher = Number(yearsOfExperience) === 0;
 
   const [entries, setEntries] = useState(
     defaultValues.workExperience?.length > 0
