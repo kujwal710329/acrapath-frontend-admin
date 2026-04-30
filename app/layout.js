@@ -10,6 +10,16 @@ const poppins = Poppins({
   display: "swap",
 });
 
+export const metadata = {
+  title: "Acrapath Admin",
+  description: "Acrapath Admin Portal",
+  icons: {
+    icon: "/static/Icons/Acrapath_Logo_Below_Text.svg",
+    shortcut: "/static/Icons/Acrapath_Logo_Below_Text.svg",
+    apple: "/static/Icons/Acrapath_Logo_Below_Text.svg",
+  },
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${poppins.className} ${poppins.variable}`}>
