@@ -5,6 +5,7 @@ import Button from "@/components/common/Button";
 import Label from "@/components/common/Label";
 import CreatableSelect from "@/components/common/CreatableSelect";
 import { useMetadataData } from "@/hooks/useMetadata";
+import { MonthYearPicker } from "@/components/common/MonthYearPicker";
 
 const inputBase =
   "h-14 w-full rounded-xl border px-5 text-[0.9375rem] font-medium outline-none transition-colors placeholder:text-(--color-black-shade-400)";
@@ -27,8 +28,8 @@ function emptyEntry() {
     collegeName: "",
     grade: "",
     gradeType: "Percentage",
-    startDate: "",
-    endDate: "",
+    startDate: null,
+    endDate: null,
     currentlyStudying: false,
   };
 }
@@ -148,29 +149,26 @@ function EduEntry({ entry, index, onChange, onRemove, canRemove, fieldOptions, e
       <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
         <div className="mb-4">
           <Label htmlFor={`sd-${index}`} required>Start Month</Label>
-          <input
-            id={`sd-${index}`}
-            type="month"
-            value={entry.startDate}
-            onChange={(e) => set("startDate", e.target.value)}
-            className={`${inputBase} ${errors.startDate ? inputError : inputNormal}`}
+          <MonthYearPicker
+            value={entry.startDate || null}
+            onChange={(iso) => set("startDate", iso)}
+            placeholder="Start Month"
+            maxDate={new Date().toISOString()}
+            error={errors.startDate}
           />
-          <FieldError msg={errors.startDate} />
         </div>
         <div className="mb-4">
           <Label htmlFor={`ed-${index}`}>
             End Month{!entry.currentlyStudying && <span className="ml-0.5 text-(--color-red)">*</span>}
             {entry.currentlyStudying && <span className="ml-1 text-xs font-normal text-(--color-black-shade-400)">(tentative)</span>}
           </Label>
-          <input
-            id={`ed-${index}`}
-            type="month"
-            value={entry.endDate}
-            min={entry.startDate || undefined}
-            onChange={(e) => set("endDate", e.target.value)}
-            className={`${inputBase} ${errors.endDate ? inputError : inputNormal}`}
+          <MonthYearPicker
+            value={entry.endDate || null}
+            onChange={(iso) => set("endDate", iso)}
+            placeholder="End Month"
+            minDate={entry.startDate || undefined}
+            error={errors.endDate}
           />
-          <FieldError msg={errors.endDate} />
         </div>
       </div>
     </div>
@@ -186,8 +184,8 @@ export default function ProfessionalStepFiveForm({ defaultValues = {}, onBack, o
       ? defaultValues.educationDetails.map((e) => ({
           ...emptyEntry(),
           ...e,
-          startDate: e.startDate ? String(e.startDate).slice(0, 7) : "",
-          endDate: e.endDate ? String(e.endDate).slice(0, 7) : "",
+          startDate: e.startDate || null,
+          endDate: e.endDate || null,
         }))
       : [emptyEntry()]
   );
@@ -233,8 +231,8 @@ export default function ProfessionalStepFiveForm({ defaultValues = {}, onBack, o
       collegeName: e.collegeName.trim(),
       grade: e.grade || undefined,
       gradeType: e.gradeType,
-      startDate: e.startDate ? String(e.startDate).slice(0, 7) : undefined,
-      endDate: e.currentlyStudying ? undefined : e.endDate ? String(e.endDate).slice(0, 7) : undefined,
+      startDate: e.startDate || undefined,
+      endDate: e.currentlyStudying ? undefined : (e.endDate || undefined),
       currentlyStudying: e.currentlyStudying,
     }));
 

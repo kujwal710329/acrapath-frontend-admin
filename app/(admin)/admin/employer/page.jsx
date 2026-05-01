@@ -1,3 +1,5 @@
+export const metadata = { title: "Employer" };
+
 export default function EmployerPage() {
   return (
     <div className="flex flex-col gap-6">

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Button from "@/components/common/Button";
 import Label from "@/components/common/Label";
 import CreatableSelect from "@/components/common/CreatableSelect";
+import { DatePicker } from "@/components/common/DatePicker";
 import CountryCodeSelect from "@/components/common/CountryCodeSelect";
 import { Country, State, City } from "country-state-city";
 import { getCountryCallingCode, isValidPhoneNumber } from "libphonenumber-js";
@@ -274,13 +275,16 @@ export default function ProfessionalStepOneForm({ defaultValues = {}, onBack, on
       <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
         <div className="mb-4">
           <Label htmlFor="dateOfBirth">Date of Birth</Label>
-          <input
-            id="dateOfBirth"
-            type="date"
-            value={form.dateOfBirth}
-            max={new Date().toISOString().split("T")[0]}
-            onChange={(e) => set("dateOfBirth", e.target.value)}
-            className={`${inputBase} ${inputNormal}`}
+          <DatePicker
+            value={form.dateOfBirth || null}
+            onChange={(iso) => set("dateOfBirth", iso)}
+            placeholder="Date of Birth"
+            maxDate={new Date().toISOString()}
+            minDate={new Date(
+              new Date().getFullYear() - 100,
+              new Date().getMonth(),
+              new Date().getDate()
+            ).toISOString()}
           />
         </div>
         <div className="mb-4">

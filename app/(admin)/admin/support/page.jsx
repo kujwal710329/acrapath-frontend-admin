@@ -1,7 +1,7 @@
 import SupportPage from "@/components/admin-dashboard/Support";
 
 export const metadata = {
-  title: "Support | Acrapath Admin",
+  title: "Support",
 };
 
 export default function AdminSupportPage() {

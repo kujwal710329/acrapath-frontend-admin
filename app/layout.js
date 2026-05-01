@@ -11,8 +11,11 @@ const poppins = Poppins({
 });
 
 export const metadata = {
-  title: "Acrapath Admin",
-  description: "Acrapath Admin Portal",
+  title: {
+    default: "Acrapath Admin",
+    template: "%s | Acrapath Admin",
+  },
+  description: "Acrapath Admin Panel",
   icons: {
     icon: "/static/Icons/Acrapath_Logo_Below_Text.svg",
     shortcut: "/static/Icons/Acrapath_Logo_Below_Text.svg",

@@ -1,3 +1,5 @@
+export const metadata = { title: "Professionals" };
+
 import ProfessionalsPage from "@/components/admin-dashboard/Professionals";
 
 export default function Page() {

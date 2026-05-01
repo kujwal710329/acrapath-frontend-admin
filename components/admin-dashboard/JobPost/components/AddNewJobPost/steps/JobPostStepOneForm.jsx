@@ -24,13 +24,26 @@ const JOB_TYPE_OPTIONS = ["Full-time", "Freelance", "Part-time", "Contract"];
 const WORK_TYPE_OPTIONS = ["In-office", "Remote", "Hybrid", "Field Job"];
 const PAY_TYPE_OPTIONS = ["Fixed Only", "Fixed + Variable"];
 const PERKS_OPTIONS = [
-  "Health Insurance",
-  "Flexible Working Hours",
-  "Joining Bonus",
   "PF",
-  "Travel Allowance",
-  "Petrol Allowance",
-  "Mobile Allowance",
+  "Health insurance",
+  "Paid leaves",
+  "Gratuity",
+  "ESOPs",
+  "Travel allowance",
+  "Food allowance",
+  "Work from home allowance",
+  "Gym membership",
+  "Internet allowance",
+  "Performance bonus",
+  "Joining bonus",
+  "Quarterly bonus",
+  "Annual bonus",
+  "Sales commission",
+  "Retention bonus",
+  "Project completion bonus",
+  "Flexible working hours",
+  "Mobile allowance",
+  "Petrol allowance",
   "Laptop",
 ];
 
@@ -610,7 +623,8 @@ export default function JobPostStepOneForm({
         <CreatableSelect
           placeholder="Search or add perks..."
           options={filterSelectedOptions(PERKS_OPTIONS, form.perks)}
-          allowCreate={false}
+          allowCreate={true}
+          showAllOnOpen
           value=""
           onChange={(value) => {
             if (!value || form.perks.includes(value)) return;

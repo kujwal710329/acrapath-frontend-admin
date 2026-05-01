@@ -1,7 +1,7 @@
 import MetadataPage from "@/components/admin-dashboard/Metadata";
 
 export const metadata = {
-  title: "Metadata Management",
+  title: "Metadata",
 };
 
 export default function Page() {

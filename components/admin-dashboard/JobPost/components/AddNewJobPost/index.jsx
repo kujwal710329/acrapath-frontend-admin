@@ -63,15 +63,9 @@ function buildPayload(step1, step2, step3, categoryApiMap = {}) {
     ...(step2.strategicSkills || []),
   ];
 
-  // Map perks → backend benefits (only "PF" and "Health insurance" are valid)
-  const benefits = (step1.perks || [])
-    .filter((p) => p === "PF" || p === "Health Insurance")
-    .map((p) => (p === "Health Insurance" ? "Health insurance" : p));
-
-  // Map perks → supplementPay (joining bonus)
-  const supplementPay = (step1.perks || []).includes("Joining Bonus")
-    ? ["joining bonus"]
-    : undefined;
+  // Send all perks directly as benefits — backend now accepts any string
+  const benefits = (step1.perks || []).length > 0 ? step1.perks : undefined;
+  const supplementPay = undefined;
 
   // Build qualifications array
   const qualifications = [];

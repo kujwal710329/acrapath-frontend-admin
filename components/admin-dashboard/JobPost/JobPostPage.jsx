@@ -9,6 +9,7 @@ import JobPostRequestsTable from "./components/JobPostRequestsTable";
 import TopVerifiedJobsTable from "./components/TopVerifiedJobsTable";
 import AddNewJobPost from "./components/AddNewJobPost";
 import { useJobPosts } from "@/hooks/useJobPosts";
+import BulkJobUpload from "./components/BulkJobUpload/BulkJobUpload";
 
 const REQUESTS_TYPE_TABS = new Set(["request", "rejected"]);
 
@@ -49,13 +50,14 @@ export default function JobPostPage() {
   const isRequestsType = REQUESTS_TYPE_TABS.has(activeTab);
   const isAddNew = activeTab === "addNew";
   const isTopVerified = activeTab === "topVerified";
+  const isBulkUpload = activeTab === "bulkUpload";
 
   return (
     <div className="flex flex-col">
       {/* Sticky toolbar */}
       <div className="sticky top-18 z-20 flex items-center justify-between flex-wrap gap-3 px-6 py-3 bg-(--pure-white) border-b border-(--color-black-shade-100)">
         <JobPostTabNav activeTab={activeTab} onTabChange={handleTabChange} />
-        {!isAddNew && (
+        {!isAddNew && !isBulkUpload && (
           <TableControls
             search={search}
             onSearch={handleSearch}
@@ -79,7 +81,11 @@ export default function JobPostPage() {
           <AddNewJobPost onBack={() => handleTabChange("currentPost")} />
         </div>
 
-        {!isAddNew && (
+        {isBulkUpload && (
+          <BulkJobUpload onViewJobs={() => handleTabChange("request")} />
+        )}
+
+        {!isAddNew && !isBulkUpload && (
           isTopVerified ? (
             <TopVerifiedJobsTable
               data={rows}

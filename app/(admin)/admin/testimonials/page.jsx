@@ -1,7 +1,7 @@
 import TestimonialsPage from "@/components/admin-dashboard/Testimonials";
 
 export const metadata = {
-  title: "Testimonials Management",
+  title: "Testimonials",
 };
 
 export default function Page() {

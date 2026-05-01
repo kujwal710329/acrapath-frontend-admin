@@ -6,6 +6,7 @@ export const JOB_POST_TABS = [
   { key: "rejected", label: "Rejected" },
   { key: "topVerified", label: "Top Verified" },
   { key: "addNew", label: "+ Add New" },
+  { key: "bulkUpload", label: "Bulk Upload" },
 ];
 
 export default function JobPostTabNav({ activeTab, onTabChange }) {
@@ -16,8 +17,8 @@ export default function JobPostTabNav({ activeTab, onTabChange }) {
           key={tab.key}
           onClick={() => onTabChange(tab.key)}
           className={`px-4 py-2 rounded text-14 font-medium transition-colors cursor-pointer whitespace-nowrap ${
-            tab.key === "addNew"
-              ? activeTab === "addNew"
+            tab.key === "addNew" || tab.key === "bulkUpload"
+              ? activeTab === tab.key
                 ? "bg-(--color-primary) text-white"
                 : "bg-(--color-primary) text-white opacity-85 hover:opacity-100"
               : activeTab === tab.key

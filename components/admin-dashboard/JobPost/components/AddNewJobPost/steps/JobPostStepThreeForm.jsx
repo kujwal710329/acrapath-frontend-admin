@@ -7,7 +7,6 @@ import Heading from "@/components/common/Heading";
 import Text from "@/components/common/Text";
 import CreatableSelect from "@/components/common/CreatableSelect";
 import RichTextEditor from "@/components/common/RichTextEditor";
-import { SelectPill } from "../pills";
 import { filterSelectedOptions } from "@/utilities/filterSelectedOptions";
 
 /** Strip HTML tags to get plain-text character count for validation. */
@@ -18,12 +17,6 @@ function stripHtml(html) {
 const MAX_DESC_LENGTH = 10000;
 
 // ── Static options ────────────────────────────────────────────────────────────
-const INTERVIEW_LOCATION_OPTIONS = [
-  "Online",
-  "In-office",
-  "Both Online & In-office",
-];
-
 const INTERVIEW_STAGE_OPTIONS = [
   "Resume Screening",
   "Online Test / Assessment",
@@ -64,8 +57,6 @@ function validate(form) {
       "Please provide at least 20 characters for the job description.";
   else if (descLength > MAX_DESC_LENGTH)
     errs.jobDescription = `Job description cannot exceed ${MAX_DESC_LENGTH.toLocaleString()} characters.`;
-  if (!form.interviewLocationType)
-    errs.interviewLocationType = "Please select an interview location type.";
   return errs;
 }
 
@@ -73,7 +64,6 @@ function validate(form) {
 export default function JobPostStepThreeForm({ defaultValues = {}, onNext, onBack }) {
   const [form, setForm] = useState({
     jobDescription: "",
-    interviewLocationType: "",
     interviewStages: ["", "", "", "", ""],
     ...defaultValues,
   });
@@ -96,7 +86,7 @@ export default function JobPostStepThreeForm({ defaultValues = {}, onNext, onBac
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setTouched({ jobDescription: true, interviewLocationType: true });
+    setTouched({ jobDescription: true });
     if (isFormValid) onNext?.(form);
   };
 
@@ -130,35 +120,6 @@ export default function JobPostStepThreeForm({ defaultValues = {}, onNext, onBac
       </div>
 
       <SectionDivider />
-
-      {/* ── Interview Method & Address ───────────────────────────────────── */}
-      <SectionHeader
-        title="Interview method and address"
-        subtitle="Let professionals know how the interview will be conducted for this job"
-      />
-
-      {/* Interview Location Type */}
-      <div className="mb-6">
-        <Label required className="mb-4!">Interview Location Type</Label>
-        <div className="flex flex-wrap gap-2">
-          {INTERVIEW_LOCATION_OPTIONS.map((opt) => (
-            <SelectPill
-              key={opt}
-              label={opt}
-              isSelected={form.interviewLocationType === opt}
-              onSelect={() => {
-                set("interviewLocationType")(opt);
-                touch("interviewLocationType")();
-              }}
-            />
-          ))}
-        </div>
-        {err("interviewLocationType") && (
-          <p className="mt-1.5 text-xs text-(--color-red)">
-            {err("interviewLocationType")}
-          </p>
-        )}
-      </div>
 
       {/* Interview Process — 5 optional stages */}
       <div className="mb-6">

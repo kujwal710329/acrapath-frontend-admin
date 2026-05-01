@@ -2,6 +2,7 @@
 
 import Button from "@/components/common/Button";
 import { formatIndianNumber } from "@/utilities/salaryValidation";
+import { fmtMonthYear } from "@/components/common/MonthYearPicker";
 
 function ReviewSection({ title, children, onEdit, slug }) {
   return (
@@ -135,7 +136,7 @@ export default function ProfessionalStepSevenForm({
             <div key={i} className={`${i > 0 ? "mt-3 border-t border-(--color-black-shade-100) pt-3" : ""}`}>
               <p className="text-sm font-semibold text-(--color-black-shade-900)">{w.role} @ {w.companyName}</p>
               <p className="text-xs text-(--color-black-shade-500)">
-                {w.joiningDate} — {w.currentlyWorking ? "Present" : w.relievingDate}
+                {fmtMonthYear(w.joiningDate)} — {w.currentlyWorking ? "Present" : fmtMonthYear(w.relievingDate)}
                 {w.salary ? ` · ₹ ${formatIndianNumber(w.salary)} p.a.` : ""}
               </p>
               {w.points?.length > 0 && (
@@ -163,7 +164,7 @@ export default function ProfessionalStepSevenForm({
                 {e.degreeLevel} in {e.fieldOfStudy}
               </p>
               <p className="text-xs text-(--color-black-shade-500)">
-                {e.collegeName} · {e.startDate} — {e.currentlyStudying ? "Present" : e.endDate}
+                {e.collegeName} · {fmtMonthYear(e.startDate)} — {e.currentlyStudying ? "Present" : fmtMonthYear(e.endDate)}
                 {e.grade ? ` · ${e.gradeType}: ${e.grade}` : ""}
               </p>
             </div>
