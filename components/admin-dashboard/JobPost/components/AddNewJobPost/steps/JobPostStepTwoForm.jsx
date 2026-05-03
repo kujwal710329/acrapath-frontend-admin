@@ -114,10 +114,6 @@ function SubSectionHeader({ title, onRemove }) {
 // ── Validation ────────────────────────────────────────────────────────────────
 function validate(form) {
   const errs = {};
-  if (!form.minimumEducation)
-    errs.minimumEducation = "Please select minimum education.";
-  if (!form.educationStream.trim())
-    errs.educationStream = "Education stream is required.";
   if (!form.yearsExperience)
     errs.yearsExperience = "Please select years of experience.";
   if (!form.englishLevel)
@@ -207,7 +203,10 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
 
       {/* Minimum Education */}
       <div className="mb-6">
-        <Label required className="mb-4!">Minimum Education</Label>
+        <Label className="mb-4!">
+          Minimum Education
+          <span className="text-xs font-normal text-(--color-black-shade-400) ml-1">(optional)</span>
+        </Label>
         <div className="flex flex-wrap gap-2">
           {EDUCATION_OPTIONS.map((opt) => (
             <SelectPill
@@ -221,17 +220,13 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
             />
           ))}
         </div>
-        {err("minimumEducation") && (
-          <p className="mt-1.5 text-xs text-(--color-red)">
-            {err("minimumEducation")}
-          </p>
-        )}
       </div>
 
       {/* Education Stream */}
       <div className="mb-6">
-        <FieldLabel required info="Specify the field of study required (e.g. Computer Science, MBA, Electronics). You can type a custom stream if it's not listed.">
+        <FieldLabel info="Specify the field of study required (e.g. Computer Science, MBA, Electronics). You can type a custom stream if it's not listed.">
           Education Stream
+          <span className="text-xs font-normal text-(--color-black-shade-400) ml-1">(optional)</span>
         </FieldLabel>
         {metaError && (
           <p className="mb-3 rounded-lg bg-red-50 px-4 py-2.5 text-xs text-(--color-red)">

@@ -114,6 +114,7 @@ export default function AuthForm() {
       localStorage.setItem("token", res.token);
       localStorage.setItem("user", JSON.stringify(res.user));
       localStorage.setItem("isAuthenticated", "true");
+      document.cookie = `admin_token=${res.token}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
 
       router.push("/admin/overview");
     } catch (err) {

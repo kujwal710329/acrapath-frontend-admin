@@ -14,6 +14,8 @@ function AdminUserMenu({ onClose }) {
   const handleSignOut = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("isAuthenticated");
+    document.cookie = "admin_token=; path=/; max-age=0; SameSite=Lax";
     onClose();
     router.push("/login");
   };

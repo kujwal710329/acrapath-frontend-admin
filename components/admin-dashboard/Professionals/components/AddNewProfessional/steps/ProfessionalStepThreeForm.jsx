@@ -5,6 +5,7 @@ import Button from "@/components/common/Button";
 import Label from "@/components/common/Label";
 import CreatableSelect from "@/components/common/CreatableSelect";
 import { useMetadataData } from "@/hooks/useMetadata";
+import { validateSkill, SKILL_MAX_LENGTH } from "@/utilities/skillValidation";
 
 const MAX_SKILLS = 15;
 
@@ -59,8 +60,11 @@ export default function ProfessionalStepThreeForm({
   const availableSkills = allSkillOptions.filter((s) => !skills.includes(s));
 
   const addSkill = (skill) => {
-    if (!skill || skills.includes(skill) || skills.length >= MAX_SKILLS) return;
-    setSkills((prev) => [...prev, skill]);
+    if (!skill || skills.length >= MAX_SKILLS) return;
+    const result = validateSkill(skill, skills)
+    if (!result.valid) { setErr("skillInput", result.error); return; }
+    clearErr("skillInput");
+    setSkills((prev) => [...prev, result.value]);
     clearErr("skills");
   };
 
@@ -127,14 +131,19 @@ export default function ProfessionalStepThreeForm({
           allowCreate={true}
           showAllOnOpen
           isDisabled={skills.length >= MAX_SKILLS}
+          maxLength={SKILL_MAX_LENGTH}
           error={touched.skills && errors.skills}
           onChange={addSkill}
           onBlur={(didSelect) => {
             markTouched("skills");
+            clearErr("skillInput");
             if (!didSelect && skills.length === 0) setErr("skills", "Add at least one skill.");
             else clearErr("skills");
           }}
         />
+        {errors.skillInput && (
+          <p className="mt-1 text-xs text-(--color-red)">{errors.skillInput}</p>
+        )}
         {!professionalCategory && (
           <p className="mt-1 text-xs text-(--color-black-shade-400) italic">
             Select a category in Step 2 to get skill suggestions.
