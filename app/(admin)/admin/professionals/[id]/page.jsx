@@ -6,6 +6,7 @@ import { apiRequest } from "@/utilities/api";
 import { adminUpdateProfessionalProfile, adminDocumentPresignedUrl, adminSaveDocument, adminDeleteDocument } from "@/services/professionals.service";
 import { showSuccess, showError } from "@/utilities/toast";
 import Button from "@/components/common/Button";
+import Input from "@/components/common/Input";
 import Icon from "@/components/common/Icon";
 import Label from "@/components/common/Label";
 import FixedBackButton from "@/components/common/FixedBackButton";
@@ -13,7 +14,10 @@ import Carousel from "@/components/common/Carousel";
 import EditSectionModal from "@/components/common/EditSectionModal";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import CreatableSelect from "@/components/common/CreatableSelect";
+import { MonthYearPicker } from "@/components/common/MonthYearPicker";
+import { DatePicker } from "@/components/common/DatePicker";
 import { useMetadataData } from "@/hooks/useMetadata";
+import { validateSkill, SKILL_MAX_LENGTH } from "@/utilities/skillValidation";
 
 /* ─── Constants ────────────────────────────────────────────────────── */
 
@@ -33,14 +37,6 @@ const ENUM_TO_METADATA_KEY = {
   consultant: "Consultancy",
 };
 
-const EXPERIENCE_OPTIONS = [
-  "Fresher",
-  "Less than 1 year",
-  "1–2 years",
-  "2–4 years",
-  "4–7 years",
-  "7+ years",
-];
 
 const DEGREE_LEVEL_OPTIONS = [
   "Bachelor's",
@@ -402,7 +398,7 @@ function ProfessionalInfoModal({ user, onSave, onClose, isLoading, onSetDirty })
     if (!form.firstName.trim()) e.firstName = "First name is required.";
     if (!form.lastName.trim()) e.lastName = "Last name is required.";
     if (!form.professionalCategory) e.professionalCategory = "Category is required.";
-    if (!form.yearsOfExperience) e.yearsOfExperience = "Experience is required.";
+    if (form.yearsOfExperience === "") e.yearsOfExperience = "Experience is required.";
     if (!form.openToRoles.length) e.openToRoles = "Select at least one role.";
     return e;
   };
@@ -414,7 +410,7 @@ function ProfessionalInfoModal({ user, onSave, onClose, isLoading, onSetDirty })
       firstName: form.firstName.trim(),
       middleName: form.middleName.trim(),
       lastName: form.lastName.trim(),
-      personalInfo: { currentDesignation: form.currentDesignation.trim(), professionalCategory: form.professionalCategory, yearsOfExperience: form.yearsOfExperience, openToRoles: form.openToRoles },
+      personalInfo: { currentDesignation: form.currentDesignation.trim(), professionalCategory: form.professionalCategory, yearsOfExperience: parseFloat(form.yearsOfExperience), openToRoles: form.openToRoles },
     });
   };
 
@@ -451,11 +447,15 @@ function ProfessionalInfoModal({ user, onSave, onClose, isLoading, onSetDirty })
       </div>
       <div className="mb-4">
         <Label required>Years of Experience</Label>
-        <CreatableSelect
-          options={EXPERIENCE_OPTIONS} value={form.yearsOfExperience}
-          allowCreate={false} showAllOnOpen placeholder="Select experience"
-          error={errors.yearsOfExperience} onChange={(v) => set("yearsOfExperience", v)} className="mb-0!"
+        <Input
+          type="number"
+          min="0"
+          step="0.5"
+          placeholder="e.g. 0 for fresher, 1.5, 2, 5.5"
+          value={form.yearsOfExperience}
+          onChange={(e) => { set("yearsOfExperience", e.target.value); if (e.target.value !== "") setErrors((p) => { const n = { ...p }; delete n.yearsOfExperience; return n; }); }}
         />
+        {errors.yearsOfExperience && <p className="mt-1 text-xs text-(--color-red)">{errors.yearsOfExperience}</p>}
       </div>
       <div className="mb-4">
         <div className="mb-2 flex items-center justify-between">
@@ -520,9 +520,10 @@ function SkillsModal({ user, onSave, onClose, isLoading, onSetDirty }) {
 
   const addSkill = (skill) => {
     if (!skill) return;
-    if (skills.map((s) => s.toLowerCase()).includes(skill.toLowerCase())) return;
     if (skills.length >= 15) { setError("Maximum 15 skills allowed."); return; }
-    setSkills((prev) => [...prev, skill]);
+    const result = validateSkill(skill, skills)
+    if (!result.valid) { setError(result.error); return; }
+    setSkills((prev) => [...prev, result.value]);
     setError("");
     onSetDirty();
   };
@@ -592,6 +593,7 @@ function SkillsModal({ user, onSave, onClose, isLoading, onSetDirty }) {
               allowCreate
               showAllOnOpen={false}
               isDisabled={skills.length >= 15}
+              maxLength={SKILL_MAX_LENGTH}
               error={error}
               onChange={addSkill}
               className="mb-0!"
@@ -757,8 +759,8 @@ function WorkExpEntryModal({ entry, onSave, onClose, isLoading }) {
     role: entry?.role || "",
     salary: entry?.salary ? String(Math.round(entry.salary / 100000 * 10) / 10) : "",
     salaryPeriod: entry?.salaryPeriod || "per annum",
-    joiningDate: toInputDate(entry?.joiningDate),
-    relievingDate: toInputDate(entry?.relievingDate),
+    joiningDate: entry?.joiningDate || null,
+    relievingDate: entry?.relievingDate || null,
     currentlyWorking: entry?.currentlyWorking || false,
     points: entry?.points?.filter(Boolean) || [],
   });
@@ -828,19 +830,31 @@ function WorkExpEntryModal({ entry, onSave, onClose, isLoading }) {
       </div>
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
-          <Label required>Start Date</Label>
-          <input type="date" value={form.joiningDate} onChange={(e) => set("joiningDate", e.target.value)} className={`${inputBase} ${errors.joiningDate ? inputError : ""}`} />
-          {errors.joiningDate && <p className="mt-1 text-xs text-(--color-red)">{errors.joiningDate}</p>}
+          <Label required>Start Month</Label>
+          <MonthYearPicker
+            value={form.joiningDate}
+            onChange={(iso) => set("joiningDate", iso)}
+            placeholder="Start Month"
+            maxDate={new Date().toISOString()}
+            error={errors.joiningDate}
+          />
         </div>
         <div>
-          <Label required={!form.currentlyWorking}>End Date</Label>
-          <input type="date" value={form.relievingDate} disabled={form.currentlyWorking} onChange={(e) => set("relievingDate", e.target.value)} className={`${inputBase} ${errors.relievingDate ? inputError : ""} ${form.currentlyWorking ? "opacity-40 cursor-not-allowed" : ""}`} />
-          {errors.relievingDate && <p className="mt-1 text-xs text-(--color-red)">{errors.relievingDate}</p>}
+          <Label required={!form.currentlyWorking}>End Month</Label>
+          <MonthYearPicker
+            value={form.relievingDate}
+            onChange={(iso) => set("relievingDate", iso)}
+            placeholder="End Month"
+            minDate={form.joiningDate || undefined}
+            maxDate={new Date().toISOString()}
+            disabled={form.currentlyWorking}
+            error={errors.relievingDate}
+          />
         </div>
       </div>
       <div className="mb-4">
         <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" checked={form.currentlyWorking} onChange={(e) => { set("currentlyWorking", e.target.checked); if (e.target.checked) set("relievingDate", ""); }} className="w-4 h-4 rounded accent-(--color-primary)" />
+          <input type="checkbox" checked={form.currentlyWorking} onChange={(e) => { set("currentlyWorking", e.target.checked); if (e.target.checked) set("relievingDate", null); }} className="w-4 h-4 rounded accent-(--color-primary)" />
           <span className="text-sm font-medium text-(--color-black-shade-700)">Currently working here</span>
         </label>
       </div>
@@ -876,8 +890,8 @@ function InternshipEntryModal({ entry, onSave, onClose, isLoading }) {
     role: entry?.role || "",
     stipend: entry?.stipend ? String(entry.stipend) : "",
     stipendPeriod: entry?.stipendPeriod || "per month",
-    joiningDate: toInputDate(entry?.joiningDate),
-    relievingDate: toInputDate(entry?.relievingDate),
+    joiningDate: entry?.joiningDate || null,
+    relievingDate: entry?.relievingDate || null,
     currentlyWorking: entry?.currentlyWorking || false,
   });
   const [errors, setErrors] = useState({});
@@ -929,19 +943,31 @@ function InternshipEntryModal({ entry, onSave, onClose, isLoading }) {
       </div>
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
-          <Label required>Start Date</Label>
-          <input type="date" value={form.joiningDate} onChange={(e) => set("joiningDate", e.target.value)} className={`${inputBase} ${errors.joiningDate ? inputError : ""}`} />
-          {errors.joiningDate && <p className="mt-1 text-xs text-(--color-red)">{errors.joiningDate}</p>}
+          <Label required>Start Month</Label>
+          <MonthYearPicker
+            value={form.joiningDate}
+            onChange={(iso) => set("joiningDate", iso)}
+            placeholder="Start Month"
+            maxDate={new Date().toISOString()}
+            error={errors.joiningDate}
+          />
         </div>
         <div>
-          <Label required={!form.currentlyWorking}>End Date</Label>
-          <input type="date" value={form.relievingDate} disabled={form.currentlyWorking} onChange={(e) => set("relievingDate", e.target.value)} className={`${inputBase} ${errors.relievingDate ? inputError : ""} ${form.currentlyWorking ? "opacity-40 cursor-not-allowed" : ""}`} />
-          {errors.relievingDate && <p className="mt-1 text-xs text-(--color-red)">{errors.relievingDate}</p>}
+          <Label required={!form.currentlyWorking}>End Month</Label>
+          <MonthYearPicker
+            value={form.relievingDate}
+            onChange={(iso) => set("relievingDate", iso)}
+            placeholder="End Month"
+            minDate={form.joiningDate || undefined}
+            maxDate={new Date().toISOString()}
+            disabled={form.currentlyWorking}
+            error={errors.relievingDate}
+          />
         </div>
       </div>
       <div className="mb-4">
         <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" checked={form.currentlyWorking} onChange={(e) => { set("currentlyWorking", e.target.checked); if (e.target.checked) set("relievingDate", ""); }} className="w-4 h-4 rounded accent-(--color-primary)" />
+          <input type="checkbox" checked={form.currentlyWorking} onChange={(e) => { set("currentlyWorking", e.target.checked); if (e.target.checked) set("relievingDate", null); }} className="w-4 h-4 rounded accent-(--color-primary)" />
           <span className="text-sm font-medium text-(--color-black-shade-700)">Currently working here</span>
         </label>
       </div>
@@ -959,8 +985,8 @@ function EducationEntryModal({ entry, onSave, onClose, isLoading }) {
     collegeName: entry?.collegeName || "",
     grade: entry?.grade || "",
     gradeType: entry?.gradeType || "Percentage",
-    startDate: toInputDate(entry?.startDate),
-    endDate: toInputDate(entry?.endDate),
+    startDate: entry?.startDate || null,
+    endDate: entry?.endDate || null,
     currentlyStudying: entry?.currentlyStudying || false,
   });
   const [errors, setErrors] = useState({});
@@ -1024,17 +1050,28 @@ function EducationEntryModal({ entry, onSave, onClose, isLoading }) {
       </div>
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
-          <Label>Start Date</Label>
-          <input type="date" value={form.startDate} onChange={(e) => set("startDate", e.target.value)} className={inputBase} />
+          <Label>Start Month</Label>
+          <MonthYearPicker
+            value={form.startDate}
+            onChange={(iso) => set("startDate", iso)}
+            placeholder="Start Month"
+            maxDate={new Date().toISOString()}
+          />
         </div>
         <div>
-          <Label>End Date</Label>
-          <input type="date" value={form.endDate} disabled={form.currentlyStudying} onChange={(e) => set("endDate", e.target.value)} className={`${inputBase} ${form.currentlyStudying ? "opacity-40 cursor-not-allowed" : ""}`} />
+          <Label>End Month</Label>
+          <MonthYearPicker
+            value={form.endDate}
+            onChange={(iso) => set("endDate", iso)}
+            placeholder="End Month"
+            minDate={form.startDate || undefined}
+            disabled={form.currentlyStudying}
+          />
         </div>
       </div>
       <div className="mb-4">
         <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" checked={form.currentlyStudying} onChange={(e) => { set("currentlyStudying", e.target.checked); if (e.target.checked) set("endDate", ""); }} className="w-4 h-4 rounded accent-(--color-primary)" />
+          <input type="checkbox" checked={form.currentlyStudying} onChange={(e) => { set("currentlyStudying", e.target.checked); if (e.target.checked) set("endDate", null); }} className="w-4 h-4 rounded accent-(--color-primary)" />
           <span className="text-sm font-medium text-(--color-black-shade-700)">Currently studying here</span>
         </label>
       </div>
@@ -1131,7 +1168,7 @@ function AchievementEntryModal({ entry, onSave, onClose, isLoading }) {
   const [form, setForm] = useState({
     title: entry?.title || "",
     description: entry?.description || "",
-    date: toInputDate(entry?.date),
+    date: entry?.date || null,
   });
   const [errors, setErrors] = useState({});
 
@@ -1165,7 +1202,7 @@ function AchievementEntryModal({ entry, onSave, onClose, isLoading }) {
       </div>
       <div className="mb-4">
         <Label>Date</Label>
-        <input type="date" value={form.date} onChange={(e) => set("date", e.target.value)} className={inputBase} />
+        <DatePicker value={form.date} onChange={(iso) => set("date", iso)} placeholder="Achievement Date" maxDate={new Date().toISOString()} />
       </div>
     </EditSectionModal>
   );
@@ -1353,7 +1390,12 @@ export default function AdminProfessionalDetailPage() {
   const displayName = [user.firstName, user.middleName, user.lastName].filter(Boolean).join(" ") || user.fullName || user.name || "";
   const roleLabel = user.currentDesignation || user.designation || "";
   const company = user.company && user.company !== "N/A" ? user.company : "";
-  const experience = user.yearsOfExperience || "";
+  const _rawExp = user.yearsOfExperience;
+  const experience = _rawExp === null || _rawExp === undefined || _rawExp === ""
+    ? ""
+    : Number(_rawExp) === 0
+    ? "Fresher"
+    : `${_rawExp} years Experience`;
   const rawSkills = user.skills ?? [];
   const skills = rawSkills.map((s) => (typeof s === "string" ? s : s.name));
   const about = user.profileSummary || "";
@@ -1432,8 +1474,7 @@ export default function AdminProfessionalDetailPage() {
       {skills.length > 0 ? (
         <div className="flex flex-wrap gap-2">
           {visibleSkills.map((skill, i) => (
-            <span key={i} className={`rounded-full px-4 py-1.5 text-12 font-medium bg-(--color-primary-shade-100) ${i === 0 ? "flex items-center gap-1 text-(--color-black-shade-900)" : "text-(--color-black-shade-800)"}`}>
-              {i === 0 && <Icon name="statics/Employee-Dashboard/Star.svg" width={12} height={12} />}
+            <span key={i} className="rounded-full px-4 py-1.5 text-12 font-medium bg-(--color-primary-shade-100) text-(--color-black-shade-800)">
               {skill}
             </span>
           ))}

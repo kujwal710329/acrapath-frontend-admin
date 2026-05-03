@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Button from "@/components/common/Button";
 import Label from "@/components/common/Label";
+import Input from "@/components/common/Input";
 import CreatableSelect from "@/components/common/CreatableSelect";
 import { useMetadataData } from "@/hooks/useMetadata";
 
@@ -24,14 +25,6 @@ const ENUM_TO_METADATA_KEY = {
   consultant: "Consultancy",
 };
 
-const EXPERIENCE_OPTIONS = [
-  "Fresher",
-  "Less than 1 year",
-  "1–2 years",
-  "2–4 years",
-  "4–7 years",
-  "7+ years",
-];
 
 
 function SectionHeader({ title, subtitle }) {
@@ -114,9 +107,9 @@ export default function ProfessionalStepTwoForm({ defaultValues = {}, onBack, on
     onNext({
       professionalCategory: form.professionalCategory,
       openToRoles: form.openToRoles,
-      yearsOfExperience: form.yearsOfExperience,
+      yearsOfExperience: parseFloat(form.yearsOfExperience),
       personalInfo: {
-        yearsOfExperience: form.yearsOfExperience,
+        yearsOfExperience: parseFloat(form.yearsOfExperience),
         professionalCategory: form.professionalCategory,
         openToRoles: form.openToRoles,
       },
@@ -196,20 +189,22 @@ export default function ProfessionalStepTwoForm({ defaultValues = {}, onBack, on
       {/* Years of Experience */}
       <div className="mb-4">
         <Label required>Years of Experience</Label>
-        <CreatableSelect
-          placeholder="Select experience"
-          options={EXPERIENCE_OPTIONS}
+        <Input
+          type="number"
+          min="0"
+          step="0.5"
+          placeholder="e.g. 0 for fresher, 1.5, 2, 5.5"
           value={form.yearsOfExperience}
-          allowCreate={false}
-          showAllOnOpen
-          error={touched.yearsOfExperience && errors.yearsOfExperience}
-          onChange={(v) => { set("yearsOfExperience", v); touch("yearsOfExperience"); clearErr("yearsOfExperience"); }}
-          onBlur={(didSelect) => {
+          onChange={(e) => { set("yearsOfExperience", e.target.value); touch("yearsOfExperience"); if (e.target.value !== "") clearErr("yearsOfExperience"); }}
+          onBlur={() => {
             touch("yearsOfExperience");
-            if (!didSelect && !form.yearsOfExperience) setErr("yearsOfExperience", "Years of experience is required.");
+            if (form.yearsOfExperience === "") setErr("yearsOfExperience", "Years of experience is required.");
             else clearErr("yearsOfExperience");
           }}
         />
+        {touched.yearsOfExperience && errors.yearsOfExperience && (
+          <p className="mt-1 text-xs text-(--color-red)">{errors.yearsOfExperience}</p>
+        )}
       </div>
 
       <div className="mt-8 flex items-center gap-4">

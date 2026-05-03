@@ -18,6 +18,7 @@ import EditSectionModal from "@/components/common/EditSectionModal";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import CreatableSelect from "@/components/common/CreatableSelect";
 import { useMetadataData } from "@/hooks/useMetadata";
+import { validateSkill, SKILL_MAX_LENGTH } from "@/utilities/skillValidation";
 import RichTextEditor from "@/components/common/RichTextEditor";
 
 /* ─── Constants ────────────────────────────────────────────────────── */
@@ -428,8 +429,9 @@ function SkillsModal({ job, onSave, onClose, isLoading, onSetDirty }) {
 
   const addSkill = (skill) => {
     if (!skill) return;
-    if (skills.map((s) => s.toLowerCase()).includes(skill.toLowerCase())) return;
-    setSkills((p) => [...p, skill]);
+    const result = validateSkill(skill, skills)
+    if (!result.valid) { setError(result.error); return; }
+    setSkills((p) => [...p, result.value]);
     setError("");
     onSetDirty();
   };
@@ -496,6 +498,7 @@ function SkillsModal({ job, onSave, onClose, isLoading, onSetDirty }) {
               value=""
               allowCreate
               showAllOnOpen={false}
+              maxLength={SKILL_MAX_LENGTH}
               error={error}
               onChange={addSkill}
               className="mb-0!"
@@ -821,10 +824,7 @@ export default function AdminJobDetailPage() {
           <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
             <div className="flex items-center gap-3">
               <h2 className="text-lg font-semibold text-(--color-black-shade-900)">Skills Required</h2>
-              <div className="flex items-center gap-1 text-xs text-(--color-black-shade-600)">
-                <span>Key skills highlighted with</span>
-                <Icon name="statics/Employee-Dashboard/Star.svg" width={14} height={14} />
-              </div>
+              
             </div>
             <EditButton onClick={skillsEdit.open} label="Edit skills" />
           </div>
@@ -832,7 +832,6 @@ export default function AdminJobDetailPage() {
             {job?.skills?.length > 0 ? (
               job.skills.map((skill, index) => (
                 <span key={index} className={`rounded-full px-4 py-1.5 text-xs font-medium bg-(--color-primary-shade-100) text-(--color-black-shade-800) ${index === 0 ? "flex items-center gap-1" : ""}`}>
-                  {index === 0 && <Icon name="statics/Employee-Dashboard/Star.svg" width={12} height={12} />}
                   {skill}
                 </span>
               ))

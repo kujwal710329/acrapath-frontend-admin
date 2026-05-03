@@ -312,10 +312,6 @@ export default function JobPostStepFourForm({
         title="Interview Information"
         onEdit={() => onGoToStep?.("interview-information")}
       >
-        <ReviewRow
-          label="Interview Location"
-          value={stepThreeData.interviewLocationType}
-        />
         {interviewProcess && (
           <ReviewRow label="Interview Process" value={interviewProcess} />
         )}

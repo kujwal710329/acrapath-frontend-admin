@@ -10,11 +10,25 @@ const poppins = Poppins({
   display: "swap",
 });
 
+export const metadata = {
+  title: {
+    default: "Acrapath Admin",
+    template: "%s | Acrapath Admin",
+  },
+  description: "Acrapath Admin Panel",
+  icons: {
+    icon: "/static/Icons/Acrapath_Logo_Below_Text.svg",
+    shortcut: "/static/Icons/Acrapath_Logo_Below_Text.svg",
+    apple: "/static/Icons/Acrapath_Logo_Below_Text.svg",
+  },
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${poppins.className} ${poppins.variable}`}>
       <body
         className={`${poppins.className} ${poppins.variable} antialiased flex flex-col min-h-screen`}
+        suppressHydrationWarning
       >
         <AuthProvider>
           {children}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Button from "@/components/common/Button";
 import Label from "@/components/common/Label";
 import CreatableSelect from "@/components/common/CreatableSelect";
+import { MonthYearPicker } from "@/components/common/MonthYearPicker";
 import { useMetadataData } from "@/hooks/useMetadata";
 import {
   sanitizeSalaryInput,
@@ -29,8 +30,8 @@ function emptyEntry() {
     role: "",
     salary: "",
     salaryPeriod: "per annum",
-    joiningDate: "",
-    relievingDate: "",
+    joiningDate: null,
+    relievingDate: null,
     currentlyWorking: false,
     points: ["", "", ""],
   };
@@ -104,7 +105,7 @@ function WorkEntry({ entry, index, onChange, onRemove, canRemove, roleOptions, e
           type="button"
           role="switch"
           aria-checked={entry.currentlyWorking}
-          onClick={() => set("currentlyWorking", !entry.currentlyWorking)}
+          onClick={() => { set("currentlyWorking", !entry.currentlyWorking); if (!entry.currentlyWorking) set("relievingDate", null); }}
           className={`relative shrink-0 h-7 w-12 cursor-pointer rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-(--color-primary) focus:ring-offset-1 ${entry.currentlyWorking ? "bg-(--color-secondary)" : "bg-(--color-black-shade-300)"}`}
         >
           <span className={`absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${entry.currentlyWorking ? "translate-x-5" : "translate-x-0"}`} />
@@ -137,29 +138,25 @@ function WorkEntry({ entry, index, onChange, onRemove, canRemove, roleOptions, e
       <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
         <div className="mb-4">
           <Label htmlFor={`jd-${index}`} required>Joining Month</Label>
-          <input
-            id={`jd-${index}`}
-            type="month"
-            value={entry.joiningDate}
-            max={new Date().toISOString().slice(0, 7)}
-            onChange={(e) => set("joiningDate", e.target.value)}
-            className={`${inputBase} ${errors.joiningDate ? inputError : inputNormal}`}
+          <MonthYearPicker
+            value={entry.joiningDate || null}
+            onChange={(iso) => set("joiningDate", iso)}
+            placeholder="Joining Month"
+            maxDate={new Date().toISOString()}
+            error={errors.joiningDate}
           />
-          <FieldError msg={errors.joiningDate} />
         </div>
         {!entry.currentlyWorking && (
           <div className="mb-4">
             <Label htmlFor={`rd-${index}`} required>Relieving Month</Label>
-            <input
-              id={`rd-${index}`}
-              type="month"
-              value={entry.relievingDate}
-              min={entry.joiningDate || undefined}
-              max={new Date().toISOString().slice(0, 7)}
-              onChange={(e) => set("relievingDate", e.target.value)}
-              className={`${inputBase} ${errors.relievingDate ? inputError : inputNormal}`}
+            <MonthYearPicker
+              value={entry.relievingDate || null}
+              onChange={(iso) => set("relievingDate", iso)}
+              placeholder="Relieving Month"
+              minDate={entry.joiningDate || undefined}
+              maxDate={new Date().toISOString()}
+              error={errors.relievingDate}
             />
-            <FieldError msg={errors.relievingDate} />
           </div>
         )}
       </div>
@@ -227,7 +224,7 @@ export default function ProfessionalStepFourForm({
   onNext,
 }) {
   const { metadata } = useMetadataData();
-  const isFresher = yearsOfExperience === "Fresher";
+  const isFresher = Number(yearsOfExperience) === 0;
 
   const [entries, setEntries] = useState(
     defaultValues.workExperience?.length > 0
@@ -235,8 +232,8 @@ export default function ProfessionalStepFourForm({
           ...emptyEntry(),
           ...e,
           salary: e.salary ?? "",
-          joiningDate: e.joiningDate ? String(e.joiningDate).slice(0, 7) : "",
-          relievingDate: e.relievingDate ? String(e.relievingDate).slice(0, 7) : "",
+          joiningDate: e.joiningDate || null,
+          relievingDate: e.relievingDate || null,
         }))
       : [emptyEntry()]
   );
@@ -296,8 +293,8 @@ export default function ProfessionalStepFourForm({
       role: e.role.trim(),
       salary: e.currentlyWorking && e.salary ? Number(e.salary) : undefined,
       salaryPeriod: "per annum",
-      joiningDate: e.joiningDate ? String(e.joiningDate).slice(0, 7) : undefined,
-      relievingDate: e.currentlyWorking ? undefined : e.relievingDate ? String(e.relievingDate).slice(0, 7) : undefined,
+      joiningDate: e.joiningDate || undefined,
+      relievingDate: e.currentlyWorking ? undefined : (e.relievingDate || undefined),
       currentlyWorking: e.currentlyWorking,
       points: (e.points || []).filter(Boolean).map((p) => p.trim()),
     }));

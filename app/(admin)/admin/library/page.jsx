@@ -1,7 +1,7 @@
 import LibraryPage from "@/components/admin-dashboard/Library";
 
 export const metadata = {
-  title: "Library Management",
+  title: "Library",
 };
 
 export default function Page() {

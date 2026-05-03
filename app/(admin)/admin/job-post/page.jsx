@@ -1,3 +1,5 @@
+export const metadata = { title: "Job Post" };
+
 import JobPostPage from "@/components/admin-dashboard/JobPost";
 
 export default function Page() {

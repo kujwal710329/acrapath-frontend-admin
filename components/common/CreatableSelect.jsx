@@ -15,6 +15,7 @@ export default function CreatableSelect({
   isDisabled = false,
   disabled = false,
   className = "",
+  maxLength,
 }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -189,6 +190,7 @@ export default function CreatableSelect({
           value={displayValue}
           placeholder={placeholder}
           disabled={isOff}
+          maxLength={maxLength}
           onFocus={() => {
             if (isOff) return;
             hasFocused.current = true;
