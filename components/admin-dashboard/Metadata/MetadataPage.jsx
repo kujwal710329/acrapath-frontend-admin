@@ -5,6 +5,7 @@ import { useMetadata, METADATA_TYPES, ARRAY_TYPES } from "@/hooks/useMetadata";
 import ArrayTypeEditor from "./components/ArrayTypeEditor";
 import ObjectTypeEditor from "./components/ObjectTypeEditor";
 import SeedAllPanel from "./components/SeedAllPanel";
+import CompaniesMetadata from "./components/CompaniesMetadata";
 
 // ─── Human-readable labels & descriptions ─────────────────────────────────────
 
@@ -44,6 +45,11 @@ const TYPE_META = {
     description: "Academic fields of study available for professional profiles.",
     kind: "array",
   },
+  __companies: {
+    label: "Companies",
+    description: "Company profiles used for auto-filling job post details.",
+    kind: "companies",
+  },
   __seedAll: {
     label: "Seed All",
     description: "Bulk upsert all metadata types at once from a single JSON payload.",
@@ -53,6 +59,7 @@ const TYPE_META = {
 
 const NAV_ITEMS = [
   ...METADATA_TYPES.map((t) => ({ key: t, ...TYPE_META[t] })),
+  { key: "__companies", ...TYPE_META["__companies"] },
   { key: "__seedAll", ...TYPE_META["__seedAll"] },
 ];
 
@@ -89,7 +96,7 @@ function PanelHeader({ item, onRefresh, loading }) {
         <h2 className="text-20 font-bold text-(--color-black-shade-900)">{item.label}</h2>
         <p className="text-14 text-(--color-black-shade-500) mt-1">{item.description}</p>
       </div>
-      {item.kind !== "seed" && (
+      {item.kind !== "seed" && item.kind !== "companies" && (
         <button
           type="button"
           onClick={onRefresh}
@@ -190,8 +197,10 @@ export default function MetadataPage() {
 
         <div className="px-6 py-6">
           {/* Global error */}
-          {error && activeItem.kind !== "seed" ? (
+          {error && activeItem.kind !== "seed" && activeItem.kind !== "companies" ? (
             <ErrorPanel message={error} onRetry={refresh} />
+          ) : activeItem.kind === "companies" ? (
+            <CompaniesMetadata />
           ) : activeItem.kind === "seed" ? (
             <SeedAllPanel isPending={isPending} onSeedAll={seedAll} />
           ) : ARRAY_TYPES.has(activeKey) ? (

@@ -10,6 +10,7 @@ import TopVerifiedJobsTable from "./components/TopVerifiedJobsTable";
 import AddNewJobPost from "./components/AddNewJobPost";
 import { useJobPosts } from "@/hooks/useJobPosts";
 import BulkJobUpload from "./components/BulkJobUpload/BulkJobUpload";
+import JobTemplatesAdminPage from "./components/JobTemplates/JobTemplatesAdminPage";
 
 const REQUESTS_TYPE_TABS = new Set(["request", "rejected"]);
 
@@ -17,6 +18,7 @@ export default function JobPostPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("currentPost");
   const [perPage, setPerPage] = useState(20);
+  const isTemplates = activeTab === "templates";
 
   const {
     rows,
@@ -57,7 +59,7 @@ export default function JobPostPage() {
       {/* Sticky toolbar */}
       <div className="sticky top-18 z-20 flex items-center justify-between flex-wrap gap-3 px-6 py-3 bg-(--pure-white) border-b border-(--color-black-shade-100)">
         <JobPostTabNav activeTab={activeTab} onTabChange={handleTabChange} />
-        {!isAddNew && !isBulkUpload && (
+        {!isAddNew && !isBulkUpload && !isTemplates && (
           <TableControls
             search={search}
             onSearch={handleSearch}
@@ -85,13 +87,16 @@ export default function JobPostPage() {
           <BulkJobUpload onViewJobs={() => handleTabChange("request")} />
         )}
 
-        {!isAddNew && !isBulkUpload && (
+        {isTemplates && <JobTemplatesAdminPage />}
+
+        {!isAddNew && !isBulkUpload && !isTemplates && (
           isTopVerified ? (
             <TopVerifiedJobsTable
               data={rows}
               loading={loading}
               error={error}
               onRetry={refresh}
+              onStatusChange={updateStatus}
               onToggleDreamjob={toggleDreamjob}
               onView={handleView}
               onDelete={deleteJob}

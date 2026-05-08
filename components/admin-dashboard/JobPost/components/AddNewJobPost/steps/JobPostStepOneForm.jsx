@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Button from "@/components/common/Button";
 import Label from "@/components/common/Label";
 import Heading from "@/components/common/Heading";
@@ -13,6 +13,9 @@ import RichTextEditor from "@/components/common/RichTextEditor";
 import { useMetadataData } from "@/hooks/useMetadata";
 import { filterSelectedOptions } from "@/utilities/filterSelectedOptions";
 import InfoTooltip from "@/components/common/InfoTooltip";
+import SearchableInput from "@/components/common/SearchableInput";
+import AutoFillBanner from "../components/AutoFillBanner";
+import { apiRequest } from "@/utilities/api";
 
 /** Strip HTML tags to get plain-text length for validation. */
 function stripHtml(html) {
@@ -75,7 +78,6 @@ function SectionDivider() {
   return <div className="my-8 border-t border-(--color-black-shade-300)" />;
 }
 
-// Label with optional info tooltip inline
 function FieldLabel({ children, required, info }) {
   return (
     <div className="mb-4 flex items-center gap-1.5">
@@ -169,15 +171,74 @@ export default function JobPostStepOneForm({
   const [touched, setTouched] = useState({});
   const [pincodeLoading, setPincodeLoading] = useState(false);
   const [pincodeApiError, setPincodeApiError] = useState("");
+  const [descLoading, setDescLoading] = useState(false);
+  const [autoFill, setAutoFill] = useState({ visible: false, dismissed: false, source: null });
 
   const currentErrors = validate(form);
   const isFormValid = Object.keys(currentErrors).length === 0;
 
-  const set = (field) => (val) => setForm({ ...form, [field]: val });
-  const handle = (field) => (e) => setForm({ ...form, [field]: e.target.value });
-  const touch = (field) => () =>
-    setTouched((prev) => ({ ...prev, [field]: true }));
+  const set = (field) => (val) => setForm((prev) => ({ ...prev, [field]: val }));
+  const handle = (field) => (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
+  const touch = (field) => () => setTouched((prev) => ({ ...prev, [field]: true }));
   const err = (field) => (touched[field] ? currentErrors[field] : "");
+
+  // ── Company name suggestions ───────────────────────────────────────────────
+
+  const fetchCompanySuggestions = useCallback(async (query) => {
+    const res = await apiRequest(
+      `/jobs/suggestions/companies?q=${encodeURIComponent(query)}`,
+      {},
+      { useCache: false }
+    );
+    return res?.data ?? [];
+  }, []);
+
+  const handleCompanySelect = useCallback(async (company) => {
+    setForm((prev) => ({ ...prev, companyName: company.name }));
+    touch("companyName")();
+
+    // Never overwrite content already typed
+    if (form.companyDescription && stripHtml(form.companyDescription).length > 0) return;
+    // Don't re-show banner if already dismissed this session
+    if (autoFill.dismissed) return;
+
+    if (company.description) {
+      setForm((prev) => ({ ...prev, companyDescription: company.description }));
+      setAutoFill({ visible: true, dismissed: false, source: company.source });
+      return;
+    }
+
+    // No description in suggestion — do lookup by exact name
+    try {
+      setDescLoading(true);
+      const res = await apiRequest(
+        `/jobs/suggestions/company-description?name=${encodeURIComponent(company.name)}`,
+        {},
+        { useCache: false }
+      );
+      if (res?.found) {
+        setForm((prev) => ({ ...prev, companyDescription: res.data.description }));
+        setAutoFill({ visible: true, dismissed: false, source: res.data.source });
+      }
+    } catch (e) {
+      console.error("[CompanyAutoFill]", e);
+    } finally {
+      setDescLoading(false);
+    }
+  }, [form.companyDescription, autoFill.dismissed]);
+
+  // ── Job title suggestions ──────────────────────────────────────────────────
+
+  const fetchJobTitleSuggestions = useCallback(async (query) => {
+    const res = await apiRequest(
+      `/jobs/suggestions/titles?q=${encodeURIComponent(query)}`,
+      {},
+      { useCache: false }
+    );
+    return res?.data ?? [];
+  }, []);
+
+  // ── Pincode ────────────────────────────────────────────────────────────────
 
   const fetchPincodeData = async (pincode) => {
     if (!/^[0-9]{6}$/.test(pincode)) {
@@ -209,7 +270,20 @@ export default function JobPostStepOneForm({
     e.preventDefault();
     const allTouched = Object.fromEntries(Object.keys(form).map((k) => [k, true]));
     setTouched(allTouched);
-    if (isFormValid) onNext?.(form);
+    if (isFormValid) {
+      onNext?.(form);
+    } else {
+      const fieldOrder = [
+        "companyName", "companyDescription", "jobTitle", "jobCategory",
+        "jobType", "externalJobUrl", "workType", "workingLocation",
+        "pincode", "city", "state", "fixedSalaryMin", "fixedSalaryMax", "variableSalary",
+      ];
+      const idMap = { fixedSalaryMin: "field-fixedSalary", fixedSalaryMax: "field-fixedSalary", state: "field-city" };
+      const firstError = fieldOrder.find((f) => currentErrors[f]);
+      if (firstError) {
+        document.getElementById(idMap[firstError] ?? `field-${firstError}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
   };
 
   return (
@@ -221,31 +295,68 @@ export default function JobPostStepOneForm({
       />
 
       {/* Company Name */}
-      <div className="mb-6">
+      <div id="field-companyName" className="mb-6">
         <Label required className="mb-4!">Company Name</Label>
-        <input
-          type="text"
+        <SearchableInput
           value={form.companyName}
-          onChange={handle("companyName")}
+          onChange={(val) => setForm((prev) => ({ ...prev, companyName: val }))}
+          onSelect={handleCompanySelect}
           onBlur={touch("companyName")}
+          fetchSuggestions={fetchCompanySuggestions}
+          renderItem={(company) => (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {company.iconUrl && (
+                <img
+                  src={company.iconUrl}
+                  width={20}
+                  height={20}
+                  alt=""
+                  style={{ borderRadius: 4, objectFit: "contain", flexShrink: 0 }}
+                />
+              )}
+              <span>{company.name}</span>
+              {company.source === "metadata" && (
+                <span style={{ fontSize: 11, color: "var(--color-secondary-shade-900)", marginLeft: "auto" }}>
+                  verified
+                </span>
+              )}
+            </div>
+          )}
+          getItemLabel={(company) => company.name}
           placeholder="Eg. Acrapath Technologies"
-          className={`${inputBase} ${err("companyName") ? inputError : inputNormal}`}
+          debounceMs={300}
+          minChars={2}
+          error={err("companyName")}
         />
-        {err("companyName") && (
-          <p className="mt-1.5 text-xs text-(--color-red)">{err("companyName")}</p>
-        )}
       </div>
 
       {/* Company Description */}
-      <div className="mb-6">
+      <div id="field-companyDescription" className="mb-6">
         <FieldLabel required>Company Description</FieldLabel>
-        <RichTextEditor
-          value={form.companyDescription}
-          onChange={set("companyDescription")}
-          onBlur={touch("companyDescription")}
-          placeholder="Describe your company — culture, mission, and what makes it a great place to work (min 50 characters)…"
-          hasError={!!err("companyDescription")}
-        />
+        {autoFill.visible && !autoFill.dismissed && (
+          <AutoFillBanner
+            source={autoFill.source}
+            onDismiss={() => setAutoFill((prev) => ({ ...prev, visible: false, dismissed: true }))}
+          />
+        )}
+        <div className={`relative ${descLoading ? "pointer-events-none opacity-70" : ""}`}>
+          {descLoading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-(--pure-white)/60">
+              <svg className="animate-spin h-5 w-5 text-(--color-primary)" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+              </svg>
+            </div>
+          )}
+          <RichTextEditor
+            value={form.companyDescription}
+            onChange={set("companyDescription")}
+            onBlur={touch("companyDescription")}
+            placeholder="Describe your company — culture, mission, and what makes it a great place to work (min 50 characters)…"
+            hasError={!!err("companyDescription")}
+            editable={!descLoading}
+          />
+        </div>
         <div className="mt-1 flex items-center justify-between">
           {err("companyDescription") ? (
             <p className="text-xs text-(--color-red)">{err("companyDescription")}</p>
@@ -259,25 +370,30 @@ export default function JobPostStepOneForm({
       </div>
 
       {/* Job Title */}
-      <div className="mb-6">
+      <div id="field-jobTitle" className="mb-6">
         <FieldLabel required info="Enter the specific job title or designation for this role. A clear title (e.g. 'Senior React Developer') helps attract the right candidates.">
           Job Title / Designation
         </FieldLabel>
-        <input
-          type="text"
+        <SearchableInput
           value={form.jobTitle}
-          onChange={handle("jobTitle")}
+          onChange={(val) => setForm((prev) => ({ ...prev, jobTitle: val }))}
+          onSelect={(title) => {
+            setForm((prev) => ({ ...prev, jobTitle: title }));
+            touch("jobTitle")();
+          }}
           onBlur={touch("jobTitle")}
+          fetchSuggestions={fetchJobTitleSuggestions}
+          renderItem={(title) => <span>{title}</span>}
+          getItemLabel={(title) => title}
           placeholder="Eg. Performance Marketer"
-          className={`${inputBase} ${err("jobTitle") ? inputError : inputNormal}`}
+          debounceMs={300}
+          minChars={2}
+          error={err("jobTitle")}
         />
-        {err("jobTitle") && (
-          <p className="mt-1.5 text-xs text-(--color-red)">{err("jobTitle")}</p>
-        )}
       </div>
 
       {/* Job Category */}
-      <div className="mb-6">
+      <div id="field-jobCategory" className="mb-6">
         <Label required className="mb-4!">Job Role / Category</Label>
         {metaError && (
           <p className="mb-3 rounded-lg bg-red-50 px-4 py-2.5 text-xs text-(--color-red)">
@@ -302,10 +418,9 @@ export default function JobPostStepOneForm({
       </div>
 
       {/* Job Type */}
-      <div className="mb-6">
+      <div id="field-jobType" className="mb-6">
         <Label required className="mb-4!">Job Type</Label>
 
-        {/* Night Shift */}
         <div className="mb-4">
           <label className="flex cursor-pointer items-center gap-2">
             <input
@@ -344,7 +459,7 @@ export default function JobPostStepOneForm({
           <SelectPill
             label="Through Acrapath"
             isSelected={form.jobSource === "internal"}
-            onSelect={() => setForm({ ...form, jobSource: "internal", externalJobUrl: "" })}
+            onSelect={() => setForm((prev) => ({ ...prev, jobSource: "internal", externalJobUrl: "" }))}
           />
           <SelectPill
             label="Your  careers page"
@@ -353,7 +468,7 @@ export default function JobPostStepOneForm({
           />
         </div>
         {form.jobSource === "external" && (
-          <div className="mt-4">
+          <div id="field-externalJobUrl" className="mt-4">
             <Label required className="mb-4!">Careers Page / Application Link</Label>
             <input
               type="url"
@@ -379,7 +494,7 @@ export default function JobPostStepOneForm({
       />
 
       {/* Work Type */}
-      <div className="mb-6">
+      <div id="field-workType" className="mb-6">
         <Label required className="mb-4!">Work Type</Label>
         <div className="flex flex-wrap gap-2">
           {WORK_TYPE_OPTIONS.map((opt) => (
@@ -397,7 +512,7 @@ export default function JobPostStepOneForm({
       </div>
 
       {/* Working Location */}
-      <div className="mb-6">
+      <div id="field-workingLocation" className="mb-6">
         <Label required className="mb-4!">Working Location</Label>
         <WorkingLocationPicker
           value={form.workingLocation}
@@ -413,7 +528,7 @@ export default function JobPostStepOneForm({
       </div>
 
       {/* Pincode */}
-      <div className="mb-6">
+      <div id="field-pincode" className="mb-6">
         <Label required className="mb-4!">Pincode</Label>
         <input
           type="text"
@@ -424,10 +539,10 @@ export default function JobPostStepOneForm({
             const val = e.target.value.replace(/\D/g, "").slice(0, 6);
             setPincodeApiError("");
             if (val.length === 6) {
-              setForm({ ...form, pincode: val });
+              setForm((prev) => ({ ...prev, pincode: val }));
               fetchPincodeData(val);
             } else {
-              setForm({ ...form, pincode: val, city: "", state: "" });
+              setForm((prev) => ({ ...prev, pincode: val, city: "", state: "" }));
             }
           }}
           onBlur={() => {
@@ -445,7 +560,7 @@ export default function JobPostStepOneForm({
       </div>
 
       {/* City & State */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row">
+      <div id="field-city" className="mb-6 flex flex-col gap-4 sm:flex-row">
         <div className="flex-1">
           <Label required className="mb-4!">City</Label>
           <input
@@ -528,7 +643,7 @@ export default function JobPostStepOneForm({
       </div>
 
       {/* Fixed Salary range */}
-      <div className="mb-6">
+      <div id="field-fixedSalary" className="mb-6">
         <Label required className="mb-4!">Fixed Salary</Label>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
           <div className="flex-1">
@@ -575,9 +690,9 @@ export default function JobPostStepOneForm({
         </div>
       </div>
 
-      {/* Variable Salary (only if Fixed + Variable) */}
+      {/* Variable Salary */}
       {form.payType === "Fixed + Variable" && (
-        <div className="mb-6">
+        <div id="field-variableSalary" className="mb-6">
           <Label required className="mb-4!">Variable Salary</Label>
           <div className="relative">
             <input
@@ -646,8 +761,7 @@ export default function JobPostStepOneForm({
         <Button
           variant="primary"
           type="submit"
-          disabled={!isFormValid}
-          className={`sm:w-52! ${!isFormValid ? "bg-(--color-black-shade-100) text-(--color-black-shade-400) hover:bg-(--color-black-shade-100) cursor-not-allowed" : ""}`}
+          className="sm:w-52!"
         >
           Continue
         </Button>

@@ -5,9 +5,7 @@ import Button from "@/components/common/Button";
 import Label from "@/components/common/Label";
 import Heading from "@/components/common/Heading";
 import Text from "@/components/common/Text";
-import CreatableSelect from "@/components/common/CreatableSelect";
 import RichTextEditor from "@/components/common/RichTextEditor";
-import { filterSelectedOptions } from "@/utilities/filterSelectedOptions";
 
 /** Strip HTML tags to get plain-text character count for validation. */
 function stripHtml(html) {
@@ -15,20 +13,6 @@ function stripHtml(html) {
 }
 
 const MAX_DESC_LENGTH = 10000;
-
-// ── Static options ────────────────────────────────────────────────────────────
-const INTERVIEW_STAGE_OPTIONS = [
-  "Resume Screening",
-  "Online Test / Assessment",
-  "Assignment",
-  "Group Discussion",
-  "Technical Interview 1",
-  "Technical Interview 2",
-  "Manager Round",
-  "HR Round",
-  "Final Interview",
-  "Offer Discussion",
-];
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 function SectionHeader({ title, subtitle }) {
@@ -42,10 +26,6 @@ function SectionHeader({ title, subtitle }) {
       )}
     </div>
   );
-}
-
-function SectionDivider() {
-  return <div className="my-8 border-t border-(--color-black-shade-300)" />;
 }
 
 // ── Validation ────────────────────────────────────────────────────────────────
@@ -64,7 +44,6 @@ function validate(form) {
 export default function JobPostStepThreeForm({ defaultValues = {}, onNext, onBack }) {
   const [form, setForm] = useState({
     jobDescription: "",
-    interviewStages: ["", "", "", "", ""],
     ...defaultValues,
   });
 
@@ -78,16 +57,14 @@ export default function JobPostStepThreeForm({ defaultValues = {}, onNext, onBac
     setTouched((prev) => ({ ...prev, [field]: true }));
   const err = (field) => (touched[field] ? currentErrors[field] : "");
 
-  const setStage = (index, value) => {
-    const stages = [...form.interviewStages];
-    stages[index] = value;
-    set("interviewStages")(stages);
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     setTouched({ jobDescription: true });
-    if (isFormValid) onNext?.(form);
+    if (isFormValid) {
+      onNext?.(form);
+    } else {
+      document.getElementById("field-jobDescription")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   };
 
   return (
@@ -98,7 +75,7 @@ export default function JobPostStepThreeForm({ defaultValues = {}, onNext, onBac
         subtitle="Clear job description — don't include any contact information like email or phone number"
       />
 
-      <div className="mb-2">
+      <div id="field-jobDescription" className="mb-2">
         <Label required className="mb-4!">Job Description</Label>
         <RichTextEditor
           value={form.jobDescription}
@@ -119,37 +96,6 @@ export default function JobPostStepThreeForm({ defaultValues = {}, onNext, onBac
         </div>
       </div>
 
-      <SectionDivider />
-
-      {/* Interview Process — 5 optional stages */}
-      <div className="mb-6">
-        <p className="mb-4 text-[0.9375rem] font-medium text-(--color-black-shade-900)">
-          Interview Process (Optional)
-        </p>
-        <div className="flex flex-col gap-4">
-          {form.interviewStages.map((stage, index) => {
-            const otherSelected = form.interviewStages.filter((s, i) => i !== index && s !== "");
-            const availableOptions = filterSelectedOptions(INTERVIEW_STAGE_OPTIONS, otherSelected);
-            return (
-              <div key={index}>
-                <p className="mb-2 text-sm font-medium text-(--color-black-shade-700)">
-                  Stage {index + 1}
-                </p>
-                <CreatableSelect
-                  placeholder={`Choose Stage ${index + 1}`}
-                  options={availableOptions}
-                  value={stage}
-                  allowCreate={false}
-                  showAllOnOpen
-                  onChange={(val) => setStage(index, val)}
-                  className="mb-0!"
-                />
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
       {/* ── Footer ───────────────────────────────────────────────────────── */}
       <div className="mt-10 flex flex-col-reverse gap-3 pb-10 sm:flex-row sm:items-center sm:justify-between">
         <Button
@@ -163,8 +109,7 @@ export default function JobPostStepThreeForm({ defaultValues = {}, onNext, onBac
         <Button
           variant="primary"
           type="submit"
-          disabled={!isFormValid}
-          className={`sm:w-52! ${!isFormValid ? "bg-(--color-black-shade-100) text-(--color-black-shade-400) hover:bg-(--color-black-shade-100) cursor-not-allowed" : ""}`}
+          className="sm:w-52!"
         >
           Continue
         </Button>

@@ -52,6 +52,7 @@ function SchemaReference() {
     "externalJobUrl": "URL string — required only when jobSource is 'external'",
     "jobSchedule": "string — optional",
     "experienceLevel": "Entry | Mid | Senior — required",
+    "educationStream": ["string"] — optional (e.g. ["Computer Science", "Electronics"]),
     "qualifications": ["string"] — optional,
     "skills": ["string", min 4] — required,
     "payMinRange": "number — required",
