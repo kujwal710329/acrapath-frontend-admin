@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import StarRating from "./StarRating";
+import { formatFullName } from "@/utilities/formatName";
 import Button from "@/components/common/Button";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import { CATEGORY_LABELS, CATEGORY_BADGE_STYLES } from "@/constants/testimonialCategories";
@@ -76,10 +77,7 @@ function getDisplayName(row) {
   if (row.userName) return row.userName;
   const userId = row.userId;
   if (!userId) return "—";
-  const first = userId.firstName ?? "";
-  const last = userId.lastName ?? "";
-  const full = `${first} ${last}`.trim();
-  return full || userId.email || "—";
+  return formatFullName(userId.personalInfo?.firstName, userId.personalInfo?.middleName, userId.personalInfo?.lastName) || "—";
 }
 
 function resolveCurrentExperience(userId) {

@@ -163,7 +163,9 @@ export default function ProfessionalStepOneForm({ defaultValues = {}, onBack, on
       github: form.github,
       website: form.website,
       personalInfo: {
-        fullName: [form.firstName.trim(), form.middleName.trim(), form.lastName.trim()].filter(Boolean).join(" "),
+        firstName: form.firstName.trim(),
+        middleName: form.middleName.trim() || undefined,
+        lastName: form.lastName.trim(),
         contactNo: form.contactNo.trim(),
         countryCode: dialCode,
         dateOfBirth: form.dateOfBirth || undefined,

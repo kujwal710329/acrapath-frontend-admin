@@ -18,6 +18,7 @@ import { MonthYearPicker } from "@/components/common/MonthYearPicker";
 import { DatePicker } from "@/components/common/DatePicker";
 import { useMetadataData } from "@/hooks/useMetadata";
 import { validateSkill, SKILL_MAX_LENGTH } from "@/utilities/skillValidation";
+import { formatFullName } from "@/utilities/formatName";
 
 /* ─── Constants ────────────────────────────────────────────────────── */
 
@@ -364,9 +365,9 @@ function useArrayModal() {
 function ProfessionalInfoModal({ user, onSave, onClose, isLoading, onSetDirty }) {
   const { metadata } = useMetadataData();
   const [form, setForm] = useState({
-    firstName: user.firstName || "",
-    middleName: user.middleName || "",
-    lastName: user.lastName || "",
+    firstName: user.personalInfo?.firstName || "",
+    middleName: user.personalInfo?.middleName || "",
+    lastName: user.personalInfo?.lastName || "",
     currentDesignation: user.currentDesignation || user.designation || "",
     professionalCategory: user.professionalCategory || "",
     yearsOfExperience: user.yearsOfExperience || "",
@@ -407,10 +408,15 @@ function ProfessionalInfoModal({ user, onSave, onClose, isLoading, onSetDirty })
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
     onSave({
-      firstName: form.firstName.trim(),
-      middleName: form.middleName.trim(),
-      lastName: form.lastName.trim(),
-      personalInfo: { currentDesignation: form.currentDesignation.trim(), professionalCategory: form.professionalCategory, yearsOfExperience: parseFloat(form.yearsOfExperience), openToRoles: form.openToRoles },
+      personalInfo: {
+        firstName: form.firstName.trim(),
+        middleName: form.middleName.trim(),
+        lastName: form.lastName.trim(),
+        currentDesignation: form.currentDesignation.trim(),
+        professionalCategory: form.professionalCategory,
+        yearsOfExperience: parseFloat(form.yearsOfExperience),
+        openToRoles: form.openToRoles,
+      },
     });
   };
 
@@ -1387,7 +1393,7 @@ export default function AdminProfessionalDetailPage() {
   }
 
   /* ── Derived data ───────────────────────────────────────────────── */
-  const displayName = [user.firstName, user.middleName, user.lastName].filter(Boolean).join(" ") || user.fullName || user.name || "";
+  const displayName = formatFullName(user.personalInfo?.firstName, user.personalInfo?.middleName, user.personalInfo?.lastName) || "";
   const roleLabel = user.currentDesignation || user.designation || "";
   const company = user.company && user.company !== "N/A" ? user.company : "";
   const _rawExp = user.yearsOfExperience;

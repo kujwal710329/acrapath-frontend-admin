@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { showError } from "@/utilities/toast";
+import { formatFullName } from "@/utilities/formatName";
 import Heading from "@/components/common/Heading";
 import Label from "@/components/common/Label";
 import Button from "@/components/common/Button";
@@ -83,7 +84,7 @@ function UserInfoStrip({ testimonial }) {
   const userId = testimonial?.userId;
 
   const name = userId
-    ? (`${userId.firstName ?? ""} ${userId.lastName ?? ""}`.trim() || userId.email || "—")
+    ? (formatFullName(userId.personalInfo?.firstName, userId.personalInfo?.middleName, userId.personalInfo?.lastName) || "—")
     : "—";
   const role = userId?.role
     ? userId.role.charAt(0).toUpperCase() + userId.role.slice(1)

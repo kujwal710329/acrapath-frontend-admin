@@ -2,6 +2,7 @@
 
 import Button from "@/components/common/Button";
 import { formatIndianNumber } from "@/utilities/salaryValidation";
+import { formatFullName } from "@/utilities/formatName";
 import { fmtMonthYear } from "@/components/common/MonthYearPicker";
 
 function ReviewSection({ title, children, onEdit, slug }) {
@@ -58,9 +59,11 @@ export default function ProfessionalStepSevenForm({
   const education = stepFiveData.educationDetails || [];
   const docs = stepSixData.documents || {};
 
-  const fullName = [stepOneData.firstName, stepOneData.middleName, stepOneData.lastName]
-    .filter(Boolean)
-    .join(" ");
+  const fullName = formatFullName(
+    stepOneData.personalInfo?.firstName,
+    stepOneData.personalInfo?.middleName,
+    stepOneData.personalInfo?.lastName
+  );
 
   return (
     <div className="max-w-2xl py-6">
