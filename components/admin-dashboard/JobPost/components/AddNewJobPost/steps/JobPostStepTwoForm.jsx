@@ -138,7 +138,7 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
   const strategicSkillOptions = metadata.strategicSkillsByCategory[jobCategory] ?? [];
   const [form, setForm] = useState({
     minimumEducation: "",
-    educationStream: "",
+    educationStream: [],
     yearsExperience: "",
     englishLevel: "",
     additionalRequirements: [],
@@ -150,6 +150,11 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
     technicalSkills: [],
     strategicSkills: [],
     ...defaultValues,
+    educationStream: (() => {
+      const raw = defaultValues.educationStream;
+      if (Array.isArray(raw)) return raw;
+      return raw ? [raw] : [];
+    })(),
   });
 
   const [touched, setTouched] = useState({});
@@ -185,7 +190,18 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
     e.preventDefault();
     const allTouched = Object.fromEntries(Object.keys(form).map((k) => [k, true]));
     setTouched(allTouched);
-    if (isFormValid) onNext?.(form);
+    if (isFormValid) {
+      onNext?.(form);
+    } else {
+      const fieldOrder = [
+        "yearsExperience", "englishLevel",
+        "technicalSkills", "strategicSkills", "ageMin", "ageMax",
+      ];
+      const firstError = fieldOrder.find((f) => currentErrors[f]);
+      if (firstError) {
+        document.getElementById(`field-${firstError}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
   };
 
   const hasGender = form.additionalRequirements.includes("Gender");
@@ -233,25 +249,41 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
             {metaError}
           </p>
         )}
+        {form.educationStream.length > 0 && (
+          <div className="mb-2 flex flex-wrap gap-2">
+            {form.educationStream.map((stream) => (
+              <div
+                key={stream}
+                className="flex cursor-pointer items-center gap-1.5 rounded-full bg-(--color-primary-shade-100) px-3 py-1.5 text-xs font-medium"
+              >
+                {stream}
+                <button
+                  type="button"
+                  onClick={() => set("educationStream")(form.educationStream.filter((s) => s !== stream))}
+                >
+                  <Icon name="statics/login/cross-icon.svg" width={9} height={9} alt="Remove" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
         <CreatableSelect
           placeholder={metaLoading ? "Loading fields…" : "Eg. Computer Science"}
-          options={metadata.fieldsOfStudy}
-          value={form.educationStream}
+          options={filterSelectedOptions(metadata.fieldsOfStudy, form.educationStream)}
           isDisabled={metaLoading}
           allowCreate={true}
           showAllOnOpen
-          error={err("educationStream")}
+          value=""
           onChange={(val) => {
-            set("educationStream")(val);
-            touch("educationStream")();
+            if (!val || form.educationStream.includes(val)) return;
+            set("educationStream")([...form.educationStream, val]);
           }}
-          onBlur={() => touch("educationStream")()}
           className="mb-0!"
         />
       </div>
 
       {/* Years of Experience */}
-      <div className="mb-6">
+      <div id="field-yearsExperience" className="mb-6">
         <FieldLabel required info="Count only full-time professional experience. Internships, freelance, or part-time work are not included.">
           Total Years of Full-time Experience Required
         </FieldLabel>
@@ -274,7 +306,7 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
       </div>
 
       {/* English Level */}
-      <div className="mb-6">
+      <div id="field-englishLevel" className="mb-6">
         <Label required className="mb-4!">English Level Required</Label>
         <div className="flex flex-wrap gap-2">
           {ENGLISH_OPTIONS.map((opt) => (
@@ -442,7 +474,7 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
       />
 
       {/* Technical Skills */}
-      <div className="mb-6">
+      <div id="field-technicalSkills" className="mb-6">
         <FieldLabel required info="Add at least 4 technical or domain-specific skills required for this role. These are used to match your job with candidates who have the right expertise.">
           Technical Skills
         </FieldLabel>
@@ -483,7 +515,7 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
       </div>
 
       {/* Strategic Skills */}
-      <div className="mb-6">
+      <div id="field-strategicSkills" className="mb-6">
         <FieldLabel required info="Add at least 4 soft or behavioural skills required (e.g. Communication, Leadership). These improve the quality of candidate matches.">
           Strategic Skills
         </FieldLabel>
@@ -536,8 +568,7 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
         <Button
           variant="primary"
           type="submit"
-          disabled={!isFormValid}
-          className={`sm:w-52! ${!isFormValid ? "bg-(--color-black-shade-100) text-(--color-black-shade-400) hover:bg-(--color-black-shade-100) cursor-not-allowed" : ""}`}
+          className="sm:w-52!"
         >
           Continue
         </Button>

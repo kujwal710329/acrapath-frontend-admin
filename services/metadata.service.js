@@ -5,6 +5,7 @@
 
 import { apiRequest, clearEndpointCache } from "@/utilities/api";
 import { logger } from "@/utilities/logger";
+import { COMPANY_API } from "@/constants/apiRoutes";
 
 const BASE = "/metadata";
 
@@ -104,4 +105,70 @@ export async function seedAllMetadata(payload) {
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+// ─── Company Metadata ─────────────────────────────────────────────────────────
+
+/**
+ * Fetch all company records
+ * GET /api/v1/companies
+ */
+export async function getAllCompanies() {
+  logger.debug("[metadata] fetching companies");
+  return apiRequest(COMPANY_API.LIST, { cache: "no-store" }, { useCache: false });
+}
+
+/**
+ * Create a new company record
+ * POST /api/v1/companies
+ */
+export async function createCompany(payload) {
+  logger.debug("[metadata] creating company", { name: payload.name });
+  return apiRequest(COMPANY_API.CREATE, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * Update a company record
+ * PUT /api/v1/companies/:id
+ */
+export async function updateCompany(id, payload) {
+  logger.debug("[metadata] updating company", { id });
+  return apiRequest(COMPANY_API.UPDATE(id), {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * Soft-delete a company record
+ * DELETE /api/v1/companies/:id
+ */
+export async function deleteCompany(id) {
+  logger.debug("[metadata] deleting company", { id });
+  return apiRequest(COMPANY_API.DELETE(id), { method: "DELETE" });
+}
+
+/**
+ * Get presigned S3 URL for company icon upload
+ * POST /api/v1/companies/upload-icon
+ */
+export async function getCompanyIconUploadUrl(fileName) {
+  logger.debug("[metadata] getting icon upload url", { fileName });
+  return apiRequest(COMPANY_API.UPLOAD_ICON, {
+    method: "POST",
+    body: JSON.stringify({ fileName }),
+  });
+}
+
+/**
+ * Seed companies from all distinct company names in the jobs collection.
+ * Idempotent — skips companies that already exist.
+ * POST /api/v1/companies/seed-from-jobs
+ */
+export async function seedCompaniesFromJobs() {
+  logger.debug("[metadata] seeding companies from jobs");
+  return apiRequest(COMPANY_API.SEED, { method: "POST" });
 }

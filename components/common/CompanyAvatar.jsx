@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
 // Full class strings kept here so Tailwind's content scanner includes them.
 const AVATAR_COLORS = [
   "bg-blue-500",
@@ -29,11 +31,48 @@ const SIZE_CLASSES = {
   lg: { box: "w-14 h-14", text: "text-xl" },
 };
 
+const API_BASE =
+  (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_BASE_URL) ||
+  "http://localhost:5000/api/v1";
+
+// Module-level icon cache — persists for the page session.
+// Key: lowercased company name. Value: resolved iconUrl string | null | Promise.
+const iconCache = new Map();
+
+function getCompanyIcon(companyName) {
+  const key = companyName.toLowerCase().trim();
+
+  if (iconCache.has(key)) {
+    const val = iconCache.get(key);
+    return val instanceof Promise ? val : Promise.resolve(val);
+  }
+
+  const promise = fetch(
+    `${API_BASE}/companies/icon?name=${encodeURIComponent(companyName)}`
+  )
+    .then(async (res) => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const url = data.iconUrl ?? null;
+      iconCache.set(key, url);
+      return url;
+    })
+    .catch((e) => {
+      console.warn("[CompanyAvatar] icon lookup failed:", e);
+      iconCache.set(key, null);
+      return null;
+    });
+
+  iconCache.set(key, promise);
+  return promise;
+}
+
 /**
  * CompanyAvatar
  *
- * Renders a deterministic letter-based avatar for a company.
- * When `companyName` is empty/null, renders a neutral gray box.
+ * Renders a company icon from metadata when available; falls back to a
+ * deterministic letter-based avatar. When `companyName` is empty/null,
+ * renders a neutral gray box.
  *
  * Props:
  *   companyName  — string | null | undefined
@@ -46,6 +85,31 @@ export default function CompanyAvatar({ companyName, size = "md", className = ""
   const bgColor = letter
     ? AVATAR_COLORS[getColorIndex(companyName)]
     : "bg-(--color-black-shade-300)";
+
+  const [iconUrl, setIconUrl] = useState(null);
+
+  useEffect(() => {
+    if (!companyName?.trim()) return;
+    let cancelled = false;
+
+    getCompanyIcon(companyName).then((url) => {
+      if (!cancelled) setIconUrl(url);
+    });
+
+    return () => { cancelled = true; };
+  }, [companyName]);
+
+  if (iconUrl) {
+    return (
+      <img
+        src={iconUrl}
+        alt={companyName}
+        className={`${box} shrink-0 object-contain rounded ${className}`}
+        style={{ background: "var(--card, #fff)" }}
+        onError={() => setIconUrl(null)}
+      />
+    );
+  }
 
   return (
     <div
