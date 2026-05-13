@@ -7,6 +7,7 @@ export const JOB_POST_TABS = [
   { key: "topVerified", label: "Top Verified" },
   { key: "addNew", label: "+ Add New" },
   { key: "bulkUpload", label: "Bulk Upload" },
+  { key: "templates", label: "Templates" },
 ];
 
 export default function JobPostTabNav({ activeTab, onTabChange }) {
