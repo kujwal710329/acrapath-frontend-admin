@@ -27,7 +27,7 @@ function FieldError({ msg }) {
 function emptyEntry() {
   return {
     companyName: "",
-    role: "",
+    designation: "",
     salary: "",
     salaryPeriod: "per annum",
     joiningDate: null,
@@ -89,12 +89,12 @@ function WorkEntry({ entry, index, onChange, onRemove, canRemove, roleOptions, e
         <div className="mb-4">
           <Label htmlFor={`role-${index}`} required>Role / Designation</Label>
           <CreatableSelect
-            value={entry.role}
+            value={entry.designation}
             options={roleOptions}
             placeholder="e.g. Software Engineer"
-            onChange={(v) => set("role", v)}
+            onChange={(v) => set("designation", v)}
             showAllOnOpen
-            error={errors.role}
+            error={errors.designation}
           />
         </div>
       </div>
@@ -269,7 +269,7 @@ export default function ProfessionalStepFourForm({
     return data.map((e) => {
       const errs = {};
       if (!e.companyName.trim()) errs.companyName = "Company name is required.";
-      if (!e.role.trim()) errs.role = "Role is required.";
+      if (!e.designation.trim()) errs.designation = "Designation is required.";
       if (!e.joiningDate) errs.joiningDate = "Joining date is required.";
       if (!e.currentlyWorking && !e.relievingDate)
         errs.relievingDate = "Relieving date is required.";
@@ -293,7 +293,7 @@ export default function ProfessionalStepFourForm({
 
     const workExperience = entries.map((e) => ({
       companyName: e.companyName.trim(),
-      role: e.role.trim(),
+      designation: e.designation.trim(),
       salary: e.currentlyWorking && e.salary ? Number(e.salary) : undefined,
       salaryPeriod: "per annum",
       joiningDate: e.joiningDate || undefined,

@@ -2,6 +2,7 @@
 
 import Button from "@/components/common/Button";
 import { formatIndianNumber } from "@/utilities/salaryValidation";
+import { formatFullName } from "@/utilities/formatName";
 import { fmtMonthYear } from "@/components/common/MonthYearPicker";
 
 function ReviewSection({ title, children, onEdit, slug }) {
@@ -58,9 +59,11 @@ export default function ProfessionalStepSevenForm({
   const education = stepFiveData.educationDetails || [];
   const docs = stepSixData.documents || {};
 
-  const fullName = [stepOneData.firstName, stepOneData.middleName, stepOneData.lastName]
-    .filter(Boolean)
-    .join(" ");
+  const fullName = formatFullName(
+    stepOneData.personalInfo?.firstName,
+    stepOneData.personalInfo?.middleName,
+    stepOneData.personalInfo?.lastName
+  );
 
   return (
     <div className="max-w-2xl py-6">
@@ -134,7 +137,7 @@ export default function ProfessionalStepSevenForm({
         ) : (
           workExp.map((w, i) => (
             <div key={i} className={`${i > 0 ? "mt-3 border-t border-(--color-black-shade-100) pt-3" : ""}`}>
-              <p className="text-sm font-semibold text-(--color-black-shade-900)">{w.role} @ {w.companyName}</p>
+              <p className="text-sm font-semibold text-(--color-black-shade-900)">{w.designation} @ {w.companyName}</p>
               <p className="text-xs text-(--color-black-shade-500)">
                 {fmtMonthYear(w.joiningDate)} — {w.currentlyWorking ? "Present" : fmtMonthYear(w.relievingDate)}
                 {w.salary ? ` · ₹ ${formatIndianNumber(w.salary)} p.a.` : ""}
