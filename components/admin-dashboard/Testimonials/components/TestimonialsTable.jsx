@@ -102,7 +102,7 @@ function getDesignation(row) {
   if (userId.personalInfo?.currentDesignation) return userId.personalInfo.currentDesignation;
   // Employees store it in their work/internship experience
   const exp = resolveCurrentExperience(userId);
-  if (exp?.role) return exp.role;
+  if (exp?.designation) return exp.designation;
   return "—";
 }
 

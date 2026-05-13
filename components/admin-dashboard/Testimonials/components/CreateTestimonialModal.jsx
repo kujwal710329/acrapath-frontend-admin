@@ -130,7 +130,7 @@ function UserSearchDropdown({ selectedUser, onSelect, error }) {
   };
 
   const displayValue = selectedUser
-    ? formatFullName(selectedUser.personalInfo?.firstName, selectedUser.personalInfo?.middleName, selectedUser.personalInfo?.lastName) || selectedUser.email
+    ? formatFullName(selectedUser.personalInfo?.firstName, selectedUser.personalInfo?.middleName, selectedUser.personalInfo?.lastName) || selectedUser.personalInfo?.email
     : query;
 
   let borderClass;
@@ -192,7 +192,7 @@ function UserSearchDropdown({ selectedUser, onSelect, error }) {
               const fullName =
                 formatFullName(user.personalInfo?.firstName, user.personalInfo?.middleName, user.personalInfo?.lastName) || "—";
               const sub = [
-                user.email,
+                user.personalInfo?.email,
                 user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : null,
               ]
                 .filter(Boolean)
@@ -241,7 +241,7 @@ function resolveDesignation(user) {
   if (!user) return "—";
   if (user.personalInfo?.currentDesignation) return user.personalInfo.currentDesignation;
   const exp = resolveCurrentExperience(user);
-  return exp?.role || "—";
+  return exp?.designation || "—";
 }
 
 function resolveCompany(user) {

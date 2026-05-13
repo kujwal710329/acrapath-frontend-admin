@@ -69,7 +69,7 @@ function resolveDesignation(user) {
   if (!user) return "—";
   if (user.personalInfo?.currentDesignation) return user.personalInfo.currentDesignation;
   const exp = resolveCurrentExperience(user);
-  return exp?.role || "—";
+  return exp?.designation || "—";
 }
 
 function resolveCompany(user) {

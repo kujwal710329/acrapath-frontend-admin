@@ -762,7 +762,7 @@ function WorkExpEntryModal({ entry, onSave, onClose, isLoading }) {
   const isEdit = !!entry;
   const [form, setForm] = useState({
     companyName: entry?.companyName || "",
-    role: entry?.role || "",
+    designation: entry?.designation || "",
     salary: entry?.salary ? String(Math.round(entry.salary / 100000 * 10) / 10) : "",
     salaryPeriod: entry?.salaryPeriod || "per annum",
     joiningDate: entry?.joiningDate || null,
@@ -790,7 +790,7 @@ function WorkExpEntryModal({ entry, onSave, onClose, isLoading }) {
   const validate = () => {
     const e = {};
     if (!form.companyName.trim()) e.companyName = "Company name is required.";
-    if (!form.role.trim()) e.role = "Role is required.";
+    if (!form.designation.trim()) e.designation = "Designation is required.";
     if (!form.joiningDate) e.joiningDate = "Start date is required.";
     if (!form.currentlyWorking && !form.relievingDate) e.relievingDate = "End date is required (or toggle Currently Working).";
     return e;
@@ -802,7 +802,7 @@ function WorkExpEntryModal({ entry, onSave, onClose, isLoading }) {
     const salaryLPA = parseFloat(form.salary);
     onSave({
       companyName: form.companyName.trim(),
-      role: form.role.trim(),
+      designation: form.designation.trim(),
       salary: !isNaN(salaryLPA) && salaryLPA > 0 ? Math.round(salaryLPA * 100000) : undefined,
       salaryPeriod: form.salaryPeriod,
       joiningDate: form.joiningDate || undefined,
@@ -821,8 +821,8 @@ function WorkExpEntryModal({ entry, onSave, onClose, isLoading }) {
       </div>
       <div className="mb-4">
         <Label required>Role / Designation</Label>
-        <input value={form.role} onChange={(e) => set("role", e.target.value)} placeholder="e.g. Software Engineer" className={`${inputBase} ${errors.role ? inputError : ""}`} />
-        {errors.role && <p className="mt-1 text-xs text-(--color-red)">{errors.role}</p>}
+        <input value={form.designation} onChange={(e) => set("designation", e.target.value)} placeholder="e.g. Software Engineer" className={`${inputBase} ${errors.designation ? inputError : ""}`} />
+        {errors.designation && <p className="mt-1 text-xs text-(--color-red)">{errors.designation}</p>}
       </div>
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
@@ -893,7 +893,7 @@ function InternshipEntryModal({ entry, onSave, onClose, isLoading }) {
   const isEdit = !!entry;
   const [form, setForm] = useState({
     companyName: entry?.companyName || "",
-    role: entry?.role || "",
+    designation: entry?.designation || "",
     stipend: entry?.stipend ? String(entry.stipend) : "",
     stipendPeriod: entry?.stipendPeriod || "per month",
     joiningDate: entry?.joiningDate || null,
@@ -910,7 +910,7 @@ function InternshipEntryModal({ entry, onSave, onClose, isLoading }) {
   const validate = () => {
     const e = {};
     if (!form.companyName.trim()) e.companyName = "Company name is required.";
-    if (!form.role.trim()) e.role = "Role is required.";
+    if (!form.designation.trim()) e.designation = "Designation is required.";
     if (!form.joiningDate) e.joiningDate = "Start date is required.";
     if (!form.currentlyWorking && !form.relievingDate) e.relievingDate = "End date is required.";
     return e;
@@ -922,7 +922,7 @@ function InternshipEntryModal({ entry, onSave, onClose, isLoading }) {
     const stipendNum = parseInt(form.stipend, 10);
     onSave({
       companyName: form.companyName.trim(),
-      role: form.role.trim(),
+      designation: form.designation.trim(),
       stipend: !isNaN(stipendNum) && stipendNum > 0 ? stipendNum : undefined,
       stipendPeriod: "per month",
       joiningDate: form.joiningDate || undefined,
@@ -940,8 +940,8 @@ function InternshipEntryModal({ entry, onSave, onClose, isLoading }) {
       </div>
       <div className="mb-4">
         <Label required>Role</Label>
-        <input value={form.role} onChange={(e) => set("role", e.target.value)} placeholder="e.g. SDE Intern" className={`${inputBase} ${errors.role ? inputError : ""}`} />
-        {errors.role && <p className="mt-1 text-xs text-(--color-red)">{errors.role}</p>}
+        <input value={form.designation} onChange={(e) => set("designation", e.target.value)} placeholder="e.g. SDE Intern" className={`${inputBase} ${errors.designation ? inputError : ""}`} />
+        {errors.designation && <p className="mt-1 text-xs text-(--color-red)">{errors.designation}</p>}
       </div>
       <div className="mb-4">
         <Label>Stipend (per month, ₹)</Label>
@@ -1430,7 +1430,7 @@ export default function AdminProfessionalDetailPage() {
   const contactItems = [
     user.contactNo && { label: "Contact Number", icon: "statics/user-profile/phone.svg", value: `${user.countryCode ?? ""} ${user.contactNo}`.trim(), href: `tel:+${user.countryCode ?? ""}${user.contactNo}` },
     user.whatsappNo && { label: "WhatsApp Number", icon: "statics/user-profile/whatsapp.svg", value: user.whatsappNo, href: `https://wa.me/${user.countryCode ?? ""}${user.whatsappNo}` },
-    user.email && { label: "Email", icon: "statics/user-profile/email.svg", value: user.email, href: `mailto:${user.email}` },
+    user.personalInfo?.email && { label: "Email", icon: "statics/user-profile/email.svg", value: user.personalInfo.email, href: `mailto:${user.personalInfo.email}` },
     user.linkedin && { label: "LinkedIn", icon: "statics/user-profile/LinkedIn.svg", value: user.linkedin, href: user.linkedin },
   ].filter(Boolean);
 
@@ -1910,7 +1910,7 @@ export default function AdminProfessionalDetailPage() {
               renderEntry={(exp) => (
                 <div>
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-0.5 mb-1">
-                    <h3 className="text-14 font-bold" style={{ color: "var(--color-black-shade-900)" }}>{exp.role}</h3>
+                    <h3 className="text-14 font-bold" style={{ color: "var(--color-black-shade-900)" }}>{exp.designation}</h3>
                     <span className="text-12 shrink-0 uppercase tracking-wide sm:ml-4" style={{ color: "var(--color-black-shade-500)" }}>{formatDuration(exp.joiningDate, exp.relievingDate, exp.currentlyWorking)}</span>
                   </div>
                   <p className="text-14 mb-1" style={{ color: "var(--color-black-shade-600)" }}>{exp.companyName}</p>
@@ -1941,7 +1941,7 @@ export default function AdminProfessionalDetailPage() {
               renderEntry={(exp) => (
                 <div>
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-0.5 mb-1">
-                    <h3 className="text-14 font-bold" style={{ color: "var(--color-black-shade-900)" }}>{exp.role}</h3>
+                    <h3 className="text-14 font-bold" style={{ color: "var(--color-black-shade-900)" }}>{exp.designation}</h3>
                     <span className="text-12 shrink-0 uppercase tracking-wide sm:ml-4" style={{ color: "var(--color-black-shade-500)" }}>{formatDuration(exp.joiningDate, exp.relievingDate, exp.currentlyWorking)}</span>
                   </div>
                   <p className="text-14 mb-1" style={{ color: "var(--color-black-shade-600)" }}>{exp.companyName}</p>
