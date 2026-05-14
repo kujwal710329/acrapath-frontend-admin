@@ -105,12 +105,15 @@ function WorkEntry({ entry, index, onChange, onRemove, canRemove, roleOptions, e
           type="button"
           role="switch"
           aria-checked={entry.currentlyWorking}
-          onClick={() => { set("currentlyWorking", !entry.currentlyWorking); if (!entry.currentlyWorking) set("relievingDate", null); }}
+          onClick={() => {
+            const newWorking = !entry.currentlyWorking;
+            onChange(index, { ...entry, currentlyWorking: newWorking, relievingDate: newWorking ? null : entry.relievingDate });
+          }}
           className={`relative shrink-0 h-7 w-12 cursor-pointer rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-(--color-primary) focus:ring-offset-1 ${entry.currentlyWorking ? "bg-(--color-secondary)" : "bg-(--color-black-shade-300)"}`}
         >
           <span className={`absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${entry.currentlyWorking ? "translate-x-5" : "translate-x-0"}`} />
         </button>
-        <span className="text-sm font-medium text-(--color-black-shade-800)">Currently working here</span>
+        <span className="text-sm font-medium text-(--color-black-shade-700)">Currently working here</span>
       </div>
 
       {/* Salary — only shown when currently working */}
