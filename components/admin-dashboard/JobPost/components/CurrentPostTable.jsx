@@ -73,6 +73,7 @@ export default function CurrentPostTable({
   error,
   onRetry,
   onStatusChange,
+  onBulkStatusChange,
   onView,
   onDelete,
 }) {
@@ -89,10 +90,10 @@ export default function CurrentPostTable({
   }, [isIndeterminate]);
 
   const handleBulkStatus = useCallback(async (status) => {
-    const items = getSelectedItems();
-    await Promise.all(items.map((row) => onStatusChange?.(row.jobId ?? row.id, status)));
+    const ids = getSelectedItems().map((row) => row.jobId ?? row.id);
+    await onBulkStatusChange?.(ids, status);
     clearSelection();
-  }, [getSelectedItems, onStatusChange, clearSelection]);
+  }, [getSelectedItems, onBulkStatusChange, clearSelection]);
 
   const handleBulkDeleteRequest = useCallback(() => {
     const ids = getSelectedItems().map((r) => r.jobId ?? r.id);

@@ -39,15 +39,15 @@ export const throttle = (func, limit) => {
  * Format salary range
  * @param {number} min - Minimum salary
  * @param {number} max - Maximum salary
- * @param {string} type - Rate type (e.g., "per year")
+ * @param {string} type - Rate type (e.g., "year")
  * @returns {string} Formatted salary string
  */
-export const formatSalary = (min, max, type = "per year") => {
+export const formatSalary = (min, max, type = "year") => {
   if (!min || !max) return "Not disclosed";
 
   const minLacs = (min / 100000).toFixed(0);
   const maxLacs = (max / 100000).toFixed(0);
-  const suffix = type === "per year" ? " PA" : "";
+  const suffix = type === "year" ? " PA" : "";
 
   return `${minLacs}–${maxLacs} Lacs${suffix}`;
 };

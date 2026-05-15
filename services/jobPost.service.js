@@ -51,6 +51,19 @@ export async function toggleDreamjob(jobId) {
 }
 
 /**
+ * Bulk update job post statuses — one request replaces N individual calls
+ * PATCH /api/v1/jobs/bulk-admin-status
+ */
+export async function bulkUpdateJobPostStatus(jobIds, status) {
+  logger.debug("[jobPosts] bulk updating status", { count: jobIds.length, status });
+  clearEndpointCache("/jobs");
+  return apiRequest("/jobs/bulk-admin-status", {
+    method: "PATCH",
+    body: JSON.stringify({ jobIds, status }),
+  });
+}
+
+/**
  * Update a job post's status
  * PATCH /api/v1/jobs/:id/admin-status
  */

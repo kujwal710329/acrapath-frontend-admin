@@ -30,6 +30,7 @@ export default function JobPostPage() {
     handleSearch,
     refresh,
     updateStatus,
+    bulkUpdateStatus,
     toggleDreamjob,
     deleteJob,
   } = useJobPosts({ tab: activeTab, perPage });
@@ -108,6 +109,7 @@ export default function JobPostPage() {
               error={error}
               onRetry={refresh}
               onStatusChange={updateStatus}
+              onBulkStatusChange={bulkUpdateStatus}
               onView={handleView}
               onDelete={deleteJob}
             />
@@ -118,6 +120,7 @@ export default function JobPostPage() {
               error={error}
               onRetry={refresh}
               onStatusChange={updateStatus}
+              onBulkStatusChange={bulkUpdateStatus}
               onView={handleView}
               onDelete={deleteJob}
             />

@@ -123,10 +123,10 @@ function validate(form) {
   if (form.strategicSkills.length < 4)
     errs.strategicSkills = "Please add at least 4 strategic skills.";
   // Optional age validation — only when values are present
-  if (form.ageMin !== "" && Number(form.ageMin) < 18)
-    errs.ageMin = "Min age must be at least 18.";
-  if (form.ageMin !== "" && form.ageMax !== "" && Number(form.ageMax) <= Number(form.ageMin))
-    errs.ageMax = "Max age must be greater than min age.";
+  if (form.professionalMinAge !== "" && Number(form.professionalMinAge) < 18)
+    errs.professionalMinAge = "Min age must be at least 18.";
+  if (form.professionalMinAge !== "" && form.professionalMaxAge !== "" && Number(form.professionalMaxAge) <= Number(form.professionalMinAge))
+    errs.professionalMaxAge = "Max age must be greater than min age.";
   return errs;
 }
 
@@ -143,9 +143,9 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
     englishLevel: "",
     additionalRequirements: [],
     gender: "Open to all",
-    ageMin: "",
-    ageMax: "",
-    assets: [],
+    professionalMinAge: "",
+    professionalMaxAge: "",
+    requiredAssets: [],
     regionalLanguages: [],
     technicalSkills: [],
     strategicSkills: [],
@@ -173,8 +173,8 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
     const clearedValues = {};
     if (isRemoving) {
       if (req === "Gender") clearedValues.gender = "Open to all";
-      if (req === "Age") { clearedValues.ageMin = ""; clearedValues.ageMax = ""; }
-      if (req === "Assets") clearedValues.assets = [];
+      if (req === "Age") { clearedValues.professionalMinAge = ""; clearedValues.professionalMaxAge = ""; }
+      if (req === "Assets") clearedValues.requiredAssets = [];
       if (req === "Regional Languages") clearedValues.regionalLanguages = [];
     }
     setForm((prev) => ({
@@ -195,7 +195,7 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
     } else {
       const fieldOrder = [
         "yearsExperience", "englishLevel",
-        "technicalSkills", "strategicSkills", "ageMin", "ageMax",
+        "technicalSkills", "strategicSkills", "professionalMinAge", "professionalMaxAge",
       ];
       const firstError = fieldOrder.find((f) => currentErrors[f]);
       if (firstError) {
@@ -373,22 +373,22 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
             <div className="flex-1">
               <p className="mb-2 text-sm font-medium text-(--color-black-shade-700)">
-                Min Age
+                Min Professional Age
               </p>
               <input
                 type="number"
                 min="18"
-                value={form.ageMin}
+                value={form.professionalMinAge}
                 onChange={(e) => {
-                  set("ageMin")(e.target.value);
-                  touch("ageMin")();
+                  set("professionalMinAge")(e.target.value);
+                  touch("professionalMinAge")();
                 }}
-                onBlur={touch("ageMin")}
+                onBlur={touch("professionalMinAge")}
                 placeholder="e.g. 21"
-                className={`${inputBase} ${err("ageMin") ? inputError : inputNormal}`}
+                className={`${inputBase} ${err("professionalMinAge") ? inputError : inputNormal}`}
               />
-              {err("ageMin") && (
-                <p className="mt-1.5 text-xs text-(--color-red)">{err("ageMin")}</p>
+              {err("professionalMinAge") && (
+                <p className="mt-1.5 text-xs text-(--color-red)">{err("professionalMinAge")}</p>
               )}
             </div>
             <span className="hidden shrink-0 pt-12 text-sm font-medium text-(--color-black-shade-700) sm:block">
@@ -396,22 +396,22 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
             </span>
             <div className="flex-1">
               <p className="mb-2 text-sm font-medium text-(--color-black-shade-700)">
-                Max Age
+                Max Professional Age
               </p>
               <input
                 type="number"
                 min="18"
-                value={form.ageMax}
+                value={form.professionalMaxAge}
                 onChange={(e) => {
-                  set("ageMax")(e.target.value);
-                  touch("ageMax")();
+                  set("professionalMaxAge")(e.target.value);
+                  touch("professionalMaxAge")();
                 }}
-                onBlur={touch("ageMax")}
+                onBlur={touch("professionalMaxAge")}
                 placeholder="e.g. 45"
-                className={`${inputBase} ${err("ageMax") ? inputError : inputNormal}`}
+                className={`${inputBase} ${err("professionalMaxAge") ? inputError : inputNormal}`}
               />
-              {err("ageMax") && (
-                <p className="mt-1.5 text-xs text-(--color-red)">{err("ageMax")}</p>
+              {err("professionalMaxAge") && (
+                <p className="mt-1.5 text-xs text-(--color-red)">{err("professionalMaxAge")}</p>
               )}
             </div>
           </div>
@@ -427,12 +427,12 @@ export default function JobPostStepTwoForm({ defaultValues = {}, onNext, onBack,
               <SelectPill
                 key={opt}
                 label={opt}
-                isSelected={form.assets.includes(opt)}
+                isSelected={form.requiredAssets.includes(opt)}
                 onSelect={() => {
-                  const next = form.assets.includes(opt)
-                    ? form.assets.filter((a) => a !== opt)
-                    : [...form.assets, opt];
-                  set("assets")(next);
+                  const next = form.requiredAssets.includes(opt)
+                    ? form.requiredAssets.filter((a) => a !== opt)
+                    : [...form.requiredAssets, opt];
+                  set("requiredAssets")(next);
                 }}
               />
             ))}

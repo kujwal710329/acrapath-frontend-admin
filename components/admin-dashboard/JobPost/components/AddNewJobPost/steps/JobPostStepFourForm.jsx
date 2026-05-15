@@ -273,21 +273,21 @@ export default function JobPostStepFourForm({
           <ReviewRow label="Gender" value={stepTwoData.gender} />
         )}
         {stepTwoData.additionalRequirements?.includes("Age") &&
-          (stepTwoData.ageMin || stepTwoData.ageMax) && (
+          (stepTwoData.professionalMinAge || stepTwoData.professionalMaxAge) && (
             <ReviewRow
               label="Age"
               value={
-                stepTwoData.ageMin && stepTwoData.ageMax
-                  ? `${stepTwoData.ageMin} – ${stepTwoData.ageMax} years`
-                  : stepTwoData.ageMin
-                    ? `Min ${stepTwoData.ageMin} years`
-                    : `Max ${stepTwoData.ageMax} years`
+                stepTwoData.professionalMinAge && stepTwoData.professionalMaxAge
+                  ? `${stepTwoData.professionalMinAge} – ${stepTwoData.professionalMaxAge} years`
+                  : stepTwoData.professionalMinAge
+                    ? `Min ${stepTwoData.professionalMinAge} years`
+                    : `Max ${stepTwoData.professionalMaxAge} years`
               }
             />
           )}
         {stepTwoData.additionalRequirements?.includes("Assets") &&
-          stepTwoData.assets?.length > 0 && (
-            <ReviewRow label="Assets" value={stepTwoData.assets} />
+          stepTwoData.requiredAssets?.length > 0 && (
+            <ReviewRow label="Required Assets" value={stepTwoData.requiredAssets} />
           )}
         {stepTwoData.additionalRequirements?.includes("Regional Languages") &&
           stepTwoData.regionalLanguages?.length > 0 && (

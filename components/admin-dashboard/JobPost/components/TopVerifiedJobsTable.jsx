@@ -114,7 +114,7 @@ export default function TopVerifiedJobsTable({
 
   const handleToggle = useCallback((row) => {
     const id = row.jobId ?? row.id;
-    setConfirmPending({ id, isTop: row.dreamjob === true, label: row.jobTitle ?? row.company ?? row.companyName ?? String(id) });
+    setConfirmPending({ id, isTop: row.isDreamJob === true, label: row.jobTitle ?? row.company ?? row.companyName ?? String(id) });
   }, []);
 
   const handleConfirmToggle = useCallback(() => {
@@ -228,11 +228,13 @@ export default function TopVerifiedJobsTable({
             <tbody>
               {data.map((row, idx) => {
                 const jobId = row.jobId ?? row.id;
-                const isTop = row.dreamjob === true;
+                const isTop = row.isDreamJob === true;
                 const isToggling = togglingIds.has(jobId);
+                const salMin = row.compensation?.minRange;
+                const salMax = row.compensation?.maxRange;
                 const salaryRange =
-                  row.payMinRange != null && row.payMaxRange != null
-                    ? `₹${row.payMinRange.toLocaleString()} – ₹${row.payMaxRange.toLocaleString()}`
+                  salMin != null && salMax != null
+                    ? `₹${salMin.toLocaleString()} – ₹${salMax.toLocaleString()}`
                     : "—";
 
                 return (

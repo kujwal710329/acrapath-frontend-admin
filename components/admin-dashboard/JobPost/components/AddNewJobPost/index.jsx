@@ -91,13 +91,15 @@ function buildPayload(step1, step2, step3, categoryApiMap = {}) {
     // Description
     jobDescription: step3.jobDescription,
 
-    // Location
-    jobLocationType: LOCATION_TYPE_MAP[step1.workType] || "onsite",
-    city: step1.city,
-    state: step1.state,
-    pincode: step1.pincode,
-    streetAddress1: step1.workingLocation?.address || undefined,
-    streetAddress2: step1.workingLocation?.floorPlotShop || undefined,
+    // Location (new nested structure)
+    location: {
+      type: LOCATION_TYPE_MAP[step1.workType] || "onsite",
+      city: step1.city,
+      state: step1.state,
+      pincode: step1.pincode || undefined,
+      streetAddress1: step1.workingLocation?.address || undefined,
+      streetAddress2: step1.workingLocation?.floorPlotShop || undefined,
+    },
 
     // Employment
     jobType: JOB_TYPE_MAP[step1.jobType] || "full time",
@@ -107,34 +109,39 @@ function buildPayload(step1, step2, step3, categoryApiMap = {}) {
       : {}),
     jobSchedule: step1.isNightShift ? "night shift" : "day shift",
 
-    // Requirements
+    // Requirements (new nested structure)
+    requirements: {
+      skills,
+      qualifications,
+      ...(step2.additionalRequirements?.includes("Gender") && step2.gender
+        ? { culturalPreference: step2.gender }
+        : {}),
+      ...(step2.additionalRequirements?.includes("Age") && step2.professionalMinAge
+        ? { professionalMinAge: Number(step2.professionalMinAge) }
+        : {}),
+      ...(step2.additionalRequirements?.includes("Age") && step2.professionalMaxAge
+        ? { professionalMaxAge: Number(step2.professionalMaxAge) }
+        : {}),
+      ...(step2.additionalRequirements?.includes("Assets") && step2.requiredAssets?.length > 0
+        ? { requiredAssets: step2.requiredAssets }
+        : {}),
+      ...(step2.additionalRequirements?.includes("Regional Languages") && step2.regionalLanguages?.length > 0
+        ? { regionalLanguages: step2.regionalLanguages }
+        : {}),
+    },
+
+    // Compensation (new nested structure)
+    compensation: {
+      minRange: Number(step1.fixedSalaryMin) || 0,
+      maxRange: Number(step1.fixedSalaryMax) || 0,
+      rateType: "year",
+      ...(supplementPay !== undefined ? { supplementPay } : {}),
+      ...(benefits && benefits.length > 0 ? { benefits } : {}),
+    },
+
+    // Experience
     experienceLevel:
       EXPERIENCE_MAP[step2.yearsExperience] || step2.yearsExperience,
-    qualifications,
-    skills,
-    culturalPreference:
-      step2.additionalRequirements?.includes("Gender") && step2.gender
-        ? step2.gender
-        : undefined,
-    ...(step2.additionalRequirements?.includes("Age") && step2.ageMin
-      ? { ageMin: Number(step2.ageMin) }
-      : {}),
-    ...(step2.additionalRequirements?.includes("Age") && step2.ageMax
-      ? { ageMax: Number(step2.ageMax) }
-      : {}),
-    ...(step2.additionalRequirements?.includes("Assets") && step2.assets?.length > 0
-      ? { assets: step2.assets }
-      : {}),
-    ...(step2.additionalRequirements?.includes("Regional Languages") && step2.regionalLanguages?.length > 0
-      ? { regionalLanguages: step2.regionalLanguages }
-      : {}),
-
-    // Compensation
-    payMinRange: Number(step1.fixedSalaryMin) || 0,
-    payMaxRange: Number(step1.fixedSalaryMax) || 0,
-    payRateType: "per year",
-    supplementPay,
-    benefits: benefits.length > 0 ? benefits : undefined,
 
     // Interview
     hiringProcess,
@@ -177,8 +184,14 @@ export default function AddNewJobPost({ onBack }) {
       });
 
       clearJobPostStorage();
+      setStep(1);
+      setStepOneData({});
+      setStepTwoData({});
+      setStepThreeData({});
       onBack?.();
     } catch {
+      // error toast already shown by showPromise/apiRequest
+    } finally {
       setIsSubmitting(false);
     }
   };
