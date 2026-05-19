@@ -139,7 +139,7 @@ function JobHeaderModal({ job, onSave, onClose, isLoading, onSetDirty }) {
     jobTitle: job.jobTitle || "",
     companyName: job.companyName || "",
     jobCategory: job.jobCategory || "",
-    jobLocationType: job.jobLocationType || "onsite",
+    jobLocationType: job.location?.type || "onsite",
     jobType: JOB_TYPE_FROM_MODEL[job.jobType] || job.jobType || "",
     numberOfOpenings: String(job.numberOfOpenings ?? 1),
   });
@@ -164,7 +164,7 @@ function JobHeaderModal({ job, onSave, onClose, isLoading, onSetDirty }) {
       jobTitle: form.jobTitle.trim(),
       companyName: form.companyName.trim(),
       jobCategory: form.jobCategory,
-      jobLocationType: form.jobLocationType,
+      location: { ...(job.location || {}), type: form.jobLocationType },
       jobType: JOB_TYPE_TO_MODEL[form.jobType] ?? form.jobType,
       numberOfOpenings: Number(form.numberOfOpenings),
     });
@@ -236,10 +236,10 @@ function JobHeaderModal({ job, onSave, onClose, isLoading, onSetDirty }) {
 /* Location edit — city, state, pincode, streetAddress1 */
 function LocationModal({ job, onSave, onClose, isLoading, onSetDirty }) {
   const [form, setForm] = useState({
-    city: job.city || "",
-    state: job.state || "",
-    pincode: job.pincode || "",
-    streetAddress1: job.streetAddress1 || "",
+    city: job.location?.city || "",
+    state: job.location?.state || "",
+    pincode: job.location?.pincode || "",
+    streetAddress1: job.location?.streetAddress1 || "",
   });
   const [errors, setErrors] = useState({});
   const [pincodeLoading, setPincodeLoading] = useState(false);
@@ -273,7 +273,15 @@ function LocationModal({ job, onSave, onClose, isLoading, onSetDirty }) {
   const handleSave = () => {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
-    onSave({ city: form.city.trim(), state: form.state.trim(), pincode: form.pincode.trim(), streetAddress1: form.streetAddress1.trim() });
+    onSave({
+      location: {
+        type: job.location?.type || "",
+        city: form.city.trim(),
+        state: form.state.trim(),
+        pincode: form.pincode.trim(),
+        streetAddress1: form.streetAddress1.trim(),
+      },
+    });
   };
 
   return (
@@ -315,16 +323,16 @@ function LocationModal({ job, onSave, onClose, isLoading, onSetDirty }) {
   );
 }
 
-/* Compensation edit — payMinRange, payMaxRange, supplementPay, benefits */
+/* Compensation edit — minRange, maxRange, supplementPay, benefits */
 function CompensationModal({ job, onSave, onClose, isLoading, onSetDirty }) {
   const toL = (v) => v ? String(Math.round(v / 100000)) : "";
   const fromL = (v) => Number(v) * 100000;
 
   const [form, setForm] = useState({
-    payMinRange: toL(job.payMinRange),
-    payMaxRange: toL(job.payMaxRange),
-    supplementPay: job.supplementPay?.slice() || [],
-    benefits: job.benefits?.slice() || [],
+    payMinRange: toL(job.compensation?.minRange),
+    payMaxRange: toL(job.compensation?.maxRange),
+    supplementPay: job.compensation?.supplementPay?.slice() || [],
+    benefits: job.compensation?.benefits?.slice() || [],
   });
   const [errors, setErrors] = useState({});
 
@@ -347,11 +355,13 @@ function CompensationModal({ job, onSave, onClose, isLoading, onSetDirty }) {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
     onSave({
-      payMinRange: fromL(form.payMinRange),
-      payMaxRange: fromL(form.payMaxRange),
-      payRateType: "per year",
-      supplementPay: form.supplementPay,
-      benefits: form.benefits,
+      compensation: {
+        minRange: fromL(form.payMinRange),
+        maxRange: fromL(form.payMaxRange),
+        rateType: "year",
+        supplementPay: form.supplementPay,
+        benefits: form.benefits,
+      },
     });
   };
 
@@ -424,7 +434,7 @@ function JobDetailsModal({ job, onSave, onClose, isLoading, onSetDirty }) {
 /* Skills edit */
 function SkillsModal({ job, onSave, onClose, isLoading, onSetDirty }) {
   const { metadata } = useMetadataData();
-  const [skills, setSkills] = useState(job.skills?.slice() || []);
+  const [skills, setSkills] = useState(job.requirements?.skills?.slice() || []);
   const [error, setError] = useState("");
 
   const addSkill = (skill) => {
@@ -446,7 +456,7 @@ function SkillsModal({ job, onSave, onClose, isLoading, onSetDirty }) {
 
   const handleSave = () => {
     if (skills.length < 4) { setError("At least 4 skills are required."); return; }
-    onSave({ skills });
+    onSave({ requirements: { ...(job.requirements || {}), skills } });
   };
 
   useEffect(() => {
@@ -522,14 +532,14 @@ function SkillsModal({ job, onSave, onClose, isLoading, onSetDirty }) {
 /* Job Description edit */
 function DescriptionModal({ job, onSave, onClose, isLoading, onSetDirty }) {
   const [description, setDescription] = useState(job.jobDescription || "");
-  const [qualificationsText, setQualificationsText] = useState((job.qualifications || []).join("\n"));
+  const [qualificationsText, setQualificationsText] = useState((job.requirements?.qualifications || []).join("\n"));
   const [error, setError] = useState("");
 
   const handleSave = () => {
     const len = stripHtml(description).length;
     if (len < 10) { setError("Job description must be at least 10 characters."); return; }
     const qualifications = qualificationsText.split("\n").map((q) => q.trim()).filter(Boolean);
-    onSave({ jobDescription: description, qualifications });
+    onSave({ jobDescription: description, requirements: { ...(job.requirements || {}), qualifications } });
   };
 
   return (
@@ -641,7 +651,7 @@ export default function AdminJobDetailPage() {
     const snapshot = job;
     try {
       const res = await adminUpdateJobPost(jobId, payload);
-      setJob((prev) => ({ ...prev, ...res.data, dreamjob: prev.dreamjob }));
+      setJob((prev) => ({ ...prev, ...res.data, isDreamJob: prev.isDreamJob }));
       showSuccess(successMsg ?? "Changes saved successfully.");
       editState.forceClose();
     } catch {
@@ -653,9 +663,9 @@ export default function AdminJobDetailPage() {
   }, [jobId, job]);
 
   const formatSalaryLPA = (j) => {
-    if (!j?.payMinRange || !j?.payMaxRange) return "Not disclosed";
-    const min = (j.payMinRange / 100000).toFixed(0);
-    const max = (j.payMaxRange / 100000).toFixed(0);
+    if (!j?.compensation?.minRange || !j?.compensation?.maxRange) return "Not disclosed";
+    const min = (j.compensation.minRange / 100000).toFixed(0);
+    const max = (j.compensation.maxRange / 100000).toFixed(0);
     return `${min}–${max} LPA`;
   };
 
@@ -747,7 +757,7 @@ export default function AdminJobDetailPage() {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Icon name="static/Icons/location.svg" width={16} height={16} />
-                  <span>{job.city}</span>
+                  <span>{job.location?.city}</span>
                 </div>
               </div>
               <p className="hidden sm:block text-sm font-medium text-(--color-black-shade-700) shrink-0 ml-4">{job.companyName}</p>
@@ -765,7 +775,7 @@ export default function AdminJobDetailPage() {
                   <div className="h-4 w-px bg-(--color-black-shade-300)" />
                   <span>Type: <span className="font-semibold capitalize">{JOB_TYPE_FROM_MODEL[job.jobType] ?? job.jobType}</span></span>
                   <div className="h-4 w-px bg-(--color-black-shade-300)" />
-                  <span>Mode: <span className="font-semibold capitalize">{LOCATION_LABELS[job.jobLocationType] ?? job.jobLocationType}</span></span>
+                  <span>Mode: <span className="font-semibold capitalize">{LOCATION_LABELS[job.location?.type] ?? job.location?.type}</span></span>
                 </div>
                 <p className="text-[11px] text-(--color-black-shade-400) font-mono tracking-wide">ID: {job.jobId}</p>
               </div>
@@ -787,10 +797,10 @@ export default function AdminJobDetailPage() {
             <EditButton onClick={locationEdit.open} label="Edit location" />
           </div>
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-(--color-black-shade-700)">
-            {job.city && <span><span className="font-medium">City:</span> {job.city}</span>}
-            {job.state && <span><span className="font-medium">State:</span> {job.state}</span>}
-            {job.pincode && <span><span className="font-medium">Pincode:</span> {job.pincode}</span>}
-            {job.streetAddress1 && <span><span className="font-medium">Address:</span> {job.streetAddress1}</span>}
+            {job.location?.city && <span><span className="font-medium">City:</span> {job.location.city}</span>}
+            {job.location?.state && <span><span className="font-medium">State:</span> {job.location.state}</span>}
+            {job.location?.pincode && <span><span className="font-medium">Pincode:</span> {job.location.pincode}</span>}
+            {job.location?.streetAddress1 && <span><span className="font-medium">Address:</span> {job.location.streetAddress1}</span>}
           </div>
         </ProfileSectionCard>
 
@@ -814,8 +824,8 @@ export default function AdminJobDetailPage() {
           </div>
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-(--color-black-shade-700)">
             <span><span className="font-medium">CTC:</span> {formatSalaryLPA(job)}</span>
-            {job.supplementPay?.length > 0 && <span><span className="font-medium">Supplement:</span> {job.supplementPay.join(", ")}</span>}
-            {job.benefits?.length > 0 && <span><span className="font-medium">Benefits:</span> {job.benefits.join(", ")}</span>}
+            {job.compensation?.supplementPay?.length > 0 && <span><span className="font-medium">Supplement:</span> {job.compensation.supplementPay.join(", ")}</span>}
+            {job.compensation?.benefits?.length > 0 && <span><span className="font-medium">Benefits:</span> {job.compensation.benefits.join(", ")}</span>}
           </div>
         </ProfileSectionCard>
 
@@ -829,8 +839,8 @@ export default function AdminJobDetailPage() {
             <EditButton onClick={skillsEdit.open} label="Edit skills" />
           </div>
           <div className="flex flex-wrap gap-2">
-            {job?.skills?.length > 0 ? (
-              job.skills.map((skill, index) => (
+            {job?.requirements?.skills?.length > 0 ? (
+              job.requirements.skills.map((skill, index) => (
                 <span key={index} className={`rounded-full px-4 py-1.5 text-xs font-medium bg-(--color-primary-shade-100) text-(--color-black-shade-800) ${index === 0 ? "flex items-center gap-1" : ""}`}>
                   {skill}
                 </span>
@@ -848,11 +858,11 @@ export default function AdminJobDetailPage() {
             <EditButton onClick={descriptionEdit.open} label="Edit job description" />
           </div>
           <div className="rte-content text-[0.9375rem] font-medium text-black" dangerouslySetInnerHTML={{ __html: job.jobDescription }} />
-          {job.qualifications?.length > 0 && (
+          {job.requirements?.qualifications?.length > 0 && (
             <div className="mt-4">
               <h3 className="mb-3 text-sm font-semibold text-(--color-black-shade-900)">Qualifications</h3>
               <ul className="list-disc list-inside space-y-1">
-                {job.qualifications.map((q, i) => (
+                {job.requirements.qualifications.map((q, i) => (
                   <li key={i} className="text-sm text-(--color-black-shade-700)">{q}</li>
                 ))}
               </ul>
@@ -871,9 +881,9 @@ export default function AdminJobDetailPage() {
             <div>
               <h3 className="text-base font-semibold text-(--color-black-shade-900)">{job.companyName}</h3>
               <div className="flex flex-wrap gap-2 mt-3">
-                {job.city && (
+                {job.location?.city && (
                   <span className="rounded-full bg-(--color-primary-shade-100) px-3 py-1 text-xs font-medium">
-                    Head Office: {job.city}
+                    Head Office: {job.location.city}
                   </span>
                 )}
               </div>

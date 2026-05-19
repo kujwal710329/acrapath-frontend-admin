@@ -94,7 +94,15 @@ export function useBulkJobUpload() {
         return;
       }
 
-      setUploadResult(data?.data ?? { totalUploaded: parsedJobs.length });
+      setUploadResult(
+        data?.data ?? {
+          total: parsedJobs.length,
+          created: parsedJobs.length,
+          skipped: 0,
+          failed: 0,
+          jobs: { created: [], skipped: [], failed: [] },
+        }
+      );
       setStatus("success");
     } catch (err) {
       setStatus("error");

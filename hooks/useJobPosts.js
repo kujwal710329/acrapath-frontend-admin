@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { fetchJobPosts, updateJobPostStatus, toggleDreamjob as toggleDreamjobService, adminDeleteJob } from "@/services/jobPost.service";
+import { fetchJobPosts, updateJobPostStatus, bulkUpdateJobPostStatus, toggleDreamjob as toggleDreamjobService, adminDeleteJob } from "@/services/jobPost.service";
 import { DEBOUNCE_CONFIG } from "@/utilities/config";
 import { logger } from "@/utilities/logger";
 import { showSuccess } from "@/utilities/toast";
@@ -127,6 +127,23 @@ export function useJobPosts({ tab, perPage }) {
     [load]
   );
 
+  const bulkUpdateStatus = useCallback(
+    async (jobIds, status) => {
+      setRows((prev) =>
+        prev.map((r) => (jobIds.includes(r.jobId) ? { ...r, status } : r))
+      );
+      try {
+        const result = await bulkUpdateJobPostStatus(jobIds, status);
+        showSuccess(`${result?.data?.modified ?? jobIds.length} jobs updated to ${status}`);
+        logger.debug("[useJobPosts] bulk status updated", { count: jobIds.length, status });
+      } catch (err) {
+        logger.error("[useJobPosts] bulk status update failed", { error: err.message });
+        load(curRef.current.page, curRef.current.search);
+      }
+    },
+    [load]
+  );
+
   /**
    * Optimistically toggle a row's dreamjob flag; roll back on API failure.
    */
@@ -134,7 +151,7 @@ export function useJobPosts({ tab, perPage }) {
     async (jobId) => {
       // Optimistic flip
       setRows((prev) =>
-        prev.map((r) => (r.jobId === jobId ? { ...r, dreamjob: !r.dreamjob } : r))
+        prev.map((r) => (r.jobId === jobId ? { ...r, isDreamJob: !r.isDreamJob } : r))
       );
       try {
         const result = await toggleDreamjobService(jobId);
@@ -178,6 +195,7 @@ export function useJobPosts({ tab, perPage }) {
     handleSearch,
     refresh,
     updateStatus,
+    bulkUpdateStatus,
     toggleDreamjob,
     deleteJob,
   };

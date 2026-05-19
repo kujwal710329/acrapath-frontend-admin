@@ -205,7 +205,7 @@ export default function MembersTable({ data = [], loading, error, onRetry, onSta
                     checked={selectedRows.has(idx)}
                     onChange={() => toggleRow(idx)}
                     className="h-4 w-4 rounded border-(--color-black-shade-300) cursor-pointer accent-(--color-primary)"
-                    aria-label={`Select ${row.fullName}`}
+                    aria-label={`Select ${getDisplayName(row)}`}
                   />
                 </td>
                 <td className="px-4 py-3.5 text-14 text-(--color-black-shade-700) border border-(--color-black-shade-100) whitespace-nowrap">
@@ -249,7 +249,7 @@ export default function MembersTable({ data = [], loading, error, onRetry, onSta
                     <button
                       onClick={() => onView?.(row)}
                       className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold text-(--color-primary) bg-(--color-primary-shade-100) border border-(--color-primary) hover:opacity-80 transition-colors cursor-pointer"
-                      aria-label={`View ${row.fullName}`}
+                      aria-label={`View ${getDisplayName(row)}`}
                     >
                       View
                     </button>
@@ -260,14 +260,14 @@ export default function MembersTable({ data = [], loading, error, onRetry, onSta
                           ? "text-green-700 bg-green-50 border border-green-200 hover:bg-green-100"
                           : "text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100"
                       }`}
-                      aria-label={isArchived ? `Unarchive ${row.fullName}` : `Archive ${row.fullName}`}
+                      aria-label={isArchived ? `Unarchive ${getDisplayName(row)}` : `Archive ${getDisplayName(row)}`}
                     >
                       {isArchived ? "Unarchive" : "Archive"}
                     </button>
                     <button
                       onClick={() => setConfirmDelete({ id: row.id, name: getDisplayName(row) || "this professional" })}
                       className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors cursor-pointer"
-                      aria-label={`Delete ${row.fullName}`}
+                      aria-label={`Delete ${getDisplayName(row)}`}
                     >
                       Delete
                     </button>

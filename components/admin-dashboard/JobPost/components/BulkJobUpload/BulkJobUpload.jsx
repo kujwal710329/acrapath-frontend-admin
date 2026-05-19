@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useBulkJobUpload } from "@/hooks/useBulkJobUpload";
+import Button from "@/components/common/Button";
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
@@ -42,27 +43,33 @@ function SchemaReference() {
     "companyName": "string — required",
     "companyDescription": "string (HTML, min 50 chars) — required",
     "jobDescription": "string (HTML, min 10 chars) — required",
-    "jobLocationType": "remote | onsite | hybrid — required",
-    "city": "string — required",
-    "state": "string — required",
-    "pincode": "6-digit string — optional",
-    "streetAddress1": "string — optional",
     "jobType": "full time | part time | contractual — required",
     "jobSource": "internal | external — required",
     "externalJobUrl": "URL string — required only when jobSource is 'external'",
     "jobSchedule": "string — optional",
-    "experienceLevel": "Entry | Mid | Senior — required",
-    "educationStream": ["string"] — optional (e.g. ["Computer Science", "Electronics"]),
-    "qualifications": ["string"] — optional,
-    "skills": ["string", min 4] — required,
-    "payMinRange": "number — required",
-    "payMaxRange": "number > payMinRange — required",
-    "payRateType": "per hour | per day | per month | per week | per year — required",
-    "benefits": ["string"] — optional (e.g. "PF", "Health insurance", "ESOPs"),
-    "supplementPay": ["string"] — optional (e.g. "Performance bonus", "Joining bonus"),
+    "experienceLevel": "entry-level | mid-level | senior-level — required",
+    "location": {
+      "type": "remote | onsite | hybrid — required",
+      "city": "string — required",
+      "state": "string — required",
+      "pincode": "6-digit string — optional",
+      "streetAddress1": "string — optional"
+    },
+    "requirements": {
+      "skills": ["string"] (min 4 items) — required,
+      "qualifications": ["string"] — optional,
+      "educationStream": ["string"] — optional (e.g. ["Computer Science", "Electronics"])
+    },
+    "compensation": {
+      "minRange": "number — required",
+      "maxRange": "number > minRange — required",
+      "rateType": "hour | day | week | month | year — required",
+      "benefits": ["string"] — optional (e.g. "PF", "Health insurance", "ESOPs"),
+      "supplementPay": ["string"] — optional (e.g. "Performance bonus", "Joining bonus")
+    },
     "numberOfOpenings": "number — optional (default 1)",
-    "jobExpireDate": "ISO date string — optional",
-    "dreamjob": "boolean — optional (default false)"
+    "jobExpireAt": "ISO date string — optional",
+    "isDreamJob": "boolean — optional (default false)"
   }
 ]`;
 
@@ -406,9 +413,9 @@ function PreviewCard({ parsedJobs, parseError }) {
                 · {job.jobCategory}
               </span>
             )}
-            {job.jobLocationType && (
+            {job.location?.type && (
               <span className="text-12" style={{ color: "var(--color-black-shade-400)" }}>
-                · {job.jobLocationType}
+                · {job.location.type}
               </span>
             )}
             <span
@@ -491,56 +498,190 @@ function ValidationErrorPanel({ errors }) {
   );
 }
 
-function SuccessBanner({ result, onViewJobs, onUploadMore }) {
+function UploadResultBanner({ result, onViewJobs, onUploadMore }) {
+  const [showDetails, setShowDetails] = useState(false);
+
+  const created     = result?.created ?? 0;
+  const skipped     = result?.skipped ?? 0;
+  const failed      = result?.failed  ?? 0;
+  const createdJobs = result?.jobs?.created ?? [];
+  const skippedJobs = result?.jobs?.skipped ?? [];
+  const failedJobs  = result?.jobs?.failed  ?? [];
+  const hasDetails  = createdJobs.length > 0 || skippedJobs.length > 0 || failedJobs.length > 0;
+
+  let headerColor  = "var(--color-secondary)";
+  let headerBg     = "color-mix(in srgb, var(--color-secondary) 10%, transparent)";
+  let headerBorder = "color-mix(in srgb, var(--color-secondary) 35%, transparent)";
+  let headerLabel  = "Upload Complete";
+
+  if (created === 0 && skipped > 0 && failed === 0) {
+    headerColor  = "var(--color-star)";
+    headerBg     = "color-mix(in srgb, var(--color-star) 10%, transparent)";
+    headerBorder = "color-mix(in srgb, var(--color-star) 35%, transparent)";
+    headerLabel  = "No new jobs added — all external URLs already exist";
+  } else if (created === 0 && failed > 0) {
+    headerColor  = "var(--color-red)";
+    headerBg     = "color-mix(in srgb, var(--color-red) 8%, transparent)";
+    headerBorder = "color-mix(in srgb, var(--color-red) 30%, transparent)";
+    headerLabel  = "Upload failed — check errors below";
+  }
+
   return (
-    <div
-      style={{
-        padding: "20px",
-        borderRadius: "12px",
-        background: "color-mix(in srgb, var(--color-secondary) 10%, transparent)",
-        border: "1px solid color-mix(in srgb, var(--color-secondary) 35%, transparent)",
-      }}
-    >
-      <p className="text-16 font-semibold" style={{ color: "var(--color-secondary)", marginBottom: "4px" }}>
-        ✓ {result?.totalUploaded ?? 0} job{result?.totalUploaded !== 1 ? "s" : ""} uploaded successfully
-      </p>
-      <p className="text-13" style={{ color: "color-mix(in srgb, var(--color-secondary) 70%, #000)", marginBottom: "16px" }}>
-        All jobs are in &quot;Request&quot; status and pending review.
-      </p>
-      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-        <button
-          type="button"
-          onClick={onViewJobs}
-          style={{
-            padding: "8px 18px",
-            borderRadius: "8px",
-            border: "1px solid var(--color-secondary)",
-            background: "var(--pure-white)",
-            color: "var(--color-secondary)",
-            fontSize: "13px",
-            fontWeight: "600",
-            cursor: "pointer",
-          }}
-        >
-          View Jobs
-        </button>
-        <button
-          type="button"
-          onClick={onUploadMore}
-          style={{
-            padding: "8px 18px",
-            borderRadius: "8px",
-            border: "none",
-            background: "var(--color-secondary)",
-            color: "var(--pure-white)",
-            fontSize: "13px",
-            fontWeight: "600",
-            cursor: "pointer",
-          }}
-        >
-          Upload More
-        </button>
+    <div style={{ borderRadius: "12px", border: `1px solid ${headerBorder}`, overflow: "hidden" }}>
+      {/* Summary header */}
+      <div style={{ padding: "16px 20px", background: headerBg }}>
+        <p className="text-16 font-semibold" style={{ color: headerColor, marginBottom: "12px" }}>
+          {headerLabel}
+        </p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
+          {created > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ color: "var(--color-secondary)", fontWeight: "700", fontSize: "18px" }}>✓</span>
+              <span className="text-14 font-semibold" style={{ color: "var(--color-secondary)" }}>
+                Created: {created}
+              </span>
+            </div>
+          )}
+          {skipped > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ color: "var(--color-star)", fontWeight: "700", fontSize: "16px" }}>↷</span>
+              <span className="text-14 font-semibold" style={{ color: "#92400e" }}>
+                Skipped: {skipped} (duplicate URL)
+              </span>
+            </div>
+          )}
+          {failed > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ color: "var(--color-red)", fontWeight: "700", fontSize: "18px" }}>✗</span>
+              <span className="text-14 font-semibold" style={{ color: "var(--color-red)" }}>
+                Failed: {failed}
+              </span>
+            </div>
+          )}
+          {created === 0 && skipped === 0 && failed === 0 && (
+            <span className="text-14" style={{ color: "var(--color-black-shade-500)" }}>No jobs processed</span>
+          )}
+        </div>
       </div>
+
+      {/* Action bar */}
+      <div
+        style={{
+          padding: "12px 20px",
+          background: "var(--pure-white)",
+          borderTop: `1px solid ${headerBorder}`,
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          flexWrap: "wrap",
+        }}
+      >
+        {hasDetails && (
+          <Button
+            variant="outline"
+            className="w-auto! h-9! text-13! rounded-lg! px-4!"
+            style={{ gap: "6px", border: "1px solid var(--color-black-shade-200)", color: "var(--color-black-shade-600)" }}
+            onClick={() => setShowDetails((v) => !v)}
+          >
+            <svg
+              width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2"
+              style={{ transform: showDetails ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 0.2s" }}
+            >
+              <polyline points="18 15 12 9 6 15" />
+            </svg>
+            {showDetails ? "Hide Details" : "Show Details"}
+          </Button>
+        )}
+        <Button variant="outline" className="w-auto! h-9! text-13! rounded-lg! px-4!" onClick={onViewJobs}>
+          View Jobs
+        </Button>
+        <Button variant="secondary" className="w-auto! h-9! text-13! rounded-lg! px-4!" onClick={onUploadMore}>
+          Upload More
+        </Button>
+      </div>
+
+      {/* Expandable details */}
+      {showDetails && hasDetails && (
+        <div
+          style={{
+            borderTop: `1px solid ${headerBorder}`,
+            padding: "16px 20px",
+            background: "var(--color-black-shade-50)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "16px",
+          }}
+        >
+          {createdJobs.length > 0 && (
+            <div>
+              <p className="text-13 font-semibold" style={{ color: "var(--color-secondary)", marginBottom: "8px" }}>
+                ✓ Created ({createdJobs.length})
+              </p>
+              {createdJobs.map((job, i) => (
+                <div
+                  key={i}
+                  style={{
+                    padding: "6px 0",
+                    borderBottom: i < createdJobs.length - 1 ? "1px solid var(--color-black-shade-100)" : "none",
+                  }}
+                >
+                  <span className="text-13 font-medium" style={{ color: "var(--color-black-shade-800)" }}>{job.jobTitle}</span>
+                  <span className="text-13" style={{ color: "var(--color-black-shade-500)" }}>{" — "}{job.companyName}</span>
+                  {job.jobSource && (
+                    <span className="text-12" style={{ color: "var(--color-black-shade-400)" }}> [{job.jobSource}]</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          {skippedJobs.length > 0 && (
+            <div>
+              <p className="text-13 font-semibold" style={{ color: "#92400e", marginBottom: "8px" }}>
+                ↷ Skipped — Duplicate URL ({skippedJobs.length})
+              </p>
+              {skippedJobs.map((job, i) => (
+                <div
+                  key={i}
+                  style={{
+                    padding: "6px 0",
+                    borderBottom: i < skippedJobs.length - 1 ? "1px solid var(--color-black-shade-100)" : "none",
+                  }}
+                >
+                  <span className="text-13 font-medium" style={{ color: "var(--color-black-shade-800)" }}>{job.jobTitle}</span>
+                  <span className="text-13" style={{ color: "var(--color-black-shade-500)" }}>{" — "}{job.companyName}</span>
+                  {job.externalJobUrl && (
+                    <p className="text-12" style={{ color: "var(--color-black-shade-400)", marginTop: "2px", wordBreak: "break-all" }}>
+                      URL: {job.externalJobUrl}
+                    </p>
+                  )}
+                  <p className="text-12" style={{ color: "#b45309", marginTop: "2px" }}>{job.reason}</p>
+                </div>
+              ))}
+            </div>
+          )}
+          {failedJobs.length > 0 && (
+            <div>
+              <p className="text-13 font-semibold" style={{ color: "var(--color-red)", marginBottom: "8px" }}>
+                ✗ Failed ({failedJobs.length})
+              </p>
+              {failedJobs.map((job, i) => (
+                <div
+                  key={i}
+                  style={{
+                    padding: "6px 0",
+                    borderBottom: i < failedJobs.length - 1 ? "1px solid var(--color-black-shade-100)" : "none",
+                  }}
+                >
+                  <span className="text-13 font-medium" style={{ color: "var(--color-black-shade-800)" }}>{job.jobTitle}</span>
+                  <span className="text-13" style={{ color: "var(--color-black-shade-500)" }}>{" — "}{job.companyName}</span>
+                  <p className="text-12" style={{ color: "var(--color-red)", marginTop: "2px" }}>{job.reason}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -565,24 +706,14 @@ function ErrorBanner({ message, onRetry }) {
         </p>
         <p className="text-13" style={{ color: "var(--color-black-shade-600)" }}>{message}</p>
       </div>
-      <button
-        type="button"
+      <Button
+        variant="outline"
+        className="w-auto! h-9! text-13! rounded-lg! px-4!"
+        style={{ flexShrink: 0, border: "1px solid var(--color-red)", color: "var(--color-red)", whiteSpace: "nowrap" }}
         onClick={onRetry}
-        style={{
-          flexShrink: 0,
-          padding: "6px 14px",
-          borderRadius: "8px",
-          border: "1px solid var(--color-red)",
-          background: "var(--pure-white)",
-          color: "var(--color-red)",
-          fontSize: "13px",
-          fontWeight: "600",
-          cursor: "pointer",
-          whiteSpace: "nowrap",
-        }}
       >
         Try Again
-      </button>
+      </Button>
     </div>
   );
 }
@@ -644,7 +775,7 @@ export default function BulkJobUpload({ onViewJobs }) {
         )}
 
         {isSuccess && (
-          <SuccessBanner
+          <UploadResultBanner
             result={uploadResult}
             onViewJobs={onViewJobs}
             onUploadMore={reset}

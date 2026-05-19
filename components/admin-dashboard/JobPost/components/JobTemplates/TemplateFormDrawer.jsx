@@ -29,7 +29,12 @@ const JOB_SCHEDULE_OPTIONS = [
   "Flexible",
   "Weekend",
 ];
-const PAY_RATE_OPTIONS = ["per hour", "per day", "per week", "per month", "per year"];
+// PAY_RATE_OPTIONS — display labels shown in the dropdown (form state stores these)
+const PAY_RATE_OPTIONS = ["Per Hour", "Per Day", "Per Week", "Per Month", "Per Year"];
+// API key → display label (used when loading a saved template)
+const PAY_RATE_LABELS  = { hour: "Per Hour", day: "Per Day", week: "Per Week", month: "Per Month", year: "Per Year" };
+// Display label → API key (used when building the payload to send to the backend)
+const PAY_RATE_API     = { "Per Hour": "hour", "Per Day": "day", "Per Week": "week", "Per Month": "month", "Per Year": "year" };
 const EXPERIENCE_OPTIONS = ["Entry", "Mid", "Senior"];
 const EDUCATION_OPTIONS = ["Graduate", "Post Graduate", "Diploma", "12th Pass"];
 const BENEFITS_OPTIONS = [
@@ -73,7 +78,7 @@ const EMPTY_FORM = {
   jobSchedule: "",
   payMinRange: "",
   payMaxRange: "",
-  payRateType: "per year",
+  payRateType: "Per Year",
   numberOfOpenings: 1,
   // Section 3 — Requirements
   experienceLevel: "",
@@ -87,7 +92,7 @@ const EMPTY_FORM = {
   supplementPay: [],
   // Section 5 — Description
   jobDescription: "",
-  dreamjob: false,
+  isDreamJob: false,
 };
 
 function formToPayload(form) {
@@ -103,22 +108,26 @@ function formToPayload(form) {
       jobTitle: form.jobTitle,
       jobCategory: form.jobCategory,
       jobType: form.jobType,
-      jobLocationType: form.jobLocationType,
+      location: { type: form.jobLocationType },
       jobSchedule: form.jobSchedule,
-      payMinRange: form.payMinRange ? Number(form.payMinRange) : 0,
-      payMaxRange: form.payMaxRange ? Number(form.payMaxRange) : 0,
-      payRateType: form.payRateType,
+      compensation: {
+        minRange: form.payMinRange ? Number(form.payMinRange) : 0,
+        maxRange: form.payMaxRange ? Number(form.payMaxRange) : 0,
+        rateType: PAY_RATE_API[form.payRateType] ?? form.payRateType,
+        benefits: form.benefits,
+        supplementPay: form.supplementPay,
+      },
       numberOfOpenings: Number(form.numberOfOpenings) || 1,
       experienceLevel: form.experienceLevel,
-      skills: form.skills,
-      educationStream: form.educationStream,
+      requirements: {
+        skills: form.skills,
+        educationStream: form.educationStream,
+        qualifications: form.qualifications,
+      },
       minimumEducation: form.minimumEducation,
-      qualifications: form.qualifications,
       languages: form.languages,
-      benefits: form.benefits,
-      supplementPay: form.supplementPay,
       jobDescription: form.jobDescription,
-      dreamjob: form.dreamjob,
+      isDreamJob: form.isDreamJob,
     },
   };
 }
@@ -136,22 +145,22 @@ function templateToForm(t) {
     jobTitle: td.jobTitle ?? "",
     jobCategory: td.jobCategory ?? "",
     jobType: td.jobType ?? "",
-    jobLocationType: td.jobLocationType ?? "",
+    jobLocationType: td.location?.type ?? "",
     jobSchedule: td.jobSchedule ?? "",
-    payMinRange: td.payMinRange ? String(td.payMinRange) : "",
-    payMaxRange: td.payMaxRange ? String(td.payMaxRange) : "",
-    payRateType: td.payRateType ?? "per year",
+    payMinRange: td.compensation?.minRange ? String(td.compensation.minRange) : "",
+    payMaxRange: td.compensation?.maxRange ? String(td.compensation.maxRange) : "",
+    payRateType: PAY_RATE_LABELS[td.compensation?.rateType] ?? "Per Year",
     numberOfOpenings: td.numberOfOpenings ?? 1,
     experienceLevel: td.experienceLevel ?? "",
-    skills: td.skills ?? [],
-    educationStream: td.educationStream ?? [],
+    skills: td.requirements?.skills ?? [],
+    educationStream: td.requirements?.educationStream ?? [],
     minimumEducation: td.minimumEducation ?? "",
-    qualifications: td.qualifications ?? [],
+    qualifications: td.requirements?.qualifications ?? [],
     languages: td.languages ?? [],
-    benefits: td.benefits ?? [],
-    supplementPay: td.supplementPay ?? [],
+    benefits: td.compensation?.benefits ?? [],
+    supplementPay: td.compensation?.supplementPay ?? [],
     jobDescription: td.jobDescription ?? "",
-    dreamjob: td.dreamjob ?? false,
+    isDreamJob: td.isDreamJob ?? false,
   };
 }
 
@@ -314,22 +323,26 @@ export default function TemplateFormDrawer({
       jobTitle: form.jobTitle,
       jobCategory: form.jobCategory,
       jobType: form.jobType,
-      jobLocationType: form.jobLocationType,
+      location: { type: form.jobLocationType },
       jobSchedule: form.jobSchedule,
       experienceLevel: form.experienceLevel,
-      skills: form.skills,
-      educationStream: form.educationStream,
+      requirements: {
+        skills: form.skills,
+        educationStream: form.educationStream,
+        qualifications: form.qualifications,
+      },
       minimumEducation: form.minimumEducation,
-      qualifications: form.qualifications,
       languages: form.languages,
-      payMinRange: form.payMinRange ? Number(form.payMinRange) : 0,
-      payMaxRange: form.payMaxRange ? Number(form.payMaxRange) : 0,
-      payRateType: form.payRateType,
+      compensation: {
+        minRange: form.payMinRange ? Number(form.payMinRange) : 0,
+        maxRange: form.payMaxRange ? Number(form.payMaxRange) : 0,
+        rateType: form.payRateType,
+        benefits: form.benefits,
+        supplementPay: form.supplementPay,
+      },
       numberOfOpenings: form.numberOfOpenings,
-      benefits: form.benefits,
-      supplementPay: form.supplementPay,
       jobDescription: form.jobDescription,
-      dreamjob: form.dreamjob,
+      isDreamJob: form.isDreamJob,
     },
   };
 
@@ -770,8 +783,8 @@ export default function TemplateFormDrawer({
 
             {/* Dream Job toggle */}
             <ToggleSwitch
-              checked={form.dreamjob}
-              onChange={set("dreamjob")}
+              checked={form.isDreamJob}
+              onChange={set("isDreamJob")}
               label="Mark as Dream Job"
             />
           </div>

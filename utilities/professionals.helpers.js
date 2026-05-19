@@ -3,6 +3,7 @@
  */
 
 import { API_CONFIG } from "@/utilities/config";
+import { formatFullName } from "@/utilities/formatName";
 
 /** ISO date → "7 days ago" / "2h ago" / "Just now" */
 export function formatRelativeTime(isoDate) {
@@ -63,14 +64,8 @@ export function getResumeUrl(s3Path) {
   return `${API_CONFIG.S3_BASE_URL}/${s3Path}`;
 }
 
-/**
- * Derive display name from separate name parts, falling back to fullName / name.
- * firstName + middleName + lastName takes priority over the denormalised fullName field.
- */
 export function getDisplayName(row) {
-  const parts = [row?.firstName, row?.middleName, row?.lastName].filter(Boolean);
-  if (parts.length > 0) return parts.join(" ");
-  return row?.fullName || row?.name || "—";
+  return formatFullName(row?.personalInfo?.firstName, row?.personalInfo?.middleName, row?.personalInfo?.lastName) || "—";
 }
 
 /**

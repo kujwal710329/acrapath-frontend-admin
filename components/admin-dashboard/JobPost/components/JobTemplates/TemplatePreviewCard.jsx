@@ -30,10 +30,13 @@ function formatDate(dateStr) {
   });
 }
 
+const PAY_RATE_LABELS = { hour: "Per Hour", day: "Per Day", week: "Per Week", month: "Per Month", year: "Per Year" };
+
 function formatPay(min, max, rateType) {
   if (!min && !max) return null;
   const fmt = (n) => `₹${Number(n).toLocaleString("en-IN")}`;
-  const rate = rateType ? ` ${rateType}` : "";
+  const label = PAY_RATE_LABELS[rateType] ?? rateType;
+  const rate = label ? ` ${label}` : "";
   if (min && max) return `${fmt(min)} – ${fmt(max)}${rate}`;
   if (min) return `From ${fmt(min)}${rate}`;
   return `Up to ${fmt(max)}${rate}`;
@@ -73,7 +76,7 @@ export default function TemplatePreviewCard({ template, onClose, inline = false 
 
   const accentColor = CATEGORY_COLORS[template.category] ?? "var(--color-primary)";
   const td = template.templateData ?? {};
-  const payStr = formatPay(td.payMinRange, td.payMaxRange, td.payRateType);
+  const payStr = formatPay(td.compensation?.minRange, td.compensation?.maxRange, td.compensation?.rateType);
 
   // Close on Escape key
   const handleKeyDown = useCallback(
@@ -139,16 +142,16 @@ export default function TemplatePreviewCard({ template, onClose, inline = false 
         )}
 
         {/* Skills preview */}
-        {td.skills?.length > 0 && (
+        {td.requirements?.skills?.length > 0 && (
           <div className="mt-3 flex flex-col gap-1">
-            {td.skills.slice(0, 5).map((s) => (
+            {td.requirements.skills.slice(0, 5).map((s) => (
               <div key={s} className="flex items-center gap-1.5 text-sm text-(--color-black-shade-700)">
                 <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: accentColor }} />
                 {s}
               </div>
             ))}
-            {td.skills.length > 5 && (
-              <p className="text-xs text-(--color-black-shade-400) mt-1">+{td.skills.length - 5} more skills</p>
+            {td.requirements.skills.length > 5 && (
+              <p className="text-xs text-(--color-black-shade-400) mt-1">+{td.requirements.skills.length - 5} more skills</p>
             )}
           </div>
         )}
@@ -191,7 +194,7 @@ export default function TemplatePreviewCard({ template, onClose, inline = false 
             </div>
             <div>
               <p className="text-xs font-medium text-(--color-black-shade-400)">Work Type</p>
-              <p className="text-sm font-medium text-(--color-black-shade-800)">{td.jobLocationType || "—"}</p>
+              <p className="text-sm font-medium text-(--color-black-shade-800)">{td.location?.type || "—"}</p>
             </div>
           </div>
 
@@ -202,11 +205,11 @@ export default function TemplatePreviewCard({ template, onClose, inline = false 
             </div>
           ) : null}
 
-          {(td.benefits?.length > 0 || td.supplementPay?.length > 0) ? (
+          {(td.compensation?.benefits?.length > 0 || td.compensation?.supplementPay?.length > 0) ? (
             <div>
               <p className="text-xs font-medium text-(--color-black-shade-400) mb-1.5">Perks / Benefits</p>
               <div className="flex flex-wrap gap-1.5">
-                {[...(td.benefits ?? []), ...(td.supplementPay ?? [])].map((b) => (
+                {[...(td.compensation?.benefits ?? []), ...(td.compensation?.supplementPay ?? [])].map((b) => (
                   <span
                     key={b}
                     className="rounded-full border border-(--color-black-shade-200) px-2.5 py-0.5 text-xs font-medium text-(--color-black-shade-700)"
@@ -243,11 +246,11 @@ export default function TemplatePreviewCard({ template, onClose, inline = false 
             </div>
           </div>
 
-          {td.educationStream?.length > 0 ? (
+          {td.requirements?.educationStream?.length > 0 ? (
             <div>
               <p className="text-xs font-medium text-(--color-black-shade-400) mb-1.5">Education Stream</p>
               <div className="flex flex-wrap gap-1.5">
-                {td.educationStream.map((s) => (
+                {td.requirements.educationStream.map((s) => (
                   <span key={s} className="rounded-full border border-(--color-black-shade-200) px-2.5 py-0.5 text-xs font-medium text-(--color-black-shade-700)">{s}</span>
                 ))}
               </div>
@@ -290,11 +293,11 @@ export default function TemplatePreviewCard({ template, onClose, inline = false 
             </div>
           )}
 
-          {td.qualifications?.length > 0 && (
+          {td.requirements?.qualifications?.length > 0 && (
             <div>
               <p className="text-xs font-medium text-(--color-black-shade-400) mb-1.5">Qualifications</p>
               <div className="flex flex-wrap gap-1.5">
-                {td.qualifications.map((q) => (
+                {td.requirements.qualifications.map((q) => (
                   <span key={q} className="rounded-full border border-(--color-black-shade-200) px-2.5 py-0.5 text-xs font-medium text-(--color-black-shade-700)">{q}</span>
                 ))}
               </div>

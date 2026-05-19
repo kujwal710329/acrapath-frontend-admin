@@ -74,9 +74,9 @@ function buildPayload(s1, s2, s3, s4, s5, s6) {
   return {
     // Auth identity
     email: s1.email,
-    firstName: s1.firstName,
-    middleName: s1.middleName,
-    lastName: s1.lastName,
+    firstName: s1.personalInfo?.firstName,
+    middleName: s1.personalInfo?.middleName,
+    lastName: s1.personalInfo?.lastName,
 
     // Personal info (merged with step 2 profession fields)
     personalInfo: {

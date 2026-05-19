@@ -8,6 +8,7 @@ import Button from "@/components/common/Button";
 import CreatableSelect from "@/components/common/CreatableSelect";
 import { searchUsersForTestimonial } from "@/services/testimonials.service";
 import { CATEGORY_OPTIONS, LABEL_TO_CATEGORY } from "@/constants/testimonialCategories";
+import { formatFullName } from "@/utilities/formatName";
 
 const EMPTY_FORM = {
   title: "",
@@ -129,8 +130,7 @@ function UserSearchDropdown({ selectedUser, onSelect, error }) {
   };
 
   const displayValue = selectedUser
-    ? `${selectedUser.firstName ?? ""} ${selectedUser.lastName ?? ""}`.trim() ||
-      selectedUser.email
+    ? formatFullName(selectedUser.personalInfo?.firstName, selectedUser.personalInfo?.middleName, selectedUser.personalInfo?.lastName) || selectedUser.personalInfo?.email
     : query;
 
   let borderClass;
@@ -190,9 +190,9 @@ function UserSearchDropdown({ selectedUser, onSelect, error }) {
           {results.length > 0 ? (
             results.map((user) => {
               const fullName =
-                `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || "—";
+                formatFullName(user.personalInfo?.firstName, user.personalInfo?.middleName, user.personalInfo?.lastName) || "—";
               const sub = [
-                user.email,
+                user.personalInfo?.email,
                 user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : null,
               ]
                 .filter(Boolean)
@@ -241,7 +241,7 @@ function resolveDesignation(user) {
   if (!user) return "—";
   if (user.personalInfo?.currentDesignation) return user.personalInfo.currentDesignation;
   const exp = resolveCurrentExperience(user);
-  return exp?.role || "—";
+  return exp?.designation || "—";
 }
 
 function resolveCompany(user) {

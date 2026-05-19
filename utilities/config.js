@@ -38,12 +38,12 @@ export const DEBOUNCE_CONFIG = {
 
 // Filter Options (Centralized from FilterDrawer)
 export const FILTER_OPTIONS = {
-  jobLocationType: [
+  locationType: [
     { label: "Onsite", value: "onsite" },
     { label: "Remote", value: "remote" },
     { label: "Hybrid", value: "hybrid" },
   ],
-  city: [
+  location: [
     { label: "Delhi", value: "Delhi" },
     { label: "Mumbai", value: "Mumbai" },
     { label: "Gurugram", value: "Gurugram" },
@@ -55,7 +55,7 @@ export const FILTER_OPTIONS = {
     { label: "Mid Level", value: "mid-level" },
     { label: "Senior Level", value: "senior-level" },
   ],
-  companyName: [
+  company: [
     { label: "PixelCraft Solutions", value: "PixelCraft Solutions" },
     { label: "Google", value: "Google" },
     { label: "Amazon", value: "Amazon" },
@@ -65,10 +65,10 @@ export const FILTER_OPTIONS = {
 
 // Filter Menu Structure
 export const FILTER_MENU = [
-  { label: "Work Mode", key: "jobLocationType" },
-  { label: "Location", key: "city" },
+  { label: "Work Mode", key: "locationType" },
+  { label: "Location", key: "location" },
   { label: "Experience", key: "experienceLevel" },
-  { label: "Company", key: "companyName" },
+  { label: "Company", key: "company" },
 ];
 
 // Dashboard Menu Items
