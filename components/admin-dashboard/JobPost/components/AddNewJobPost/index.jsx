@@ -67,15 +67,12 @@ function buildPayload(step1, step2, step3, categoryApiMap = {}) {
   const benefits = (step1.perks || []).length > 0 ? step1.perks : undefined;
   const supplementPay = undefined;
 
-  // Build qualifications array
-  const qualifications = [];
-  if (step2.minimumEducation) {
-    qualifications.push(
-      step2.educationStream
-        ? `${step2.minimumEducation} in ${step2.educationStream}`
-        : step2.minimumEducation
-    );
-  }
+  const qualifications = step2.educationStream
+    ? String(step2.educationStream)
+        .split(",")
+        .map((stream) => stream.trim())
+        .filter(Boolean)
+    : [];
 
   // Build hiringProcess string from non-empty stages
   const hiringProcess =
